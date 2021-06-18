@@ -1,0 +1,48 @@
+name: h1c_transformation
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [ h1c_transformation ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      TEST_NAME: "h1c_transformation"
+      TEST_ROOT: "tests"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+    - name: Ballerina Build
+      uses: ballerina-platform/ballerina-action@nightly
+      env:
+        CI_BUILD: true
+        WORKING_DIR: tests/h1c_transformation
+      with:
+        args:
+          build
+    - name: Docker push
+      run: docker push anuruddhal/${TEST_NAME}:latest
+    - name: Copy artifacts
+      run: |
+        ls -ltr
+        cp -a ${TEST_ROOT}/${TEST_NAME}/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
+    - name: 'Install Kustomize'
+      run: |
+        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+    - name: 'Run Kustomize'
+      run: |
+          kustomize build ${TEST_ROOT}/${TEST_NAME}/deployment > ${TEST_ROOT}/${TEST_NAME}/final.yaml
+    - name: Configure AKS
+      uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: ${{ secrets.CLUSTER_NAME }}
+        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+    - name: Deploy artifacts
+      run: |
+        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/final.yaml

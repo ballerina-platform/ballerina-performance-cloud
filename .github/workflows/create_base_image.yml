@@ -1,0 +1,32 @@
+name: create_base_image
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [ create_base_image ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      TEST_NAME: "h1_h1_passthrough"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Login via Az module
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: Build and Distribute Custom VM Image
+      id: imageBuilder
+      uses: azure/build-vm-image@v0
+      with:
+        resource-group-name: '${{ secrets.CLUSTER_RESOURCE_GROUP }}'
+        location: 'eastus'
+        managed-identity: 'bal-perf-identity'
+        source-os-type: 'linux'
+        source-image-type: 'PlatformImage'
+        source-image: Canonical:UbuntuServer:18.04-LTS:latest
+        dist-image-tags: 'number:${{ GITHUB.RUN_NUMBER }}'
+        customizer-source: ${{ GITHUB.WORKSPACE }}/base-image
+        customizer-script: |
+          sudo cp -r /tmp/base-image/ /
+          sh /base-image/init.sh
