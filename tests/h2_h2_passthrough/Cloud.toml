@@ -1,5 +1,5 @@
 [container.image]
-repository= "anuruddhal"
+repository= "ballerina"
 name="h2_h2_passthrough"
 
 [cloud.deployment]
