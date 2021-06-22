@@ -25,6 +25,8 @@ branch_name="nightly-${2}-${timestamp}"
   git clone https://ballerina-bot:"${3}"@github.com/ballerina-platform/ballerina-performance-cloud.git
   pushd ballerina-performance-cloud
   git checkout -b "${branch_name}"
+  git config --global user.email "ballerina-bot@ballerina.org"
+  git config --global user.name "ballerina-bot"
 )
 echo "$1 bal.perf.test" | sudo tee -a /etc/hosts
 echo "--------Running test ${2}--------"
