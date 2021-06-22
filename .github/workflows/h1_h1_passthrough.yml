@@ -51,21 +51,22 @@ jobs:
       uses: azure/login@v1
       with:
         creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: Write values to outputs
+      id: write
+      run: |
+        echo "::set-output name=cluster-ip::$(kubectl get ing h1-h1-passthrough -o "jsonpath={.status.loadBalancer.ingress[0].ip}")"
+        echo "::set-output name=scenario-name::${TEST_NAME}"
+        echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' ' '`-${{ GITHUB.RUN_NUMBER }}"
+        echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
     - name: Create VM Instance
       id: vminstance
       uses: azure/CLI@v1
       with:
         azcliversion: 2.0.72
         inlineScript: |
-          az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "bal-perf-vm-${{ GITHUB.RUN_NUMBER }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_1624344391151"
-          echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "bal-perf-vm-${{ GITHUB.RUN_NUMBER }}" --query publicIps -o tsv)"
-    - name: Write values to outputs
-      id: write
-      run: |
-        echo "::set-output name=cluster-ip::$(kubectl get ing h1-h1-passthrough -o "jsonpath={.status.loadBalancer.ingress[0].ip}")"
-        echo "::set-output name=scenario-name::${TEST_NAME}"
-        echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
+          az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
+          --image "mi_1624344391151" --tags benchmark-number=${{ steps.write.outputs.vm-name }}
+          echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
     - name: Execute performance tests
       uses: appleboy/ssh-action@master
       env: 
@@ -85,3 +86,9 @@ jobs:
     - name: Undeploy Kubernetes artifacts
       run: |
         kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
+    - name: Cleanup VM
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
