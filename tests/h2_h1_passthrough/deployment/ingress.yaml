@@ -21,4 +21,4 @@ spec:
               number: 9090
   tls:
   - hosts:
-    - "perf.test.com"
+    - "bal.perf.test"
