@@ -10,7 +10,15 @@ jobs:
     env:
       TEST_NAME: "h1_h1_passthrough"
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
+        fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+    - name: Write values to outputs
+      id: write
+      run: |
+        echo "::set-output name=old-image-id::cat image.txt"
     - name: Login via Az module
       uses: azure/login@v1
       with:
@@ -30,3 +38,24 @@ jobs:
         customizer-script: |
           sudo cp -r /tmp/base-image/ /
           sh /base-image/init.sh
+    - name: Cleaning up existing VM Image
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+          az group delete --name $(az group list --tag imageTemplateName=imagebuilderTemplate_${{ steps.write.outputs.old-image-id }} -otable --query "[].name" -otsv) -y
+          az image builder delete --name imagebuilderTemplate_${{ steps.write.outputs.old-image-id }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+          az image delete --name mi_${{ steps.write.outputs.old-image-id }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+    - name: Create local changes
+      run: |
+        echo "${{ steps.imageBuilder.outputs.custom-image-uri }}" | sed -e "s/^"mi_"//" > image.txt
+    - name: Commit files
+      run: |
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git commit -m "Add changes" -a
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.BALLERINA_BOT_TOKEN }}
+        branch: update-vm-image-${{ GITHUB.RUN_NUMBER }}
