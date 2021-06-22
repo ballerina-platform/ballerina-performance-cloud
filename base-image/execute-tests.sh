@@ -19,7 +19,7 @@
 set -e
 REPO_NAME="ballerina-performance-cloud"
 timestamp=$(date +%s)
-branch_name="nightly-${timestamp}"
+branch_name="nightly-${2}-${timestamp}"
 (
   cd ~/
   git clone https://ballerina-bot:"${3}"@github.com/ballerina-platform/ballerina-performance-cloud.git
@@ -36,7 +36,7 @@ echo "--------End test--------"
 echo "--------Processing Results--------"
 pushd ~/${REPO_NAME}/tests/"${2}"/results/
 echo "--------Splitting Results--------"
-jtl-splitter.sh -- -f original.jtl -t 300 -u SECONDS -s
+jtl-splitter.sh -- -f original.jtl -t 60 -u SECONDS -s
 ls -ltr
 echo "--------Splitting Completed--------"
 
