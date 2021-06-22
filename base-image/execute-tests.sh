@@ -18,13 +18,14 @@
 # ----------------------------------------------------------------------------
 set -e
 REPO_NAME="ballerina-performance-cloud"
-
+timestamp=$(date +%s)
+branch_name="nightly-${timestamp}"
 (
   cd ~/
-  git clone https://github.com/ballerina-platform/${REPO_NAME}
+  git clone https://ballerina-bot:"${3}"@github.com/ballerina-platform/ballerina-performance-cloud.git
+  git checkout -b "${branch_name}"
 )
 echo "$1 bal.perf.test" | sudo tee -a /etc/hosts
-echo "$3" >~/token.txt
 echo "--------Running test ${2}--------"
 pushd ~/${REPO_NAME}/tests/"${2}"/scripts/
 ./run.sh "${2}"
@@ -42,8 +43,17 @@ echo "--------Generating CSV--------"
 JMeterPluginsCMD.sh --generate-csv summary.csv --input-jtl original-measurement.jtl --plugin-type AggregateReport
 echo "--------CSV generated--------"
 
-echo "--------Merge csv--------"
+echo "--------Merge CSV--------"
 create-csv.sh summary.csv ~/${REPO_NAME}/summary/"${2}".csv
 echo "--------CSV merged--------"
 popd
+
+echo "--------Committing CSV--------"
+pushd ~/${REPO_NAME}
+git clean -xfd
+git add summary/
+git commit -m "Update ${2} test results on `date`"
+git push origin "${branch_name}"
+popd
+echo "--------CSV committed--------"
 echo "--------Results processed--------"
