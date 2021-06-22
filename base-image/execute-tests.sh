@@ -23,10 +23,11 @@ branch_name="nightly-${2}-${timestamp}"
 (
   cd ~/
   git clone https://ballerina-bot:"${3}"@github.com/ballerina-platform/ballerina-performance-cloud.git
-  pushd ballerina-performance-cloud
+  pushd "${REPO_NAME}"
   git checkout -b "${branch_name}"
   git config --global user.email "ballerina-bot@ballerina.org"
   git config --global user.name "ballerina-bot"
+  popd
 )
 echo "$1 bal.perf.test" | sudo tee -a /etc/hosts
 echo "--------Running test ${2}--------"
@@ -55,7 +56,7 @@ echo "--------Committing CSV--------"
 pushd ~/${REPO_NAME}
 git clean -xfd
 git add summary/
-git commit -m "Update ${2} test results on `date`"
+git commit -m "Update ${2} test results on $(date)"
 git push origin "${branch_name}"
 popd
 echo "--------CSV committed--------"
