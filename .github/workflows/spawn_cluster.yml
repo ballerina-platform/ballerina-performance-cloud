@@ -57,7 +57,7 @@ jobs:
         repo: ballerina-performance-cloud
         github_token: ${{ secrets.BALLERINA_BOT_TOKEN }}
         workflow_file_name: h1_h1_passthrough.yml
-        ref: master
+        ref: main
         wait_interval: 300
         inputs: '{}'
         trigger_workflow: true
