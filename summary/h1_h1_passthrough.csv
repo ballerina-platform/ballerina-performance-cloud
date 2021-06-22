@@ -1,1 +1,2 @@
 Label,# Samples,Average,Median,90% Line,95% Line,99% Line,Min,Max,Error %,Throughput,Received KB/sec,Std. Dev.,Date
+HTTP Request,169188,84,92,114,185,205,3,2095,0.00%,706.9,843.6,67.12,Tue Jun 22 16:52:41 UTC 2021
