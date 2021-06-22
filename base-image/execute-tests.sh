@@ -24,7 +24,7 @@ REPO_NAME="ballerina-performance-cloud"
   git clone https://github.com/ballerina-platform/${REPO_NAME}
 )
 echo "$1 bal.perf.test" | sudo tee -a /etc/hosts
-
+echo "$3" >~/token.txt
 echo "--------Running test ${2}--------"
 pushd ~/${REPO_NAME}/tests/"${2}"/scripts/
 ./run.sh "${2}"
