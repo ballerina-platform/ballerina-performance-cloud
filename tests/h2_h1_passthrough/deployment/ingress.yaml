@@ -9,7 +9,7 @@ metadata:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
   rules:
-  - host: perf.test.com
+  - host: bal.perf.test
     http:
       paths:
       - path: "/"
