@@ -22,6 +22,7 @@ timestamp=$(date +%s)
 branch_name="nightly-${timestamp}"
 (
   cd ~/
+  git init
   git clone https://ballerina-bot:"${3}"@github.com/ballerina-platform/ballerina-performance-cloud.git
   git checkout -b "${branch_name}"
 )
