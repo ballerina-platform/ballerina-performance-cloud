@@ -76,11 +76,12 @@ jobs:
         host: ${{ steps.vminstance.outputs.ip-address }}
         username: ${{ secrets.VM_USER }}
         password: ${{ secrets.VM_PWD }}
-        envs: IP,SCENARIO_NAME
+        envs: IP,SCENARIO_NAME,GITHUB_TOKEN
         command_timeout: '180m' #3 hours
         script: |
+          export GITHUB_TOKEN="${GITHUB_TOKEN}"
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP $SCENARIO_NAME
+          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN
     - name: Undeploy Kubernetes artifacts
       run: |
         kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
