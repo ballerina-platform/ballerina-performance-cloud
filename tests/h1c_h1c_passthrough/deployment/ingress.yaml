@@ -8,7 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
 spec:
   rules:
-  - host: perf.test.com
+  - host: bal.perf.test
     http:
       paths:
       - path: "/"
