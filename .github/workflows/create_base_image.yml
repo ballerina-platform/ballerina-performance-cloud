@@ -18,7 +18,7 @@ jobs:
     - name: Write values to outputs
       id: write
       run: |
-        echo "::set-output name=old-image-id::cat image.txt"
+        echo "::set-output name=old-image-id::$(cat image.txt)"
     - name: Login via Az module
       uses: azure/login@v1
       with:
@@ -48,7 +48,7 @@ jobs:
           az image delete --name mi_${{ steps.write.outputs.old-image-id }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Create local changes
       run: |
-        echo "${{ steps.imageBuilder.outputs.custom-image-uri }}" | sed -e "s/^"mi_"//" > image.txt
+        echo ${$(echo ${{ steps.imageBuilder.outputs.custom-image-uri }})##*/} | sed -e "s/^"mi_"//" > image.txt
     - name: Commit files
       run: |
         git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
