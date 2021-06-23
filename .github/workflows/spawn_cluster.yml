@@ -9,47 +9,47 @@ jobs:
     steps:
     - name: CHECKOUT
       uses: actions/checkout@v2
-#    - name: AZURE LOGIN
-#      uses: azure/login@v1
-#      with:
-#        creds: ${{secrets.AZURE_CREDENTIALS}}
-#    - name: Create Cluster
-#      env:
-#        AZURE_APP_ID: ${{ secrets.AZURE_APP_ID }}
-#        AZURE_APP_PASSWORD: ${{ secrets.AZURE_APP_PASSWORD }}
-#        RESOURCE_GROUP: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
-#      run: |
-#        az aks create \
-#            --resource-group "${RESOURCE_GROUP}" \
-#            --name "${{ secrets.CLUSTER_NAME }}" \
-#            --service-principal "${AZURE_APP_ID}"\
-#            --client-secret "${AZURE_APP_PASSWORD}" \
-#            --generate-ssh-keys
-#    - name: Configure AKS
-#      uses: azure/aks-set-context@v1
-#      with:
-#        creds: '${{ secrets.AZURE_CREDENTIALS }}'
-#        cluster-name: ${{ secrets.CLUSTER_NAME }}
-#        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
-#    - name: Deploy Niginx
-#      run: |
-#        # Create a namespace for your ingress resources
-#        kubectl create namespace ingress-basic
-#
-#        # Add the ingress-nginx repository
-#        helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-#
-#        # Use Helm to deploy an NGINX ingress controller
-#        helm install nginx-ingress ingress-nginx/ingress-nginx \
-#            --namespace ingress-basic \
-#            --set controller.replicaCount=2 \
-#            --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
-#            --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
-#            --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux
-#        # Wait for ingress ip
-#        kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
-#        -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
-#        | head -n1
+    - name: AZURE LOGIN
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: Create Cluster
+      env:
+        AZURE_APP_ID: ${{ secrets.AZURE_APP_ID }}
+        AZURE_APP_PASSWORD: ${{ secrets.AZURE_APP_PASSWORD }}
+        RESOURCE_GROUP: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+      run: |
+        az aks create \
+            --resource-group "${RESOURCE_GROUP}" \
+            --name "${{ secrets.CLUSTER_NAME }}" \
+            --service-principal "${AZURE_APP_ID}"\
+            --client-secret "${AZURE_APP_PASSWORD}" \
+            --generate-ssh-keys
+    - name: Configure AKS
+      uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: ${{ secrets.CLUSTER_NAME }}
+        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+    - name: Deploy Niginx
+      run: |
+        # Create a namespace for your ingress resources
+        kubectl create namespace ingress-basic
+
+        # Add the ingress-nginx repository
+        helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+
+        # Use Helm to deploy an NGINX ingress controller
+        helm install nginx-ingress ingress-nginx/ingress-nginx \
+            --namespace ingress-basic \
+            --set controller.replicaCount=2 \
+            --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
+            --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
+            --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux
+        # Wait for ingress ip
+        kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
+        -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
+        | head -n1
     - name: Trigger h1_h1_passthrough test
       uses: convictional/trigger-workflow-and-wait@v1.3.0
       with:
@@ -62,9 +62,7 @@ jobs:
         inputs: |
           "{
             \"event_type\": \"h1_h1_passthrough\",
-            \"client_payload\": {
-              \"sendNotification\": \"false\"
-            }
+            \"client_payload\": {}
           }"
         trigger_workflow: true
         wait_workflow: true
