@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>H1_H1_Passthrough</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script>
+</head>
+<body>
+<h3>Throughout</h3>
+<div>
+    <canvas id="myChart"></canvas>
+</div>
+
+<h3>Average</h3>
+<div>
+    <canvas id="myChart2"></canvas>
+</div>
+<script>
+    var file = 'https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/h1_h1_passthrough.csv';
+    d3.csv(file).then(makeChart);
+
+    function makeChart(days)
+    {
+        const dateLabel = days.map(function (d) {
+            return d.Date
+        });
+        const throughput = days.map(function (d) {
+            return d.Throughput
+        });
+        const average = days.map(function (d) {
+            return d.Average
+        });
+        const throughput_data = {
+            labels: dateLabel,
+            datasets: [{
+                label: 'throughput',
+                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(255, 99, 132)',
+                data: throughput,
+            }]
+        };
+
+        const average_data = {
+            labels: dateLabel,
+            datasets: [{
+                label: 'average',
+                backgroundColor: 'rgb(99,187,255)',
+                borderColor: 'rgb(99,174,255)',
+                data: average,
+            }]
+        };
+        new Chart(
+            document.getElementById('myChart'),
+            {
+                type: 'line',
+                data: throughput_data,
+                options: {}
+            }
+        );
+        new Chart(
+            document.getElementById('myChart2'),
+            {
+                type: 'line',
+                data: average_data,
+                options: {}
+            }
+        );
+    }
+</script>
+</body>
+</html>
