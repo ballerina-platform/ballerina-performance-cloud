@@ -59,10 +59,5 @@ jobs:
         workflow_file_name: h1_h1_passthrough.yml
         ref: main
         waiting_interval: 600
-        inputs: |
-          "{
-            \"event_type\": \"h1_h1_passthrough\",
-            \"client_payload\": {}
-          }"
         trigger_workflow: true
         wait_workflow: true
