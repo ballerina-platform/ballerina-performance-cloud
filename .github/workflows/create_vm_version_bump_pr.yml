@@ -1,10 +1,8 @@
-name: Create Automated PRs
+name: Create Automated VM Version Bump PR
 on:
   push:
     branches:
-    - 'nightly-**'
-    paths:
-    - 'summary/**'
+    - 'update-vm-image-**'
 jobs:
   createPullRequest:
     runs-on: ubuntu-latest
@@ -14,6 +12,6 @@ jobs:
       shell: bash
       run: |
         curl -fsSL https://github.com/github/hub/raw/master/script/get | bash -s 2.14.1
-        bin/hub pull-request -m '[Automated] Update summary csv files' -b ballerina-platform:main
+        bin/hub pull-request -m '[Automated] Update custom image version' -b ballerina-platform:main
       env:
         GITHUB_TOKEN: ${{ secrets.BALLERINA_BOT_TOKEN }}
