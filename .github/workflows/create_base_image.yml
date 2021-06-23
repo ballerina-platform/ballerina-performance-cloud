@@ -48,12 +48,12 @@ jobs:
     #       az image delete --name mi_${{ steps.write.outputs.old-image-id }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Create local changes
       run: |
-        echo ${$(echo ${{ steps.imageBuilder.outputs.custom-image-uri }})##*/} | sed -e "s/^"mi_"//" > image.txt
+        echo ${{ steps.imageBuilder.outputs.custom-image-uri }} | rev | cut -d/ -f1 | rev | sed -e "s/^"mi_"//" > image.txt
     - name: Commit files
       run: |
-        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git commit -m "Add changes" -a
+        git config --local user.email "ballerina-bot@ballerina.org"
+        git config --local user.name "ballerina-bot"
+        git commit -m "Bump VM Version" -a
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
