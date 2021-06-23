@@ -29,9 +29,10 @@ git config --global user.name "ballerina-bot"
 popd
 
 echo "$1 bal.perf.test" | sudo tee -a /etc/hosts
-echo "Executing ${2} tests"
 
 echo "--------Running test ${2}--------"
+echo "Current Dir `pwd`"
+ls -ltr
 pushd ~/${REPO_NAME}/tests/"${2}"/scripts/
 ./run.sh "${2}"
 popd
