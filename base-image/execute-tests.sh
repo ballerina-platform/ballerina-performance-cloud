@@ -21,25 +21,27 @@ REPO_NAME="ballerina-performance-cloud"
 timestamp=$(date +%s)
 branch_name="nightly-${2}-${timestamp}"
 pwd
-git clone https://ballerina-bot:"${3}"@github.com/ballerina-platform/ballerina-performance-cloud.git
+git clone https://ballerina-bot:"${3}"@github.com/ballerina-platform/"${REPO_NAME}"
 pushd "${REPO_NAME}"
 git checkout -b "${branch_name}"
 git config --global user.email "ballerina-bot@ballerina.org"
 git config --global user.name "ballerina-bot"
+git status
+git remote -v
 popd
 
 echo "$1 bal.perf.test" | sudo tee -a /etc/hosts
 
 echo "--------Running test ${2}--------"
-echo "Current Dir `pwd`"
+echo "Current Dir $(pwd)"
 ls -ltr
-pushd ~/${REPO_NAME}/tests/"${2}"/scripts/
+pushd "${REPO_NAME}"/tests/"${2}"/scripts/
 ./run.sh "${2}"
 popd
 echo "--------End test--------"
 
 echo "--------Processing Results--------"
-pushd ~/${REPO_NAME}/tests/"${2}"/results/
+pushd "${REPO_NAME}"/tests/"${2}"/results/
 echo "--------Splitting Results--------"
 jtl-splitter.sh -- -f original.jtl -t 60 -u SECONDS -s
 ls -ltr
@@ -50,12 +52,12 @@ JMeterPluginsCMD.sh --generate-csv summary.csv --input-jtl original-measurement.
 echo "--------CSV generated--------"
 
 echo "--------Merge CSV--------"
-create-csv.sh summary.csv ~/${REPO_NAME}/summary/"${2}".csv
+create-csv.sh summary.csv ~/"${REPO_NAME}"/summary/"${2}".csv
 echo "--------CSV merged--------"
 popd
 
 echo "--------Committing CSV--------"
-pushd ~/${REPO_NAME}
+pushd "${REPO_NAME}"
 git clean -xfd
 git add summary/
 git commit -m "Update ${2} test results on $(date)"
