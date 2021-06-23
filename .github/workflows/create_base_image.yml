@@ -2,8 +2,11 @@ name: create_base_image
 
 on:
   workflow_dispatch:
-  repository_dispatch:
-    types: [ create_base_image ]
+  push:
+      branches:
+          - 'master'
+      paths:
+          - 'base-image/**'
 jobs:
   build:
     runs-on: ubuntu-latest
