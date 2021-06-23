@@ -20,8 +20,7 @@ set -e
 REPO_NAME="ballerina-performance-cloud"
 timestamp=$(date +%s)
 branch_name="nightly-${2}-${timestamp}"
-
-pushd ~
+pwd
 git clone https://ballerina-bot:"${3}"@github.com/ballerina-platform/ballerina-performance-cloud.git
 pushd "${REPO_NAME}"
 git checkout -b "${branch_name}"
@@ -30,6 +29,8 @@ git config --global user.name "ballerina-bot"
 popd
 
 echo "$1 bal.perf.test" | sudo tee -a /etc/hosts
+echo "Executing ${2} tests"
+
 echo "--------Running test ${2}--------"
 pushd ~/${REPO_NAME}/tests/"${2}"/scripts/
 ./run.sh "${2}"
