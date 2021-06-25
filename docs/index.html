@@ -48,7 +48,8 @@
     function makeChart(days)
     {
         const dateLabel = days.map(function (d) {
-            return d.Date
+            var date = new Date(d.Date*1000);
+            return date.toLocaleString()
         });
         const throughput = days.map(function (d) {
             return d.Throughput
