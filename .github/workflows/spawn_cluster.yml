@@ -61,6 +61,17 @@ jobs:
         waiting_interval: 600
         trigger_workflow: true
         wait_workflow: true
+    - name: Trigger h1_transformation
+      uses: convictional/trigger-workflow-and-wait@v1.3.0
+      with:
+        owner: ballerina-platform
+        repo: ballerina-performance-cloud
+        github_token: ${{ secrets.BALLERINA_BOT_TOKEN }}
+        workflow_file_name: h1_transformation.yml
+        ref: main
+        waiting_interval: 600
+        trigger_workflow: true
+        wait_workflow: true
     # - name: Cleaning up the cluster
     #   uses: azure/CLI@v1
     #   with:
