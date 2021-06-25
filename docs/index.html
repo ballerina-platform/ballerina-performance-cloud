@@ -8,12 +8,17 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="shortcut icon" href="./img/img.png">
+    <link rel="stylesheet" href="css/styles.css">
     <title>Ballerina Cloud Performance</title>
 </head>
 <body>
-<div class="jumbotron">
-    <h1 class="display-4">HTTP1-HTTP1 Passthrough</h1>
-</div>
+<header class="jumbotron">
+    <div class="container">
+        <div class="row align-items-center">
+            <h1 class="display-5">HTTP1-HTTP1 Passthrough</h1>
+        </div>
+    </div>
+</header>
 
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -24,16 +29,16 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script>
 <div class="container">
     <div class="row">
-        <div class="col-sm">
+        <div class="col-sm row-content">
+            <h3>Throughout</h3>
             <div>
-                <h3>Throughout</h3>
                 <canvas id="myChart"></canvas>
             </div>
         </div>
     </div>
     <div class="row">
-        <div class="col-sm">
-            <h3>Average</h3>
+        <div class="col-sm row-content">
+            <div class="row_header"><h3>Average</h3></div>
             <div>
                 <canvas id="myChart2"></canvas>
             </div>
@@ -60,7 +65,7 @@
         const throughput_data = {
             labels: dateLabel,
             datasets: [{
-                label: 'throughput',
+                label: 'throughput (ms)',
                 backgroundColor: 'rgb(255, 99, 132)',
                 borderColor: 'rgb(255, 99, 132)',
                 data: throughput,
@@ -70,7 +75,7 @@
         const average_data = {
             labels: dateLabel,
             datasets: [{
-                label: 'average',
+                label: 'average (ms)',
                 backgroundColor: 'rgb(99,187,255)',
                 borderColor: 'rgb(99,174,255)',
                 data: average,
@@ -94,6 +99,5 @@
         );
     }
 </script>
-
 </body>
 </html>
