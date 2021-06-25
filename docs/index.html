@@ -28,9 +28,28 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script>
 <div class="container">
+    <div class="row ">
+
+        <div class="col-12 col-md-9">
+            <form>
+                <div class="form-group row">
+                    <div class="col-md-3 offset-md-1">
+                        Test Scenario: <select class="form-control">
+                            <option>h1_h1_passthrough</option>
+                            <option>h1_transformation</option>
+                            <option>h1c_h1c_passthrough</option>
+                            <option>h1c_transformation</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="row">
         <div class="col-sm row-content">
-            <h3>Throughout</h3>
+            <div class="col-12">
+                <h3>Throughput</h3>
+            </div>
             <div>
                 <canvas id="myChart"></canvas>
             </div>
@@ -38,7 +57,9 @@
     </div>
     <div class="row">
         <div class="col-sm row-content">
-            <div class="row_header"><h3>Average</h3></div>
+            <div class="col-12">
+                <h3>Average Response Time</h3>
+            </div>
             <div>
                 <canvas id="myChart2"></canvas>
             </div>
