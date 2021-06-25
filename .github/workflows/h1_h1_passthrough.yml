@@ -54,7 +54,9 @@ jobs:
     - name: Write values to outputs
       id: write
       run: |
-        echo "::set-output name=cluster-ip::$(kubectl get ing h1-h1-passthrough -o "jsonpath={.status.loadBalancer.ingress[0].ip}")"
+        echo "::set-output name=cluster-ip::$(kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
+                                              -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
+                                              | head -n1)"
         echo "::set-output name=scenario-name::${TEST_NAME}"
         echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ GITHUB.RUN_NUMBER }}"
         echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
