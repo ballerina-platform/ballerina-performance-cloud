@@ -15,7 +15,7 @@
 <header class="jumbotron">
     <div class="container">
         <div class="row align-items-center">
-            <h1 class="display-5">HTTP1-HTTP1 Passthrough</h1>
+            <h1 class="display-5">Ballerina Cloud Performance Summary</h1>
         </div>
     </div>
 </header>
@@ -33,14 +33,13 @@
         <div class="col-12 col-md-9">
             <form>
                 <div class="form-group row">
-                    <div class="col-md-3 offset-md-1">
-                        Test Scenario: <select class="form-control">
-                            <option>h1_h1_passthrough</option>
-                            <option>h1_transformation</option>
-                            <option>h1c_h1c_passthrough</option>
-                            <option>h1c_transformation</option>
-                        </select>
-                    </div>
+                    <label for="scenario" class="col-12 col-md-2 col-form-label">Test Scenario </label>
+                    <select id="scenario" class="form-control">
+                        <option>h1_h1_passthrough</option>
+                        <option>h1_transformation</option>
+                        <option>h1c_h1c_passthrough</option>
+                        <option>h1c_transformation</option>
+                    </select>
                 </div>
             </form>
         </div>
@@ -69,56 +68,55 @@
 
 <script>
     var file = 'https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/h1_h1_passthrough.csv';
-    d3.csv(file).then(makeChart);
+    d3.csv(file).then(function (days) {
+        {
+            const dateLabel = days.map(function (d) {
+                var date = new Date(d.Date*1000);
+                return date.toLocaleString()
+            });
+            const throughput = days.map(function (d) {
+                return d.Throughput
+            });
+            const average = days.map(function (d) {
+                return d.Average
+            });
+            const throughput_data = {
+                labels: dateLabel,
+                datasets: [{
+                    label: 'throughput (ms)',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: throughput,
+                }]
+            };
 
-    function makeChart(days)
-    {
-        const dateLabel = days.map(function (d) {
-            var date = new Date(d.Date*1000);
-            return date.toLocaleString()
-        });
-        const throughput = days.map(function (d) {
-            return d.Throughput
-        });
-        const average = days.map(function (d) {
-            return d.Average
-        });
-        const throughput_data = {
-            labels: dateLabel,
-            datasets: [{
-                label: 'throughput (ms)',
-                backgroundColor: 'rgb(255, 99, 132)',
-                borderColor: 'rgb(255, 99, 132)',
-                data: throughput,
-            }]
-        };
-
-        const average_data = {
-            labels: dateLabel,
-            datasets: [{
-                label: 'average (ms)',
-                backgroundColor: 'rgb(99,187,255)',
-                borderColor: 'rgb(99,174,255)',
-                data: average,
-            }]
-        };
-        new Chart(
-            document.getElementById('myChart'),
-            {
-                type: 'line',
-                data: throughput_data,
-                options: {}
-            }
-        );
-        new Chart(
-            document.getElementById('myChart2'),
-            {
-                type: 'line',
-                data: average_data,
-                options: {}
-            }
-        );
-    }
+            const average_data = {
+                labels: dateLabel,
+                datasets: [{
+                    label: 'average (ms)',
+                    backgroundColor: 'rgb(99,187,255)',
+                    borderColor: 'rgb(99,174,255)',
+                    data: average,
+                }]
+            };
+            new Chart(
+                document.getElementById('myChart'),
+                {
+                    type: 'line',
+                    data: throughput_data,
+                    options: {}
+                }
+            );
+            new Chart(
+                document.getElementById('myChart2'),
+                {
+                    type: 'line',
+                    data: average_data,
+                    options: {}
+                }
+            );
+        }
+    });
 </script>
 </body>
 </html>
