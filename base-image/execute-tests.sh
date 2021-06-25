@@ -40,7 +40,7 @@ echo "--------End test--------"
 echo "--------Processing Results--------"
 pushd "${REPO_NAME}"/tests/"${2}"/results/
 echo "--------Splitting Results--------"
-jtl-splitter.sh -- -f original.jtl -t 60 -u SECONDS -s
+jtl-splitter.sh -- -f original.jtl -t 120 -u SECONDS -s
 ls -ltr
 echo "--------Splitting Completed--------"
 
