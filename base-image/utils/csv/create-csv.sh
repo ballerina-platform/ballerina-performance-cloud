@@ -25,7 +25,7 @@ if [ "$#" -ne 2 ]; then
   exit 1
 fi
 
-buildTime=$(date)
+buildTime=`date +%s`
 echo "CSV modification started"
 # Append Date header
 sed -i ' 1 s/.*/&,Date/' "${1}"
