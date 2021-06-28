@@ -3,37 +3,36 @@
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <link rel="shortcut icon" href="./img/img.png">
-    <link rel="stylesheet" href="css/styles.css">
+    <link crossorigin="anonymous" href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./img/img.png" rel="shortcut icon">
+    <link href="css/styles.css" rel="stylesheet">
     <title>Ballerina Cloud Performance</title>
 </head>
 <body>
 <header class="jumbotron">
     <div class="container">
         <div class="row align-items-center">
-            <h1 class="display-5">Cloud Performance Stats</h1>
+            <h1 class="display-5">Ballerina Cloud Performance Stats</h1>
         </div>
     </div>
 </header>
 
-<!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script>
+<script crossorigin="anonymous" src="./scripts/jquery.slim.js"></script>
+<script crossorigin="anonymous" src="scripts/popper.min.js"></script>
+<script crossorigin="anonymous" src="scripts/bootstrap.min.js"></script>
+<script src="scripts/chart.js"></script>
+<script src="scripts/d3.min.js" type="text/javascript"></script>
 <div class="container">
     <div class="row ">
 
         <div class="col-12 col-md-9">
             <form>
                 <div class="form-group row">
-                    <label for="scenario" class="col-12 col-md-2 col-form-label">Test Scenario </label>
+                    <h3 class="col-12 col-md-2 col-form-label">Test Scenario </h3>
                     <select class="form-control" id="scenario" onchange="onSelectChange(this.value)">
                         <option selected="selected">h1_h1_passthrough</option>
                         <option>h1_transformation</option>
@@ -49,8 +48,8 @@
             <div class="col-12">
                 <h3>Throughput</h3>
             </div>
-            <div id="chart1">
-                <canvas id="myChart1"></canvas>
+            <div>
+                <canvas id="throughputCanvas"></canvas>
             </div>
         </div>
     </div>
@@ -59,8 +58,38 @@
             <div class="col-12">
                 <h3>Average Response Time</h3>
             </div>
-            <div id="chart2">
-                <canvas id="myChart2"></canvas>
+            <div>
+                <canvas id="averageCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm row-content">
+            <div class="col-12">
+                <h3>Standard Deviation of Response Time</h3>
+            </div>
+            <div>
+                <canvas id="stdDevCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm row-content">
+            <div class="col-12">
+                <h3>99th Percentile of Response Time</h3>
+            </div>
+            <div>
+                <canvas id="percentileCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm row-content">
+            <div class="col-12">
+                <h3>Error Percentage</h3>
+            </div>
+            <div>
+                <canvas id="errorCanvas"></canvas>
             </div>
         </div>
     </div>
@@ -76,70 +105,170 @@
     function onSelectChange(value) {
         let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/" + value + ".csv";
         console.log(url);
-        drawChart(url);
+        destroyCharts();
+        drawCharts(url);
     }
 
+    function drawChart(throughput_data, canvas) {
+        let timeFormat = 'DD/MM/YYYY, HH:mm:ss';
+        return new Chart(
+            document.getElementById(canvas),
+            {
+                type: 'line',
+                data: throughput_data,
+                options: {
+                    scales: {
+                        xAxes: [{
+                            type: "time",
+                            time: {
+                                format: timeFormat,
+                                tooltipFormat: 'll'
+                            },
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Date'
+                            }
+                        }],
+                    }
+                }
+            }
+        )
 
-    let chart1;
-    let chart2;
+    }
 
-    function drawChart(url) {
-        if (chart1 !== undefined) {
-            chart1.destroy();
+    let throughputChart;
+    let averageChart;
+    let stdDevChart;
+    let percentileChart;
+    let errorChart;
+
+    function destroyCharts() {
+        if (throughputChart !== undefined) {
+            throughputChart.destroy();
         }
-        if (chart2 !== undefined) {
-            chart2.destroy();
+        if (averageChart !== undefined) {
+            averageChart.destroy();
         }
-        console.log("Debug")
+        if (stdDevChart !== undefined) {
+            stdDevChart.destroy();
+        }
+        if (percentileChart !== undefined) {
+            percentileChart.destroy();
+        }
+        if (errorChart !== undefined) {
+            errorChart.destroy();
+        }
+    }
+
+    function getCSVData(stats, attribute) {
+        let dataset = [];
+        // 60 users to 1024 bytes
+        let coordinates = [];
+        stats.filter(function (row) {
+            return row['Users'] === '60' && row['Payload'] === '1024';
+        }).map(function (value) {
+                let date = new Date(value['Date'] * 1000);
+                let dateString = date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
+                coordinates.push({"x": dateString, "y": value[attribute]});
+            }
+        );
+        let data_60_1024 = {
+            label: '60 user 1024b payload (ms)',
+            showLine: true,
+            backgroundColor: 'rgb(99,161,255)',
+            borderColor: 'rgb(99,174,255)',
+            data: coordinates,
+        }
+        dataset.push(data_60_1024);
+
+        // 60 users to 50 bytes
+        coordinates = [];
+        stats.filter(function (row) {
+            return row['Users'] === '60' && row['Payload'] === '50';
+        }).map(function (value) {
+                let date = new Date(value['Date'] * 1000);
+                let dateString = date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
+                coordinates.push({"x": dateString, "y": value[attribute]});
+            }
+        );
+        let data_60_50 = {
+            label: '60 user 50b payload (ms)',
+            showLine: true,
+            backgroundColor: 'rgb(255,229,99)',
+            borderColor: 'rgb(255,229,99)',
+            data: coordinates,
+        }
+        dataset.push(data_60_50);
+
+        // 300 users to 50 bytes
+        coordinates = [];
+        stats.filter(function (row) {
+            return row['Users'] === '300' && row['Payload'] === '50';
+        }).map(function (value) {
+                let date = new Date(value['Date'] * 1000);
+                let dateString = date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
+                coordinates.push({"x": dateString, "y": value[attribute]});
+            }
+        );
+        let data_300_50 = {
+            label: '300 user 50b payload (ms)',
+            showLine: true,
+            backgroundColor: 'rgb(128,255,99)',
+            borderColor: 'rgb(154,255,99)',
+            data: coordinates,
+        }
+        dataset.push(data_300_50);
+
+        // 300 users to 1024 bytes
+        coordinates = [];
+        stats.filter(function (row) {
+            return row['Users'] === '300' && row['Payload'] === '1024';
+        }).map(function (value) {
+                let date = new Date(value['Date'] * 1000);
+                let dateString = date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
+                coordinates.push({"x": dateString, "y": value[attribute]});
+            }
+        );
+        let data_300_1024 = {
+            label: '300 user 1024b payload (ms)',
+            showLine: true,
+            backgroundColor: 'rgb(255,99,112)',
+            borderColor: 'rgb(255,99,122)',
+            data: coordinates,
+        }
+        dataset.push(data_300_1024);
+
+
+        return {
+            datasets: dataset
+        };
+    }
+
+    function drawCharts(url) {
+
         d3.csv(url).then(function (stats) {
+            //Throughput Chart
+            const throughput_dataset = getCSVData(stats, 'Throughput')
+            throughputChart = drawChart(throughput_dataset, 'throughputCanvas');
 
-            const dateLabel = stats.map(function (stat) {
-                var date = new Date(stat.Date * 1000);
-                return date.toLocaleString()
-            });
-            const throughput = stats.map(function (stat) {
-                return stat.Throughput
-            });
-            const average = stats.map(function (stat) {
-                return stat.Average
-            });
-            const throughput_data = {
-                labels: dateLabel,
-                datasets: [{
-                    label: 'throughput (ms)',
-                    backgroundColor: 'rgb(255, 99, 132)',
-                    borderColor: 'rgb(255, 99, 132)',
-                    data: throughput,
-                }]
-            };
+            // Average Chart
+            const average_dataset = getCSVData(stats, 'Average');
+            averageChart = drawChart(average_dataset, 'averageCanvas');
 
-            const average_data = {
-                labels: dateLabel,
-                datasets: [{
-                    label: 'average (ms)',
-                    backgroundColor: 'rgb(99,187,255)',
-                    borderColor: 'rgb(99,174,255)',
-                    data: average,
-                }]
-            };
-            chart1 = new Chart(
-                document.getElementById("myChart1"),
-                {
-                    type: 'line',
-                    data: throughput_data,
-                    options: {}
-                }
-            );
-            chart2 = new Chart(document.getElementById("myChart2"),
-                {
-                    type: 'line',
-                    data: average_data,
-                    options: {}
-                }
-            );
+            //Standard Deviation of Response Time Chart
+            const deviation_dataset = getCSVData(stats, 'Std. Dev.')
+            stdDevChart = drawChart(deviation_dataset, 'stdDevCanvas')
 
+            //99 percentile of Response Time Chart
+            const percentile_dataset = getCSVData(stats, '99% Line')
+            percentileChart = drawChart(percentile_dataset, "percentileCanvas");
+
+            //Error Count Chart
+            const error_dataset = getCSVData(stats, 'Error %');
+            errorChart = drawChart(error_dataset, "errorCanvas");
         });
     }
+
 </script>
 </body>
 </html>
