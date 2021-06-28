@@ -31,6 +31,11 @@ echo "CSV modification started"
 sed -i ' 1 s/.*/&,Date/' "${1}"
 # Append Date value
 sed -i " 2 s/.*/&,${buildTime}/" "${1}"
+# Append Payload header
+sed -i ' 1 s/.*/&,Payload/' "${1}"
+# Append Payload value
+sed -i " 2 s/.*/&,${3}/" "${1}"
+
 # Remove total row
 sed -i '$ d' "${1}"
 echo "CSV modification completed"
