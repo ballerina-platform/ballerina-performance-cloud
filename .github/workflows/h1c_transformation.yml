@@ -84,12 +84,14 @@ jobs:
         command_timeout: '180m' #3 hours
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP h1_transformation $GITHUB_TOKEN
+          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN
     - name: Undeploy Kubernetes artifacts
+      if: always()
       run: |
         kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
     - name: Cleanup VM
       uses: azure/CLI@v1
+      if: always()
       with:
         azcliversion: 2.0.72
         inlineScript: |
