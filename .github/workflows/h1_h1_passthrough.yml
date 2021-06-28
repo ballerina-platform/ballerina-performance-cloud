@@ -12,7 +12,6 @@ jobs:
         payload: [50, 1024]
     env:
       TEST_NAME: "h1_h1_passthrough"
-      PAYLOAD_SIZE: "1024"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -61,7 +60,7 @@ jobs:
                                               -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
                                               | head -n1)"
         echo "::set-output name=scenario-name::${TEST_NAME}"
-        echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ GITHUB.RUN_NUMBER }}"
+        echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ matrix.payload }}-${{ GITHUB.RUN_NUMBER }}"
         echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
         echo "::set-output name=custom-image-name::$(cat image.txt)"
     - name: Create VM Instance
