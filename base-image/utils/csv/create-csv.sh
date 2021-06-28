@@ -18,10 +18,12 @@
 # Generate final csv
 # ----------------------------------------------------------------------------
 set -e
-if [ "$#" -ne 2 ]; then
+if [ "$#" -ne 4 ]; then
   echo "Script expect 2 parameters"
   echo "parameter1 : New summary.csv file"
   echo "parameter2 : Existing summary.csv file to append results"
+  echo "parameter3 : Size of the payload"
+  echo "parameter4 : Number of concurrent users"
   exit 1
 fi
 
@@ -35,6 +37,10 @@ sed -i " 2 s/.*/&,${buildTime}/" "${1}"
 sed -i ' 1 s/.*/&,Payload/' "${1}"
 # Append Payload value
 sed -i " 2 s/.*/&,${3}/" "${1}"
+# Append Users header
+sed -i ' 1 s/.*/&,Users/' "${1}"
+# Append Users value
+sed -i " 2 s/.*/&,${4}/" "${1}"
 
 # Remove total row
 sed -i '$ d' "${1}"

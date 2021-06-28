@@ -17,5 +17,5 @@
 # Execution script for ballerina performance tests
 # ----------------------------------------------------------------------------
 set -e
-generate-payloads.sh -p array -s 1024
-jmeter -n -t ~/ballerina-performance-cloud/tests/"${1}"/scripts/http-post-request.jmx -l ~/ballerina-performance-cloud/tests/"${1}"/results/original.jtl -Jusers=60 -Jduration=1200 -Jhost=bal.perf.test -Jport=80 -Jprotocol=http -Jpath=passthrough -Jresponse_size=1024 -Jpayload="$(pwd)"'/1024B.json'
+generate-payloads.sh -p array -s ${2}
+jmeter -n -t ~/ballerina-performance-cloud/tests/"${1}"/scripts/http-post-request.jmx -l ~/ballerina-performance-cloud/tests/"${1}"/results/original.jtl -Jusers="${3}" -Jduration=1200 -Jhost=bal.perf.test -Jport=80 -Jprotocol=http -Jpath=passthrough -Jresponse_size="${2}" -Jpayload="$(pwd)"'/'${2}'B.json'
