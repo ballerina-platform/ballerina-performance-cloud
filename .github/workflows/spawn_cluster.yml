@@ -90,7 +90,7 @@ jobs:
         owner: ballerina-platform
         repo: ballerina-performance-cloud
         github_token: ${{ secrets.BALLERINA_BOT_TOKEN }}
-        workflow_file_name: h1_transformation.yml
+        workflow_file_name: h1c_transformation.yml
         ref: main
         waiting_interval: 600
         trigger_workflow: true
