@@ -33,7 +33,7 @@ echo "$1 bal.perf.test" | sudo tee -a /etc/hosts
 
 echo "--------Running test ${2}--------"
 pushd "${REPO_NAME}"/tests/"${2}"/scripts/
-./run.sh "${2}" "${4}"
+./run.sh "${2}" "${4}" "${5}"
 popd
 echo "--------End test--------"
 
@@ -49,7 +49,7 @@ JMeterPluginsCMD.sh --generate-csv summary.csv --input-jtl original-measurement.
 echo "--------CSV generated--------"
 
 echo "--------Merge CSV--------"
-create-csv.sh summary.csv ~/"${REPO_NAME}"/summary/"${2}".csv ${4}
+create-csv.sh summary.csv ~/"${REPO_NAME}"/summary/"${2}".csv ${4} ${5}
 echo "--------CSV merged--------"
 popd
 

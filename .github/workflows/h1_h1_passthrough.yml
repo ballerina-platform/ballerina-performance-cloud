@@ -11,6 +11,7 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [50, 1024]
+        users: [60, 100, 300, 1000]
     env:
       TEST_NAME: "h1_h1_passthrough"
       TEST_ROOT: "tests"
@@ -80,15 +81,16 @@ jobs:
         SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
         GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
         PAYLOAD: ${{ matrix.payload }}
+        USERS: ${{ matrix.users }}
       with:
         host: ${{ steps.vminstance.outputs.ip-address }}
         username: ${{ secrets.VM_USER }}
         password: ${{ secrets.VM_PWD }}
-        envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD
+        envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD
+          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
