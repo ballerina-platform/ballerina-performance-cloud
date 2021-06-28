@@ -77,24 +77,8 @@
         let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/" + value + ".csv";
         console.log(url);
         drawChart(url);
-        ajax(url).then(function (result) {
-
-        }).catch(function () {
-            // An error occurred
-        });
     }
 
-    function ajax(url) {
-        return new Promise(function (resolve, reject) {
-            var xhr = new XMLHttpRequest();
-            xhr.onload = function () {
-                resolve(this.responseText);
-            };
-            xhr.onerror = reject;
-            xhr.open('GET', url);
-            xhr.send();
-        });
-    }
 
     let chart1;
     let chart2;
