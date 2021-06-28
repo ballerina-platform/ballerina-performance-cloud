@@ -90,9 +90,11 @@ jobs:
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP h1_h1_passthrough $GITHUB_TOKEN $PAYLOAD
     - name: Undeploy Kubernetes artifacts
+      if: always()
       run: |
         kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
     - name: Cleanup VM
+      if: always()
       uses: azure/CLI@v1
       with:
         azcliversion: 2.0.72
