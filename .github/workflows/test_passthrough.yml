@@ -1,9 +1,9 @@
-name: h1_h1_passthrough
+name: test_passthrough
 
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [ h1_h1_passthrough ]
+    types: [ test_passthrough ]
 jobs:
   build:
     runs-on: ubuntu-latest
