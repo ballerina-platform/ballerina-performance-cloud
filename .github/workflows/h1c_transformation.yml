@@ -7,9 +7,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+      matrix:
+        payload: [50, 1024]
+        users: [60, 100, 300, 1000]
     env:
       TEST_NAME: "h1c_transformation"
-      PAYLOAD_SIZE: "1024"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -58,7 +62,7 @@ jobs:
                                               -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
                                               | head -n1)"
         echo "::set-output name=scenario-name::${TEST_NAME}"
-        echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ GITHUB.RUN_NUMBER }}"
+        echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ matrix.users }}-${{ matrix.payload }}-${{ GITHUB.RUN_NUMBER }}"
         echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
         echo "::set-output name=custom-image-name::$(cat image.txt)"
     - name: Create VM Instance
@@ -76,15 +80,17 @@ jobs:
         IP: ${{ steps.write.outputs.cluster-ip }}
         SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
         GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
+        PAYLOAD: ${{ matrix.payload }}
+        USERS: ${{ matrix.users }}
       with:
         host: ${{ steps.vminstance.outputs.ip-address }}
         username: ${{ secrets.VM_USER }}
         password: ${{ secrets.VM_PWD }}
-        envs: IP,SCENARIO_NAME,GITHUB_TOKEN
+        envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN
+          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
