@@ -18,6 +18,3 @@ spec:
             name: h1c-h1c-passthr
             port:
               number: 9090
-  tls:
-  - hosts:
-    - "bal.perf.test"
