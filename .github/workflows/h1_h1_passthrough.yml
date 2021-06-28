@@ -7,6 +7,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        payload: [50, 1024]
     env:
       TEST_NAME: "h1_h1_passthrough"
       PAYLOAD_SIZE: "1024"
@@ -76,15 +79,16 @@ jobs:
         IP: ${{ steps.write.outputs.cluster-ip }}
         SCENARIO_NAME: h1_h1_passthrough
         GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
+        PAYLOAD: ${{ matrix.payload }}
       with:
         host: ${{ steps.vminstance.outputs.ip-address }}
         username: ${{ secrets.VM_USER }}
         password: ${{ secrets.VM_PWD }}
-        envs: IP,SCENARIO_NAME,GITHUB_TOKEN
+        envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD
         command_timeout: '180m' #3 hours
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP h1_h1_passthrough $GITHUB_TOKEN
+          execute-tests.sh $IP h1_h1_passthrough $GITHUB_TOKEN $PAYLOAD
     - name: Undeploy Kubernetes artifacts
       run: |
         kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
