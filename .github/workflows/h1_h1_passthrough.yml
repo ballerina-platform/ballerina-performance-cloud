@@ -77,7 +77,7 @@ jobs:
       uses: appleboy/ssh-action@master
       env: 
         IP: ${{ steps.write.outputs.cluster-ip }}
-        SCENARIO_NAME: h1_h1_passthrough
+        SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
         GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
         PAYLOAD: ${{ matrix.payload }}
       with:
@@ -88,7 +88,7 @@ jobs:
         command_timeout: '180m' #3 hours
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP h1_h1_passthrough $GITHUB_TOKEN $PAYLOAD
+          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
