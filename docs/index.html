@@ -15,7 +15,7 @@
 <header class="jumbotron">
     <div class="container">
         <div class="row align-items-center">
-            <h1 class="display-5">Ballerina Cloud Performance Summary</h1>
+            <h1 class="display-5">Cloud Performance Stats</h1>
         </div>
     </div>
 </header>
@@ -91,17 +91,17 @@
             chart2.destroy();
         }
         console.log("Debug")
-        d3.csv(url).then(function (days) {
+        d3.csv(url).then(function (stats) {
 
-            const dateLabel = days.map(function (d) {
-                var date = new Date(d.Date * 1000);
+            const dateLabel = stats.map(function (stat) {
+                var date = new Date(stat.Date * 1000);
                 return date.toLocaleString()
             });
-            const throughput = days.map(function (d) {
-                return d.Throughput
+            const throughput = stats.map(function (stat) {
+                return stat.Throughput
             });
-            const average = days.map(function (d) {
-                return d.Average
+            const average = stats.map(function (stat) {
+                return stat.Average
             });
             const throughput_data = {
                 labels: dateLabel,
