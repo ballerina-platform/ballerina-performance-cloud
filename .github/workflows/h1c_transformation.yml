@@ -74,7 +74,7 @@ jobs:
       uses: appleboy/ssh-action@master
       env:
         IP: ${{ steps.write.outputs.cluster-ip }}
-        SCENARIO_NAME: h1_transformation
+        SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
         GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
       with:
         host: ${{ steps.vminstance.outputs.ip-address }}
