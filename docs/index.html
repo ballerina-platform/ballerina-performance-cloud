@@ -34,8 +34,8 @@
             <form>
                 <div class="form-group row">
                     <label for="scenario" class="col-12 col-md-2 col-form-label">Test Scenario </label>
-                    <select id="scenario" class="form-control">
-                        <option>h1_h1_passthrough</option>
+                    <select class="form-control" id="scenario" onchange="onSelectChange(this.value)">
+                        <option selected="selected">h1_h1_passthrough</option>
                         <option>h1_transformation</option>
                         <option>h1c_h1c_passthrough</option>
                         <option>h1c_transformation</option>
@@ -49,8 +49,8 @@
             <div class="col-12">
                 <h3>Throughput</h3>
             </div>
-            <div>
-                <canvas id="myChart"></canvas>
+            <div id="chart1">
+                <canvas id="myChart1"></canvas>
             </div>
         </div>
     </div>
@@ -59,7 +59,7 @@
             <div class="col-12">
                 <h3>Average Response Time</h3>
             </div>
-            <div>
+            <div id="chart2">
                 <canvas id="myChart2"></canvas>
             </div>
         </div>
@@ -67,11 +67,50 @@
 </div>
 
 <script>
-    var file = 'https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/h1_h1_passthrough.csv';
-    d3.csv(file).then(function (days) {
-        {
+    // A $( document ).ready() block.
+    $(document).ready(function () {
+        let value = document.getElementById("scenario").value;
+        onSelectChange(value)
+    });
+
+    function onSelectChange(value) {
+        let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/" + value + ".csv";
+        console.log(url);
+        drawChart(url);
+        ajax(url).then(function (result) {
+
+        }).catch(function () {
+            // An error occurred
+        });
+    }
+
+    function ajax(url) {
+        return new Promise(function (resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.onload = function () {
+                resolve(this.responseText);
+            };
+            xhr.onerror = reject;
+            xhr.open('GET', url);
+            xhr.send();
+        });
+    }
+
+    let chart1;
+    let chart2;
+
+    function drawChart(url) {
+        if (chart1 !== undefined) {
+            chart1.destroy();
+        }
+        if (chart2 !== undefined) {
+            chart2.destroy();
+        }
+        console.log("Debug")
+        d3.csv(url).then(function (days) {
+
             const dateLabel = days.map(function (d) {
-                var date = new Date(d.Date*1000);
+                var date = new Date(d.Date * 1000);
                 return date.toLocaleString()
             });
             const throughput = days.map(function (d) {
@@ -99,24 +138,24 @@
                     data: average,
                 }]
             };
-            new Chart(
-                document.getElementById('myChart'),
+            chart1 = new Chart(
+                document.getElementById("myChart1"),
                 {
                     type: 'line',
                     data: throughput_data,
                     options: {}
                 }
             );
-            new Chart(
-                document.getElementById('myChart2'),
+            chart2 = new Chart(document.getElementById("myChart2"),
                 {
                     type: 'line',
                     data: average_data,
                     options: {}
                 }
             );
-        }
-    });
+
+        });
+    }
 </script>
 </body>
 </html>
