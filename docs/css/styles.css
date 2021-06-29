@@ -21,3 +21,7 @@ body{
     z-index: 0;
     background: #f7f7f7;
 }
+
+.check-label{
+    padding-right: 10px;
+}

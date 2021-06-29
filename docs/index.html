@@ -40,6 +40,28 @@
                         <option>h1c_transformation</option>
                     </select>
                 </div>
+                <div class="form-group row">
+                    <div class="form-check">
+                        <input checked class="form-check-input" name="params" onclick="drawSelectedCharts()"
+                               type="checkbox" value="60_1024"><label
+                            class="check-label">60 Users 1024b </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" name="params" onclick="drawSelectedCharts()" type="checkbox"
+                               value="60_50"><label
+                            class="check-label">60 Users 50b</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" name="params" onclick="drawSelectedCharts()" type="checkbox"
+                               value="300_1024"><label
+                            class="check-label">300 Users 1024b </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" name="params" onclick="drawSelectedCharts() " type="checkbox"
+                               value="300_50"><label
+                            class="check-label">300 Users 50b </label>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
@@ -105,8 +127,24 @@
     function onSelectChange(value) {
         let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/" + value + ".csv";
         console.log(url);
-        destroyCharts();
-        drawCharts(url);
+        drawCharts(url, getSelected());
+    }
+
+    function getSelected() {
+        const checkboxes = document.querySelectorAll('input[name="params"]:checked');
+        let params = [];
+        checkboxes.forEach((checkbox) => {
+            params.push(checkbox.value);
+        });
+        return params;
+    }
+
+    function drawSelectedCharts() {
+        let value = document.getElementById("scenario").value;
+        let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/" + value + ".csv";
+        let params = getSelected();
+        drawCharts(url, params);
+        return params
     }
 
     function drawChart(throughput_data, canvas) {
@@ -166,81 +204,59 @@
             return row['Users'] === users && row['Payload'] === payload;
         }).map(function (value) {
                 let date = new Date(value['Date'] * 1000);
-                coordinates.push({"x": date.toLocaleString(), "y": value[attribute].replace("%","")});
+                coordinates.push({"x": date.toLocaleString(), "y": value[attribute].replace("%", "")});
             }
         );
         return coordinates;
     }
 
-    function getCSVData(stats, attribute) {
+    function getCSVData(stats, attribute, chartTypes) {
         let dataset = [];
-        // 60 users to 1024 bytes
-        let data_60_1024 = {
-            label: '60 user 1024b payload (ms)',
-            showLine: true,
-            backgroundColor: 'rgb(99,161,255)',
-            borderColor: 'rgb(99,174,255)',
-            data: extractData(stats, '60', '1024', attribute)
+        if (chartTypes !== undefined) {
+            chartTypes.forEach(function (type) {
+                let res = type.split("_");
+                let users = res[0];
+                let payload = res[1];
+                let r = Math.floor(Math.random() * 255);
+                let g = Math.floor(Math.random() * 255);
+                let b = Math.floor(Math.random() * 255);
+                let color = 'rgb(' + r + ',' + g + ',' + b + ')';
+                let data = {
+                    label: users + "users " + payload + " payload (ms)",
+                    showLine: true,
+                    backgroundColor: color,
+                    borderColor: color,
+                    data: extractData(stats, users, payload, attribute)
+                }
+                dataset.push(data);
+            })
         }
-        dataset.push(data_60_1024);
-
-        // 60 users to 50 bytes
-        let data_60_50 = {
-            label: '60 user 50b payload (ms)',
-            showLine: true,
-            backgroundColor: 'rgb(255,229,99)',
-            borderColor: 'rgb(255,229,99)',
-            data: extractData(stats, '60', '50', attribute),
-        }
-        dataset.push(data_60_50);
-
-        // 300 users to 50 bytes
-        let data_300_50 = {
-            label: '300 user 50b payload (ms)',
-            showLine: true,
-            backgroundColor: 'rgb(128,255,99)',
-            borderColor: 'rgb(154,255,99)',
-            data: extractData(stats, '300', '50', attribute),
-        }
-        dataset.push(data_300_50);
-
-        // 300 users to 1024 bytes
-        let data_300_1024 = {
-            label: '300 user 1024b payload (ms)',
-            showLine: true,
-            backgroundColor: 'rgb(255,99,112)',
-            borderColor: 'rgb(255,99,122)',
-            data: extractData(stats, '300', '1024', attribute),
-        }
-        dataset.push(data_300_1024);
-
-
         return {
             datasets: dataset
         };
     }
 
-    function drawCharts(url) {
-
+    function drawCharts(url, chartTypes) {
+        destroyCharts();
         d3.csv(url).then(function (stats) {
             //Throughput Chart
-            const throughput_dataset = getCSVData(stats, 'Throughput')
+            const throughput_dataset = getCSVData(stats, 'Throughput', chartTypes)
             throughputChart = drawChart(throughput_dataset, 'throughputCanvas');
 
             // Average Chart
-            const average_dataset = getCSVData(stats, 'Average');
+            const average_dataset = getCSVData(stats, 'Average', chartTypes);
             averageChart = drawChart(average_dataset, 'averageCanvas');
 
             //Standard Deviation of Response Time Chart
-            const deviation_dataset = getCSVData(stats, 'Std. Dev.')
+            const deviation_dataset = getCSVData(stats, 'Std. Dev.', chartTypes)
             stdDevChart = drawChart(deviation_dataset, 'stdDevCanvas')
 
             //99 percentile of Response Time Chart
-            const percentile_dataset = getCSVData(stats, '99% Line')
+            const percentile_dataset = getCSVData(stats, '99% Line', chartTypes)
             percentileChart = drawChart(percentile_dataset, "percentileCanvas");
 
             //Error Count Chart
-            const error_dataset = getCSVData(stats, 'Error %');
+            const error_dataset = getCSVData(stats, 'Error %', chartTypes);
             errorChart = drawChart(error_dataset, "errorCanvas");
         });
     }
