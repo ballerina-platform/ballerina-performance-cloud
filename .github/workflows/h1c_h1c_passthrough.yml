@@ -11,10 +11,9 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [50, 1024]
-        users: [60, 1000]
+        users: [60, 300]
     env:
       TEST_NAME: "h1c_h1c_passthrough"
-      PAYLOAD_SIZE: "1024"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
