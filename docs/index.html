@@ -160,81 +160,57 @@
         }
     }
 
+    function extractData(stats, users, payload, attribute) {
+        let coordinates = [];
+        stats.filter(function (row) {
+            return row['Users'] === users && row['Payload'] === payload;
+        }).map(function (value) {
+                let date = new Date(value['Date'] * 1000);
+                coordinates.push({"x": date.toLocaleString(), "y": value[attribute].replace("%","")});
+            }
+        );
+        return coordinates;
+    }
+
     function getCSVData(stats, attribute) {
         let dataset = [];
         // 60 users to 1024 bytes
-        let coordinates = [];
-        stats.filter(function (row) {
-            return row['Users'] === '60' && row['Payload'] === '1024';
-        }).map(function (value) {
-                let date = new Date(value['Date'] * 1000);
-                let dateString = date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
-                coordinates.push({"x": dateString, "y": value[attribute]});
-            }
-        );
         let data_60_1024 = {
             label: '60 user 1024b payload (ms)',
             showLine: true,
             backgroundColor: 'rgb(99,161,255)',
             borderColor: 'rgb(99,174,255)',
-            data: coordinates,
+            data: extractData(stats, '60', '1024', attribute)
         }
         dataset.push(data_60_1024);
 
         // 60 users to 50 bytes
-        coordinates = [];
-        stats.filter(function (row) {
-            return row['Users'] === '60' && row['Payload'] === '50';
-        }).map(function (value) {
-                let date = new Date(value['Date'] * 1000);
-                let dateString = date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
-                coordinates.push({"x": dateString, "y": value[attribute]});
-            }
-        );
         let data_60_50 = {
             label: '60 user 50b payload (ms)',
             showLine: true,
             backgroundColor: 'rgb(255,229,99)',
             borderColor: 'rgb(255,229,99)',
-            data: coordinates,
+            data: extractData(stats, '60', '50', attribute),
         }
         dataset.push(data_60_50);
 
         // 300 users to 50 bytes
-        coordinates = [];
-        stats.filter(function (row) {
-            return row['Users'] === '300' && row['Payload'] === '50';
-        }).map(function (value) {
-                let date = new Date(value['Date'] * 1000);
-                let dateString = date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
-                coordinates.push({"x": dateString, "y": value[attribute]});
-            }
-        );
         let data_300_50 = {
             label: '300 user 50b payload (ms)',
             showLine: true,
             backgroundColor: 'rgb(128,255,99)',
             borderColor: 'rgb(154,255,99)',
-            data: coordinates,
+            data: extractData(stats, '300', '50', attribute),
         }
         dataset.push(data_300_50);
 
         // 300 users to 1024 bytes
-        coordinates = [];
-        stats.filter(function (row) {
-            return row['Users'] === '300' && row['Payload'] === '1024';
-        }).map(function (value) {
-                let date = new Date(value['Date'] * 1000);
-                let dateString = date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
-                coordinates.push({"x": dateString, "y": value[attribute]});
-            }
-        );
         let data_300_1024 = {
             label: '300 user 1024b payload (ms)',
             showLine: true,
             backgroundColor: 'rgb(255,99,112)',
             borderColor: 'rgb(255,99,122)',
-            data: coordinates,
+            data: extractData(stats, '300', '1024', attribute),
         }
         dataset.push(data_300_1024);
 
