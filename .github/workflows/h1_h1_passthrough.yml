@@ -102,3 +102,4 @@ jobs:
         azcliversion: 2.0.72
         inlineScript: |
           az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
+          az resource delete --ids $(az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv)
