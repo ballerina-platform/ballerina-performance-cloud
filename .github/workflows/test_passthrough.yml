@@ -139,14 +139,14 @@ jobs:
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
-    - name: Undeploy Kubernetes artifacts
-      if: always()
-      run: |
-        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
-    - name: Cleanup VM
-      if: always()
-      uses: azure/CLI@v1
-      with:
-        azcliversion: 2.0.72
-        inlineScript: |
-          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
+    # - name: Undeploy Kubernetes artifacts
+    #   if: always()
+    #   run: |
+    #     kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
+    # - name: Cleanup VM
+    #   if: always()
+    #   uses: azure/CLI@v1
+    #   with:
+    #     azcliversion: 2.0.72
+    #     inlineScript: |
+    #       az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
