@@ -59,7 +59,7 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [1024]
-        users: [500]
+        users: [60, 100, 150, 200, 250 , 300]
     env:
       TEST_NAME: "h1_h1_passthrough"
       TEST_ROOT: "tests"
