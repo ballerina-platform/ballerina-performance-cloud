@@ -68,7 +68,7 @@
     <div class="row">
         <div class="col-sm row-content">
             <div class="col-12">
-                <h3>Throughput</h3>
+                <h3>Throughput (Req/sec)</h3>
             </div>
             <div>
                 <canvas id="throughputCanvas"></canvas>
@@ -78,7 +78,7 @@
     <div class="row">
         <div class="col-sm row-content">
             <div class="col-12">
-                <h3>Average Response Time</h3>
+                <h3>Average Response Time (ms)</h3>
             </div>
             <div>
                 <canvas id="averageCanvas"></canvas>
@@ -147,14 +147,23 @@
         return params
     }
 
-    function drawChart(throughput_data, canvas) {
+    function drawChart(dataset, canvas) {
         let timeFormat = 'DD/MM/YYYY, HH:mm:ss';
         return new Chart(
             document.getElementById(canvas),
             {
                 type: 'line',
-                data: throughput_data,
+                data: dataset,
                 options: {
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                afterBody: function (t, d) {
+                                    return "1 cpu, 512mb memory"
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         xAxes: [{
                             type: "time",
