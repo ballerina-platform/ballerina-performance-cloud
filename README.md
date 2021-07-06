@@ -2,6 +2,11 @@
 
 This repository contains container based performance tests for Ballerina. The tests are running in an AKS cluster.
 
+[![Daily Build](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/spawn_cluster.yml/badge.svg)](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/spawn_cluster.yml)
+
+## Dashboard
+[https://ballerina.io/ballerina-performance-cloud/](https://ballerina.io/ballerina-performance-cloud/)
+
 ### How to add new tests
 1. Create a new Ballerina package in `/tests` folder
    
