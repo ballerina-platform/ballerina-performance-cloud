@@ -133,3 +133,10 @@ jobs:
         inlineScript: |
           az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_${{ secrets.CLUSTER_NAME }}_eastus -y
           az aks delete --name ${{ secrets.CLUSTER_NAME }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
+  notify:
+    needs: cleanup
+    name: Notify Ballerina Chat for performance drops
+    runs-on: ubuntu-latest
+    steps:
+    - name: Docker run
+      run: docker run -v $GITHUB_WORKSPACE/summary/:/summary -e SPACE_ID='${{ secrets.SPACE_ID }}' -e MESSAGE_KEY='${{ secrets.MESSAGE_KEY }}' -e CHAT_TOKEN='${{ secrets.CHAT_TOKEN }}' xlight05/chat_notifications

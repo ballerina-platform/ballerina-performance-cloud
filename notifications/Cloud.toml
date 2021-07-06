@@ -1,0 +1,3 @@
+[container.image]
+repository= "xlight05"
+name="chat_notifications"
