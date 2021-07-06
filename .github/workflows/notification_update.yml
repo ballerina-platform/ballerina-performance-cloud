@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
       branches:
-          - 'chat-notifi'
+          - 'main'
       paths:
           - 'notifications/**'
 jobs:
@@ -27,4 +27,4 @@ jobs:
         args:
           build
     - name: Docker push
-      run: docker push xlight05/chat_notifications:latest
+      run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/chat_notifications:latest
