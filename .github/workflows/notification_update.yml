@@ -29,4 +29,4 @@ jobs:
     - name: Docker push
       run: |
         docker images
-        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/chat_notifications:latest
+        docker push ballerina/chat_notifications:latest
