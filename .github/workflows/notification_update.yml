@@ -27,4 +27,6 @@ jobs:
         args:
           build
     - name: Docker push
-      run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/chat_notifications:latest
+      run: |
+        docker images
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/chat_notifications:latest
