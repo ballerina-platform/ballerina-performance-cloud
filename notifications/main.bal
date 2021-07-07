@@ -39,6 +39,9 @@ public function main() returns error? {
         string scenarioName = baseName.substring(0, baseName.length() - 4);
 
         string[][] listResult = check io:fileReadCsv(summaryFile.absPath);
+        if (listResult.length() <= 1) {
+            continue;
+        }
         string[] lastEntry = listResult[listResult.length() - 1];
         string[] beforeLastEntry = getBeforeLastEntry(listResult);
 
@@ -48,8 +51,8 @@ public function main() returns error? {
         //Average
         int newAverage = check int:fromString(lastEntry[2]);
         int oldAverage = check int:fromString(beforeLastEntry[2]);
-        log:printInfo("new avg " + newAverage.toString());
-        log:printInfo("old avg " + oldAverage.toString());
+        log:printInfo("new avg of " + scenarioName + " " + newAverage.toString());
+        log:printInfo("old avg of " + scenarioName + " " + oldAverage.toString());
         float avgPercentage = ((<float>newAverage - <float>oldAverage) * 100.0 / <float>oldAverage);
         if (avgPercentage > 10.0) {
             check sendNotification("Average response time increased by " + avgPercentage.toString() + "% for the `" + scenarioName + "` sample. \n" + 
@@ -59,8 +62,8 @@ public function main() returns error? {
         //TPS
         float newTps = check float:fromString(lastEntry[10]);
         float oldTps = check float:fromString(beforeLastEntry[10]);
-        log:printInfo("new tps " + newTps.toString());
-        log:printInfo("old tps " + oldTps.toString());
+        log:printInfo("new tps of " + scenarioName + " " + newTps.toString());
+        log:printInfo("old tps of " + scenarioName + " " + oldTps.toString());
         float tpsPercentage = ((<float>oldTps - <float>newTps) * 100.0 / <float>oldTps);
         if (tpsPercentage > 10.0) {
             check sendNotification("Throughput decreased by " + tpsPercentage.toString() + "% for the `" + scenarioName + "` sample. \n" + 
