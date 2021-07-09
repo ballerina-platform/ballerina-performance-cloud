@@ -59,7 +59,8 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [1024]
-        users: [10, 60, 100, 150, 200, 250 , 300]
+        users: [60]
+        count: [1,2,3,4,5]
     env:
       TEST_NAME: "h1_h1_passthrough"
       TEST_ROOT: "tests"
@@ -71,7 +72,7 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Ballerina Build
-      uses: ballerina-platform/ballerina-action@nightly
+      uses: ballerina-platform/ballerina-action@master
       env:
         CI_BUILD: true
         WORKING_DIR: tests/h1_h1_passthrough
@@ -139,14 +140,14 @@ jobs:
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
-    # - name: Undeploy Kubernetes artifacts
-    #   if: always()
-    #   run: |
-    #     kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
-    # - name: Cleanup VM
-    #   if: always()
-    #   uses: azure/CLI@v1
-    #   with:
-    #     azcliversion: 2.0.72
-    #     inlineScript: |
-    #       az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
+    - name: Undeploy Kubernetes artifacts
+      if: always()
+      run: |
+        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
+    - name: Cleanup VM
+      if: always()
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
