@@ -78,7 +78,7 @@ jobs:
         args:
           build
     - name: Docker push
-      run: docker push ballerina/${TEST_NAME}:latest
+      run: docker push ballerina/hello_world_benchmark:latest
     - name: Copy artifacts
       run: |
         ls -ltr

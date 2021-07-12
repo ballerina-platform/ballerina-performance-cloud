@@ -1,6 +1,6 @@
 [container.image]
 repository= "ballerina"
-name="hello-world-benchmark"
+name="hello_world_benchmark"
 
 [cloud.deployment]
 min_memory="256Mi"
