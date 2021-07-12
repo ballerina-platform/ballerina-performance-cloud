@@ -1,9 +1,9 @@
-name: test_passthrough
+name: test_workflow
 
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [ test_passthrough ]
+    types: [ test_workflow ]
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -53,16 +53,14 @@ jobs:
         -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
         | head -n1
   build:
-    needs: setup
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
       matrix:
-        payload: [1024]
-        users: [60]
-        count: [1,2,3,4,5]
+        payload: [50, 1024]
+        users: [60, 200]
     env:
-      TEST_NAME: "h1_h1_passthrough"
+      TEST_NAME: "hello_world"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -72,10 +70,10 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Ballerina Build
-      uses: ballerina-platform/ballerina-action@master
+      uses: ballerina-platform/ballerina-action@nightly
       env:
         CI_BUILD: true
-        WORKING_DIR: tests/h1_h1_passthrough
+        WORKING_DIR: tests/hello_world
       with:
         args:
           build
@@ -95,7 +93,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: 'bal-perf-cluster-test'
+        cluster-name: ${{ secrets.CLUSTER_NAME }}
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -151,3 +149,10 @@ jobs:
         azcliversion: 2.0.72
         inlineScript: |
           az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
+          var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
+          if [ -n "$var" ]
+          then
+              az resource delete --ids ${var}
+          else 
+              echo "Disk is already deleted"
+          fi
