@@ -1,9 +1,9 @@
-name: test_workflow
+name: other_lang
 
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [ test_workflow ]
+    types: [ other_lang ]
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -52,7 +52,7 @@ jobs:
         kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
         -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
         | head -n1
-  build:
+  python:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
@@ -60,7 +60,7 @@ jobs:
         payload: [50, 1024]
         users: [60, 200]
     env:
-      TEST_NAME: "hello_world"
+      TEST_NAME: "python_hello"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -69,35 +69,19 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    - name: Ballerina Build
-      uses: ballerina-platform/ballerina-action@nightly
-      env:
-        CI_BUILD: true
-        WORKING_DIR: tests/hello_world
-      with:
-        args:
-          build
+    - name: Docker build
+      run: docker build ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}
     - name: Docker push
-      run: docker push ballerina/${TEST_NAME}:latest
-    - name: Copy artifacts
-      run: |
-        ls -ltr
-        cp -a ${TEST_ROOT}/${TEST_NAME}/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
-    - name: 'Install Kustomize'
-      run: |
-        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
-    - name: 'Run Kustomize'
-      run: |
-          kustomize build ${TEST_ROOT}/${TEST_NAME}/deployment > ${TEST_ROOT}/${TEST_NAME}/final.yaml
+      run: docker push ballerina/${TEST_NAME}
     - name: Configure AKS
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: 'bal-perf-cluster-test'
+        cluster-name: ${{ secrets.CLUSTER_NAME }}
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
-        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
+        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
     - name: Login via Az module
       uses: azure/login@v1
       with:
@@ -141,7 +125,7 @@ jobs:
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
-        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
+        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
     - name: Cleanup VM
       if: always()
       uses: azure/CLI@v1
