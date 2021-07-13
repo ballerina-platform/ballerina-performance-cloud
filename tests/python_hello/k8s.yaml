@@ -93,6 +93,3 @@ spec:
             name: python-hello
             port:
               number: 5000
-  tls:
-  - hosts:
-    - "bal.perf.test"

@@ -17,6 +17,3 @@ spec:
             name: hello-world
             port:
               number: 9090
-  tls:
-  - hosts:
-    - "bal.perf.test"
