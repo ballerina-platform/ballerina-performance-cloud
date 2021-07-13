@@ -1,6 +1,6 @@
 [package]
 org = "wso2"
-name = "hello_world"
+name = "hello_world_benchmark"
 version = "0.0.1"
 
 [build-options]

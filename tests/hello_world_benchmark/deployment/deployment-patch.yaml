@@ -6,5 +6,5 @@ spec:
   template:
     spec:
       containers:
-      - name: "hello-world-deployment"
+      - name: "hello-world-ben-deployment"
         imagePullPolicy: Always
