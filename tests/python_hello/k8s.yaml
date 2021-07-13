@@ -32,7 +32,7 @@ spec:
         app: "python-hello"
     spec:
       containers:
-      - image: "xlight05/python-hello"
+      - image: "ballerina/python_hello"
         imagePullPolicy: "Always"
         lifecycle:
           preStop:
