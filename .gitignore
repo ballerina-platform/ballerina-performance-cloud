@@ -29,4 +29,4 @@ velocity.log*
 
 *.jtl
 
-.node_modules/
+node_modules

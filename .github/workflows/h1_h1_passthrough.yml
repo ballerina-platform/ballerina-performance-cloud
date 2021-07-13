@@ -97,6 +97,7 @@ jobs:
         kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
     - name: Cleanup VM
       if: always()
+      continue-on-error: true
       uses: azure/CLI@v1
       with:
         azcliversion: 2.0.72
