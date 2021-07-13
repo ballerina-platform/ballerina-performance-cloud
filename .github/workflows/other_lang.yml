@@ -53,6 +53,7 @@ jobs:
         -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
         | head -n1
   python:
+    needs: setup
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
