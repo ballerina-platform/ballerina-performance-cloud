@@ -28,3 +28,5 @@ velocity.log*
 *final.yaml
 
 *.jtl
+
+node_modules
