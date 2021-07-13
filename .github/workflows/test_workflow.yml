@@ -61,7 +61,7 @@ jobs:
         payload: [50, 1024]
         users: [60, 200]
     env:
-      TEST_NAME: "hello_world"
+      TEST_NAME: "hello_world_benchmark"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -79,7 +79,7 @@ jobs:
         args:
           build
     - name: Docker push
-      run: docker push ballerina/hello_world_benchmark:latest
+      run: docker push ballerina/${TEST_NAME}:latest
     - name: Copy artifacts
       run: |
         ls -ltr
