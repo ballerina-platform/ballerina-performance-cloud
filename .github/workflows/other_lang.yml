@@ -71,7 +71,7 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Docker build
-      run: docker build ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}
+      run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}
     - name: Configure AKS
@@ -161,7 +161,7 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Docker build
-      run: docker build ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}
+      run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}
     - name: Configure AKS
