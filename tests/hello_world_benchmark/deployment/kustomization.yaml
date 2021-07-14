@@ -1,5 +1,5 @@
 resources:
-  - hello_world.yaml
+  - hello_world_benchmark.yaml
   - ingress.yaml
 patches:
 - path: deployment-patch.yaml
