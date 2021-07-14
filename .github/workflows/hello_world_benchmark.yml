@@ -1,16 +1,16 @@
-name: hello_world
+name: hello_world_benchmark
 
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [ hello_world ]
+    types: [ hello_world_benchmark ]
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
       matrix:
-        payload: [50, 1024]
+        payload: [50]
         users: [60, 200]
     env:
       TEST_NAME: "hello_world_benchmark"

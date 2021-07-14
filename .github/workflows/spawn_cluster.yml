@@ -52,8 +52,24 @@ jobs:
         kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
         -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
         | head -n1
-  h1_h1_passthrough:
+  hello_world_benchmark:
     needs: setup
+    name: hello_world_benchmark
+    runs-on: ubuntu-latest
+    steps:
+    - name: Trigger hello_world_benchmark
+      uses: convictional/trigger-workflow-and-wait@v1.3.0
+      with:
+        owner: ballerina-platform
+        repo: ballerina-performance-cloud
+        github_token: ${{ secrets.BALLERINA_BOT_TOKEN }}
+        workflow_file_name: hello_world_benchmark.yml
+        ref: main
+        waiting_interval: 600
+        trigger_workflow: true
+        wait_workflow: true
+  h1_h1_passthrough:
+    needs: hello_world_benchmark
     name: h1_h1_passthrough
     runs-on: ubuntu-latest
     steps:
