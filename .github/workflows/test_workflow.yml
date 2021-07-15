@@ -61,7 +61,7 @@ jobs:
         payload: [50]
         users: [60, 200]
     env:
-      TEST_NAME: "hello_world_benchmark"
+      TEST_NAME: "ballerina_hello"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -74,7 +74,7 @@ jobs:
       uses: ballerina-platform/ballerina-action@nightly
       env:
         CI_BUILD: true
-        WORKING_DIR: tests/hello_world_benchmark
+        WORKING_DIR: tests/ballerina_hello
       with:
         args:
           build

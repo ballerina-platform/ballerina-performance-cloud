@@ -1,6 +1,6 @@
 [package]
 org = "wso2"
-name = "hello_world_benchmark"
+name = "ballerina_hello"
 version = "0.0.1"
 
 [build-options]

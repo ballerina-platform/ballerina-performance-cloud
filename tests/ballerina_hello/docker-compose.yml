@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   webserver:
-    image: ballerina/hello_world_benchmark:latest
+    image: ballerina/ballerina_hello:latest
     deploy:
       resources:
           limits:
