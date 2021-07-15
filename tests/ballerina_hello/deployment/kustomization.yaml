@@ -1,5 +1,5 @@
 resources:
-  - hello_world_benchmark.yaml
+  - ballerina_hello.yaml
   - ingress.yaml
 patches:
 - path: deployment-patch.yaml
@@ -7,4 +7,4 @@ patches:
     group: apps
     version: v1
     kind: Deployment
-    name: hello-world-ben-deployment
+    name: ballerina-hello-deployment
