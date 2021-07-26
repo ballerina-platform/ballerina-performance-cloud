@@ -206,7 +206,7 @@
     function drawChart(attribute, chartType, canvasId) {
         let dataset = [];
         const promises = [];
-        let urls = ["python_hello", "node_hello", "ballerina_hello"];
+        let urls = ["python_flask_hello", "python_hello" ,"node_express_hello", "node_hello", "go_hello", "ballerina_hello"];
         urls.forEach(function (lang) {
             let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/" + lang + ".csv";
             promises.push(d3.csv(url).then(function (stats) {

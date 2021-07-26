@@ -1,19 +1,19 @@
-var express = require('express');
-var app = express();
+const http = require('http');
 
-app.use(express.urlencoded({
-    extended: true
-  }));
+const hostname = '127.0.0.1';
+const port = 9090;
 
-app.use(express.json());
+const server = http.createServer((req, res) => {
+   if (req.url == "/hello") {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(`{"msg": "Hello world"}`);
+   } else {
+      res.writeHead(404);
+      res.end(JSON.stringify({ error: "Resource not found" }));
+   }
+});
 
-app.get('/hello', function (req, res) {
-   res.send({msg : "Hello world"});
-})
-
-var server = app.listen(9090, function () {
-   var host = server.address().address
-   var port = server.address().port
-   
-   console.log("Example app listening at http://%s:%s", host, port)
-})
+server.listen(port, hostname, () => {
+   console.log(`Server running at http://${hostname}:${port}/`);
+});
