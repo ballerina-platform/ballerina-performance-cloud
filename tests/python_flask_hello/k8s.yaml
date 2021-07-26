@@ -1,0 +1,95 @@
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  labels:
+    app: "python-flask-hello"
+  name: "python-flask-hello"
+spec:
+  ports:
+  - name: "python-flask-hello"
+    port: 5000
+    protocol: "TCP"
+    targetPort: 5000
+  selector:
+    app: "python-flask-hello"
+  type: "ClusterIP"
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  labels:
+    app: "python-flask-hello"
+  name: "python-flask-hello-deployment"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "python-flask-hello"
+  template:
+    metadata:
+      labels:
+        app: "python-flask-hello"
+    spec:
+      containers:
+      - image: "ballerina/python_flask_hello"
+        imagePullPolicy: "Always"
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - "sleep"
+              - "15"
+        name: "python-flask-hello-deployment"
+        ports:
+        - containerPort: 5000
+          name: "python-flask-hello"
+          protocol: "TCP"
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "1000m"
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+      nodeSelector: {}
+---
+apiVersion: "autoscaling/v2beta2"
+kind: "HorizontalPodAutoscaler"
+metadata:
+  labels:
+    app: "python-flask-hello"
+  name: "python-flask-hello-hpa"
+spec:
+  maxReplicas: 1
+  metrics:
+  - resource:
+      name: "cpu"
+      target:
+        averageUtilization: 50
+        type: "Utilization"
+    type: "Resource"
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: "apps/v1"
+    kind: "Deployment"
+    name: "python-flask-hello-deployment"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: python-flask-hello
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - host: bal.perf.test
+    http:
+      paths:
+      - path: "/"
+        pathType: Prefix
+        backend:
+          service:
+            name: python-flask-hello
+            port:
+              number: 5000

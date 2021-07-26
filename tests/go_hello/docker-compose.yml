@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  webserver:
+    image: ballerina/go_hello
+    deploy:
+      resources:
+          limits:
+            cpus: 1
+            memory: 512M
+          reservations:
+            cpus: 0.25
+            memory: 128M
+    ports:
+    - "8080:8080"
