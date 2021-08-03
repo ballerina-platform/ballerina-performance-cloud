@@ -136,6 +136,7 @@ jobs:
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
@@ -226,6 +227,7 @@ jobs:
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
@@ -316,6 +318,7 @@ jobs:
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
@@ -406,6 +409,7 @@ jobs:
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
@@ -496,6 +500,7 @@ jobs:
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
@@ -586,6 +591,7 @@ jobs:
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
