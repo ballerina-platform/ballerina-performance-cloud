@@ -87,6 +87,7 @@ jobs:
         username: ${{ secrets.VM_USER }}
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
+        timeout: 300s #5 mins
         command_timeout: '180m' #3 hours
         script: |
           source /etc/profile.d/10-perf-vm.sh
