@@ -26,6 +26,7 @@ jobs:
             --name "bal-perf-cluster-test" \
             --service-principal "${AZURE_APP_ID}"\
             --client-secret "${AZURE_APP_PASSWORD}" \
+            --nodepool-name testnodepool \
             --generate-ssh-keys
     - name: Configure AKS
       uses: azure/aks-set-context@v1
@@ -61,7 +62,7 @@ jobs:
         payload: [50]
         users: [60, 200]
     env:
-      TEST_NAME: "ballerina_hello"
+      TEST_NAME: "test_passthrough"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -71,10 +72,10 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Ballerina Build
-      uses: ballerina-platform/ballerina-action@nightly
+      uses: ballerina-platform/ballerina-action@master # uses slbeta2
       env:
         CI_BUILD: true
-        WORKING_DIR: tests/ballerina_hello
+        WORKING_DIR: tests/test_passthrough
       with:
         args:
           build
@@ -159,3 +160,21 @@ jobs:
           else 
               echo "Disk is already deleted"
           fi
+  cleanup:
+    needs: build
+    name: clean up
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: AZURE LOGIN
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: Cleaning up the cluster
+      if: always()
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_bal-perf-cluster-test_eastus -y
+          az aks delete --name bal-perf-cluster-test --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
