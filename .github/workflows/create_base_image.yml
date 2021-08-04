@@ -35,6 +35,7 @@ jobs:
         managed-identity: 'bal-perf-identity'
         source-os-type: 'linux'
         source-image-type: 'PlatformImage'
+        vm-size: 'Standard_F4s_v2'
         source-image: Canonical:UbuntuServer:18.04-LTS:latest
         dist-image-tags: 'number:${{ GITHUB.RUN_NUMBER }}'
         customizer-source: ${{ GITHUB.WORKSPACE }}/base-image
