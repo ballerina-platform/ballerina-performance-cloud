@@ -1,11 +1,10 @@
 resources:
-  - ballerina_hello.yaml
+  - mysql_insertion.yml.yaml
   - ingress.yaml
-  - mysql.yml
 patches:
 - path: deployment-patch.yaml
   target:
     group: apps
     version: v1
     kind: Deployment
-    name: ballerina-hello-deployment
+    name: mysql-insertion-deployment
