@@ -23,15 +23,16 @@ jobs:
       run: |
         az aks create \
             --resource-group "${RESOURCE_GROUP}" \
-            --name "${{ secrets.CLUSTER_NAME }}" \
+            --name "bal-perf-cluster-comp" \
             --service-principal "${AZURE_APP_ID}"\
             --client-secret "${AZURE_APP_PASSWORD}" \
+            --nodepool-name comparenodepool \
             --generate-ssh-keys
     - name: Configure AKS
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ secrets.CLUSTER_NAME }}'
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy Niginx
       run: |
@@ -94,7 +95,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: ${{ secrets.CLUSTER_NAME }}
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -185,7 +186,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ secrets.CLUSTER_NAME }}'
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -276,7 +277,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ secrets.CLUSTER_NAME }}'
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -367,7 +368,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ secrets.CLUSTER_NAME }}'
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -458,7 +459,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ secrets.CLUSTER_NAME }}'
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -549,7 +550,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ secrets.CLUSTER_NAME }}'
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -629,5 +630,5 @@ jobs:
       with:
         azcliversion: 2.0.72
         inlineScript: |
-          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_${{ secrets.CLUSTER_NAME }}_eastus -y
-          az aks delete --name ${{ secrets.CLUSTER_NAME }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
+          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_bal-perf-cluster-comp_eastus -y
+          az aks delete --name bal-perf-cluster-comp --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
