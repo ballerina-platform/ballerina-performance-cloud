@@ -20,7 +20,7 @@ service /db on new http:Listener(9092) {
         _ = check dbClient->execute("CREATE TABLE " + tablename +
                                     "(Id INTEGER NOT NULL AUTO_INCREMENT, Name  VARCHAR(300), Category VARCHAR(300), " +
                                     "Price INTEGER, PRIMARY KEY(Id))");
-        string[] records = check io:fileReadLines(path);
+        string[] values = check io:fileReadLines(path);
         foreach string value in values {
             string[] records = regex:split(value, ",");
             var e1 = check dbClient->execute("INSERT INTO " + tablename + "(Id, Name, Category, Price) VALUES (" +

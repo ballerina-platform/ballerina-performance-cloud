@@ -1,6 +1,7 @@
 resources:
-  - mysql_insertion.yml.yaml
+  - mysql_insertion.yaml
   - ingress.yaml
+  - mysql.yml
 patches:
 - path: deployment-patch.yaml
   target:

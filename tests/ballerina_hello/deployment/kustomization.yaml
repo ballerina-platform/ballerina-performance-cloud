@@ -1,7 +1,6 @@
 resources:
   - ballerina_hello.yaml
   - ingress.yaml
-  - mysql.yml
 patches:
 - path: deployment-patch.yaml
   target:
