@@ -12,7 +12,6 @@ configurable int port = ?;
 configurable string tablename = ?;
 configurable string path = ?;
 
-
 service /db on new http:Listener(9092) {
     resource function post insertData() returns string|error {
         mysql:Client dbClient = check new (host = host, user = username, password = password,
