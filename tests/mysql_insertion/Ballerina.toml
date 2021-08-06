@@ -1,0 +1,7 @@
+[package]
+org = "wso2"
+name = "mysql_insertion"
+version = "0.0.1"
+
+[build-options]
+cloud = "k8s"

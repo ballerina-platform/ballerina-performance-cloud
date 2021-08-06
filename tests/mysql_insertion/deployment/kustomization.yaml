@@ -1,0 +1,11 @@
+resources:
+  - mysql_insertion.yaml
+  - ingress.yaml
+  - mysql.yml
+patches:
+- path: deployment-patch.yaml
+  target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: mysql-insertion-deployment
