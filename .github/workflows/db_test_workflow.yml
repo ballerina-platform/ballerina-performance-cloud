@@ -82,7 +82,7 @@ jobs:
         WORKING_DIR: tests/mysql_insertion
       with:
         args:
-          build
+          build --offline
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}:latest
     - name: Copy artifacts
