@@ -76,7 +76,7 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Ballerina Build
-      uses: ballerina-platform/ballerina-action@master # uses slbeta2
+      uses: ballerina-platform/ballerina-action@nightly
       env:
         CI_BUILD: true
         WORKING_DIR: tests/mysql_insertion
@@ -164,21 +164,21 @@ jobs:
           else
               echo "Disk is already deleted"
           fi
-  # cleanup:
-  #   needs: build
-  #   name: clean up
-  #   if: always()
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: AZURE LOGIN
-  #     uses: azure/login@v1
-  #     with:
-  #       creds: ${{secrets.AZURE_CREDENTIALS}}
-  #   - name: Cleaning up the cluster
-  #     if: always()
-  #     uses: azure/CLI@v1
-  #     with:
-  #       azcliversion: 2.0.72
-  #       inlineScript: |
-  #         az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_bal-perf-cluster-test_eastus -y
-  #         az aks delete --name bal-perf-cluster-test --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
+  cleanup:
+    needs: build
+    name: clean up
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: AZURE LOGIN
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: Cleaning up the cluster
+      if: always()
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_bal-perf-cluster-test_eastus -y
+          az aks delete --name bal-perf-cluster-test --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
