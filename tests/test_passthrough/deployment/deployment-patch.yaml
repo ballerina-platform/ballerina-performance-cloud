@@ -8,3 +8,5 @@ spec:
       containers:
       - name: "test-passthroug-deployment"
         imagePullPolicy: Always
+      nodeSelector:
+        workertype: "app"
