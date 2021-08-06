@@ -8,3 +8,5 @@ spec:
       containers:
       - name: "h1c-transformat-deployment"
         imagePullPolicy: Always
+      nodeSelector:
+        workertype: "app"
