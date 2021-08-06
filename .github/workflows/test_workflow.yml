@@ -57,7 +57,7 @@ jobs:
       run: |
         node=`kubectl get nodes | awk '{if (NR==2) {print $1}}'`
         kubectl label nodes $node workertype=app
-        node1=`kubectl get nodes | awk '{if (NR==3) {print $1}}'`
+        node=`kubectl get nodes | awk '{if (NR==3) {print $1}}'`
         kubectl label nodes $node workertype=backend
   build:
     needs: setup
