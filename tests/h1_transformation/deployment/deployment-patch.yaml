@@ -8,3 +8,5 @@ spec:
       containers:
       - name: "h1-transformati-deployment"
         imagePullPolicy: Always
+      nodeSelector:
+        workertype: "app"
