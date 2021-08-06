@@ -53,6 +53,12 @@ jobs:
         kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
         -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
         | head -n1
+    - name: Label Nodes
+      run: |
+        node=`kubectl get nodes | awk '{if (NR==2) {print $1}}'`
+        kubectl label nodes $node workertype=app
+        node=`kubectl get nodes | awk '{if (NR==3) {print $1}}'`
+        kubectl label nodes $node workertype=backend
   build:
     needs: setup
     runs-on: ubuntu-latest
