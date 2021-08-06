@@ -10,7 +10,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        payload: [50, 1024]
+        payload: [50]
         users: [60, 200]
     env:
       TEST_NAME: "mysql_insertion"
