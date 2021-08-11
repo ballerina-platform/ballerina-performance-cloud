@@ -1,9 +1,9 @@
-name: test_passthrough
+name: test_passthrough_second
 
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [ test_passthrough ]
+    types: [ test_passthrough_second ]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -46,7 +46,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: 'bal-perf-cluster-test'
+        cluster-name: 'bal-perf-cluster-test-11'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
