@@ -46,7 +46,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: 'bal-perf-cluster-test'
+        cluster-name: 'bal-perf-cluster-test-11'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -74,6 +74,9 @@ jobs:
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
           --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
           echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
+    - name: Wait for VM instance
+      run: sleep 60s
+      shell: bash
     - name: Execute performance tests
       uses: appleboy/ssh-action@master
       env: 

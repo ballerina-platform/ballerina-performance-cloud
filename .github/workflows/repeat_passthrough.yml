@@ -1,9 +1,9 @@
-name: lang_comparison
+name: repeat_passthrough
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron:  '0 18 * * 0'
+  repository_dispatch:
+    types: [ repeat_passthrough ]
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -23,16 +23,16 @@ jobs:
       run: |
         az aks create \
             --resource-group "${RESOURCE_GROUP}" \
-            --name "bal-perf-cluster-comp" \
+            --name "bal-perf-cluster-rep" \
             --service-principal "${AZURE_APP_ID}"\
             --client-secret "${AZURE_APP_PASSWORD}" \
-            --nodepool-name compnodepool \
+            --nodepool-name repnodes \
             --generate-ssh-keys
     - name: Configure AKS
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: 'bal-perf-cluster-comp'
+        cluster-name: 'bal-perf-cluster-rep'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy Niginx
       run: |
@@ -53,7 +53,13 @@ jobs:
         kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
         -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
         | head -n1
-  ballerina:
+    - name: Label Nodes
+      run: |
+        node=`kubectl get nodes | awk '{if (NR==2) {print $1}}'`
+        kubectl label nodes $node workertype=app
+        node=`kubectl get nodes | awk '{if (NR==3) {print $1}}'`
+        kubectl label nodes $node workertype=backend
+  build1:
     needs: setup
     runs-on: ubuntu-latest
     strategy:
@@ -62,7 +68,7 @@ jobs:
         payload: [50]
         users: [60, 200]
     env:
-      TEST_NAME: "ballerina_hello"
+      TEST_NAME: "rep_passthrough"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -72,10 +78,10 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Ballerina Build
-      uses: ballerina-platform/ballerina-action@nightly
+      uses: ballerina-platform/ballerina-action@master # uses slbeta2
       env:
         CI_BUILD: true
-        WORKING_DIR: tests/ballerina_hello
+        WORKING_DIR: tests/rep_passthrough
       with:
         args:
           build
@@ -95,7 +101,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: 'bal-perf-cluster-comp'
+        cluster-name: 'bal-perf-cluster-rep'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -163,8 +169,8 @@ jobs:
           else 
               echo "Disk is already deleted"
           fi
-  python:
-    needs: ballerina
+  build2:
+    needs: build1
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
@@ -172,7 +178,7 @@ jobs:
         payload: [50]
         users: [60, 200]
     env:
-      TEST_NAME: "python_hello"
+      TEST_NAME: "rep_passthrough"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -181,19 +187,35 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    - name: Docker build
-      run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}
+    - name: Ballerina Build
+      uses: ballerina-platform/ballerina-action@master # uses slbeta2
+      env:
+        CI_BUILD: true
+        WORKING_DIR: tests/rep_passthrough
+      with:
+        args:
+          build
     - name: Docker push
-      run: docker push ballerina/${TEST_NAME}
+      run: docker push ballerina/${TEST_NAME}:latest
+    - name: Copy artifacts
+      run: |
+        ls -ltr
+        cp -a ${TEST_ROOT}/${TEST_NAME}/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
+    - name: 'Install Kustomize'
+      run: |
+        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+    - name: 'Run Kustomize'
+      run: |
+          kustomize build ${TEST_ROOT}/${TEST_NAME}/deployment > ${TEST_ROOT}/${TEST_NAME}/final.yaml
     - name: Configure AKS
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: 'bal-perf-cluster-comp'
+        cluster-name: 'bal-perf-cluster-rep'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
-        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
+        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
     - name: Login via Az module
       uses: azure/login@v1
       with:
@@ -241,7 +263,7 @@ jobs:
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
-        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
+        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
     - name: Cleanup VM
       if: always()
       continue-on-error: true
@@ -257,8 +279,8 @@ jobs:
           else 
               echo "Disk is already deleted"
           fi
-  python-flask:
-    needs: python
+  build3:
+    needs: build2
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
@@ -266,7 +288,7 @@ jobs:
         payload: [50]
         users: [60, 200]
     env:
-      TEST_NAME: "python_flask_hello"
+      TEST_NAME: "rep_passthrough"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -275,19 +297,35 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    - name: Docker build
-      run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}
+    - name: Ballerina Build
+      uses: ballerina-platform/ballerina-action@master # uses slbeta2
+      env:
+        CI_BUILD: true
+        WORKING_DIR: tests/rep_passthrough
+      with:
+        args:
+          build
     - name: Docker push
-      run: docker push ballerina/${TEST_NAME}
+      run: docker push ballerina/${TEST_NAME}:latest
+    - name: Copy artifacts
+      run: |
+        ls -ltr
+        cp -a ${TEST_ROOT}/${TEST_NAME}/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
+    - name: 'Install Kustomize'
+      run: |
+        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+    - name: 'Run Kustomize'
+      run: |
+          kustomize build ${TEST_ROOT}/${TEST_NAME}/deployment > ${TEST_ROOT}/${TEST_NAME}/final.yaml
     - name: Configure AKS
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: 'bal-perf-cluster-comp'
+        cluster-name: 'bal-perf-cluster-rep'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
-        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
+        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
     - name: Login via Az module
       uses: azure/login@v1
       with:
@@ -335,289 +373,7 @@ jobs:
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
-        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
-    - name: Cleanup VM
-      if: always()
-      continue-on-error: true
-      uses: azure/CLI@v1
-      with:
-        azcliversion: 2.0.72
-        inlineScript: |
-          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
-          var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
-          if [ -n "$var" ]
-          then
-              az resource delete --ids ${var}
-          else 
-              echo "Disk is already deleted"
-          fi
-  node:
-    needs: python-flask
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 1
-      matrix:
-        payload: [50]
-        users: [60, 200]
-    env:
-      TEST_NAME: "node_hello"
-      TEST_ROOT: "tests"
-    steps:
-    - uses: actions/checkout@v2
-    - name: Login to DockerHub
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    - name: Docker build
-      run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}
-    - name: Docker push
-      run: docker push ballerina/${TEST_NAME}
-    - name: Configure AKS
-      uses: azure/aks-set-context@v1
-      with:
-        creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: 'bal-perf-cluster-comp'
-        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
-    - name: Deploy artifacts
-      run: |
-        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
-    - name: Login via Az module
-      uses: azure/login@v1
-      with:
-        creds: ${{secrets.AZURE_CREDENTIALS}}
-    - name: Write values to outputs
-      id: write
-      run: |
-        echo "::set-output name=cluster-ip::$(kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
-                                              -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
-                                              | head -n1)"
-        echo "::set-output name=scenario-name::${TEST_NAME}"
-        echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ matrix.users }}-${{ matrix.payload }}-${{ GITHUB.RUN_NUMBER }}"
-        echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
-        echo "::set-output name=custom-image-name::$(cat image.txt)"
-    - name: Create VM Instance
-      id: vminstance
-      uses: azure/CLI@v1
-      with:
-        azcliversion: 2.0.72
-        inlineScript: |
-          az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
-          echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
-    - name: Wait for VM instance
-      run: sleep 60s
-      shell: bash
-    - name: Execute performance tests
-      uses: appleboy/ssh-action@master
-      env: 
-        IP: ${{ steps.write.outputs.cluster-ip }}
-        SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
-        GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
-        PAYLOAD: ${{ matrix.payload }}
-        USERS: ${{ matrix.users }}
-      with:
-        host: ${{ steps.vminstance.outputs.ip-address }}
-        username: ${{ secrets.VM_USER }}
-        password: ${{ secrets.VM_PWD }}
-        envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
-        command_timeout: '180m' #3 hours
-        timeout: 300s #5 mins
-        script: |
-          source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
-    - name: Undeploy Kubernetes artifacts
-      if: always()
-      run: |
-        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
-    - name: Cleanup VM
-      if: always()
-      continue-on-error: true
-      uses: azure/CLI@v1
-      with:
-        azcliversion: 2.0.72
-        inlineScript: |
-          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
-          var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
-          if [ -n "$var" ]
-          then
-              az resource delete --ids ${var}
-          else 
-              echo "Disk is already deleted"
-          fi
-  node-express:
-    needs: node
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 1
-      matrix:
-        payload: [50]
-        users: [60, 200]
-    env:
-      TEST_NAME: "node_express_hello"
-      TEST_ROOT: "tests"
-    steps:
-    - uses: actions/checkout@v2
-    - name: Login to DockerHub
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    - name: Docker build
-      run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}
-    - name: Docker push
-      run: docker push ballerina/${TEST_NAME}
-    - name: Configure AKS
-      uses: azure/aks-set-context@v1
-      with:
-        creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: 'bal-perf-cluster-comp'
-        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
-    - name: Deploy artifacts
-      run: |
-        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
-    - name: Login via Az module
-      uses: azure/login@v1
-      with:
-        creds: ${{secrets.AZURE_CREDENTIALS}}
-    - name: Write values to outputs
-      id: write
-      run: |
-        echo "::set-output name=cluster-ip::$(kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
-                                              -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
-                                              | head -n1)"
-        echo "::set-output name=scenario-name::${TEST_NAME}"
-        echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ matrix.users }}-${{ matrix.payload }}-${{ GITHUB.RUN_NUMBER }}"
-        echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
-        echo "::set-output name=custom-image-name::$(cat image.txt)"
-    - name: Create VM Instance
-      id: vminstance
-      uses: azure/CLI@v1
-      with:
-        azcliversion: 2.0.72
-        inlineScript: |
-          az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
-          echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
-    - name: Wait for VM instance
-      run: sleep 60s
-      shell: bash
-    - name: Execute performance tests
-      uses: appleboy/ssh-action@master
-      env: 
-        IP: ${{ steps.write.outputs.cluster-ip }}
-        SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
-        GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
-        PAYLOAD: ${{ matrix.payload }}
-        USERS: ${{ matrix.users }}
-      with:
-        host: ${{ steps.vminstance.outputs.ip-address }}
-        username: ${{ secrets.VM_USER }}
-        password: ${{ secrets.VM_PWD }}
-        envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
-        command_timeout: '180m' #3 hours
-        timeout: 300s #5 mins
-        script: |
-          source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
-    - name: Undeploy Kubernetes artifacts
-      if: always()
-      run: |
-        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
-    - name: Cleanup VM
-      if: always()
-      continue-on-error: true
-      uses: azure/CLI@v1
-      with:
-        azcliversion: 2.0.72
-        inlineScript: |
-          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
-          var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
-          if [ -n "$var" ]
-          then
-              az resource delete --ids ${var}
-          else 
-              echo "Disk is already deleted"
-          fi
-  go-lang:
-    needs: node-express
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 1
-      matrix:
-        payload: [50]
-        users: [60, 200]
-    env:
-      TEST_NAME: "go_hello"
-      TEST_ROOT: "tests"
-    steps:
-    - uses: actions/checkout@v2
-    - name: Login to DockerHub
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    - name: Docker build
-      run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}
-    - name: Docker push
-      run: docker push ballerina/${TEST_NAME}
-    - name: Configure AKS
-      uses: azure/aks-set-context@v1
-      with:
-        creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: 'bal-perf-cluster-comp'
-        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
-    - name: Deploy artifacts
-      run: |
-        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
-    - name: Login via Az module
-      uses: azure/login@v1
-      with:
-        creds: ${{secrets.AZURE_CREDENTIALS}}
-    - name: Write values to outputs
-      id: write
-      run: |
-        echo "::set-output name=cluster-ip::$(kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
-                                              -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
-                                              | head -n1)"
-        echo "::set-output name=scenario-name::${TEST_NAME}"
-        echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ matrix.users }}-${{ matrix.payload }}-${{ GITHUB.RUN_NUMBER }}"
-        echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
-        echo "::set-output name=custom-image-name::$(cat image.txt)"
-    - name: Create VM Instance
-      id: vminstance
-      uses: azure/CLI@v1
-      with:
-        azcliversion: 2.0.72
-        inlineScript: |
-          az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
-          echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
-    - name: Wait for VM instance
-      run: sleep 60s
-      shell: bash
-    - name: Execute performance tests
-      uses: appleboy/ssh-action@master
-      env: 
-        IP: ${{ steps.write.outputs.cluster-ip }}
-        SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
-        GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
-        PAYLOAD: ${{ matrix.payload }}
-        USERS: ${{ matrix.users }}
-      with:
-        host: ${{ steps.vminstance.outputs.ip-address }}
-        username: ${{ secrets.VM_USER }}
-        password: ${{ secrets.VM_PWD }}
-        envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
-        command_timeout: '180m' #3 hours
-        timeout: 300s #5 mins
-        script: |
-          source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
-    - name: Undeploy Kubernetes artifacts
-      if: always()
-      run: |
-        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
+        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
     - name: Cleanup VM
       if: always()
       continue-on-error: true
@@ -634,8 +390,9 @@ jobs:
               echo "Disk is already deleted"
           fi
   cleanup:
-    needs: go-lang
-    name: clean up cluster
+    needs: build3
+    name: clean up
+    if: always()
     runs-on: ubuntu-latest
     steps:
     - name: AZURE LOGIN
@@ -648,5 +405,5 @@ jobs:
       with:
         azcliversion: 2.0.72
         inlineScript: |
-          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_bal-perf-cluster-comp_eastus -y
-          az aks delete --name bal-perf-cluster-comp --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
+          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_bal-perf-cluster-rep_eastus -y
+          az aks delete --name bal-perf-cluster-rep --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
