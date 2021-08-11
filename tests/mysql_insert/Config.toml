@@ -1,0 +1,7 @@
+host = "localhost"
+username = "user"
+password = "pass@word1234"
+database_name = "petdb"
+port = 3306
+table_name = "pet"
+file_path = "data.csv"
