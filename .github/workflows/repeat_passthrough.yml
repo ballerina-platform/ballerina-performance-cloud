@@ -176,7 +176,7 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [50]
-        users: [60, 200]
+        users: [60]
     env:
       TEST_NAME: "rep_passthrough"
       TEST_ROOT: "tests"
@@ -286,7 +286,7 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [50]
-        users: [60, 200]
+        users: [60]
     env:
       TEST_NAME: "rep_passthrough"
       TEST_ROOT: "tests"
