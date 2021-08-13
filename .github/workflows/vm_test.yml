@@ -47,6 +47,7 @@ jobs:
         command_timeout: '180m' #3 hours
         timeout: 300s #5 mins
         script: |
+          sudo chmod +x /base-image/execute-tests.sh
           /base-image/execute-tests.sh
     - name: Write values to outputs
       id: write
