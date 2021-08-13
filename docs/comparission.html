@@ -194,7 +194,7 @@
     function getColorByLang(lang) {
         if (lang.includes("ballerina")) {
             return 'rgb(98,217,198)';
-        } else if (lang.includes("node")) {
+        } else if (lang.includes("express")) {
             return 'rgb(200,200,200)';
         } else if (lang.includes("go")) {
             return 'rgb(200,100,100)';
@@ -202,6 +202,8 @@
             return 'rgb(125,200,125)';
         } else if (lang.includes("python")) {
             return 'rgb(255,150,250)';
+        } else if (lang.includes("node")) {
+            return 'rgb(145,135,145)';
         } else {
             let r = Math.floor(Math.random() * 255);
             let g = Math.floor(Math.random() * 255);
