@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  webserver:
+    image: ballerina/h1_h1_passthrough
+    depends_on:
+      - netty
+    ports:
+    - "9090:9090"
+  netty:
+    image: ldclakmal/netty-echo-backend:latest
+    environment:
+      SSL: "true"
+    ports:
+      - "8688:8688"
