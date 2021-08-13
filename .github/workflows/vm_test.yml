@@ -6,7 +6,6 @@ on:
     types: [ vm_test ]
 jobs:
   ballerina-app:
-    needs: setup
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
