@@ -32,7 +32,7 @@ jobs:
         azcliversion: 2.0.72
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.backend.outputs.name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_1628832272130" --tags benchmark-number=${{ steps.backend.outputs.name }} --size Standard_F4s_v2
+          --image "mi_1628837716018" --tags benchmark-number=${{ steps.backend.outputs.name }} --size Standard_F4s_v2
           az vm open-port --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}" --name "${{ steps.backend.outputs.name }}" --port 9090
           echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.backend.outputs.name }}" --query publicIps -o tsv)"
     - name: Wait for Backend
