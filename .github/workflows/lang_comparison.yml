@@ -65,7 +65,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        payload: [50]
+        payload: [0]
         users: [60, 200]
     env:
       TEST_NAME: "ballerina_hello"
@@ -149,7 +149,7 @@ jobs:
         timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
+          execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
@@ -175,7 +175,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        payload: [50]
+        payload: [0]
         users: [60, 200]
     env:
       TEST_NAME: "python_hello"
@@ -243,7 +243,7 @@ jobs:
         timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
+          execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
@@ -269,7 +269,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        payload: [50]
+        payload: [0]
         users: [60, 200]
     env:
       TEST_NAME: "python_flask_hello"
@@ -337,7 +337,7 @@ jobs:
         timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
+          execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
@@ -363,7 +363,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        payload: [50]
+        payload: [0]
         users: [60, 200]
     env:
       TEST_NAME: "node_hello"
@@ -431,7 +431,7 @@ jobs:
         timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
+          execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
@@ -457,7 +457,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        payload: [50]
+        payload: [0]
         users: [60, 200]
     env:
       TEST_NAME: "node_express_hello"
@@ -525,7 +525,7 @@ jobs:
         timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
+          execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
@@ -551,7 +551,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        payload: [50]
+        payload: [0]
         users: [60, 200]
     env:
       TEST_NAME: "go_hello"
@@ -619,7 +619,7 @@ jobs:
         timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
+          execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |

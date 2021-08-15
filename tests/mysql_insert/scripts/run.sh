@@ -17,5 +17,11 @@
 # Execution script for ballerina performance tests
 # ----------------------------------------------------------------------------
 set -e
+<<<<<<< HEAD:tests/mysql_insert/scripts/run.sh
 generate-payloads.sh -p array -s ${2}
 jmeter -n -t ~/ballerina-performance-cloud/tests/"${1}"/scripts/http-post-request.jmx -l ~/ballerina-performance-cloud/tests/"${1}"/results/original.jtl -Jusers="${3}" -Jduration=600 -Jhost=bal.perf.test -Jport=80 -Jprotocol=http -Jpath=db
+=======
+source base-scenario.sh
+
+jmeter -n -t ~/ballerina-performance-cloud/tests/"$scenario_name"/scripts/http-post-request.jmx -l ~/ballerina-performance-cloud/tests/"$scenario_name"/results/original.jtl -Jusers="$concurrent_users" -Jduration=1200 -Jhost=bal.perf.test -Jport=443 -Jprotocol=http -Jpath=db/insertData
+>>>>>>> Improve bash scripts:tests/mysql_insertion/scripts/run.sh

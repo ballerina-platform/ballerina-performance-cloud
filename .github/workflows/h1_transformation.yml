@@ -94,7 +94,7 @@ jobs:
         command_timeout: '180m' #3 hours
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
+          execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
