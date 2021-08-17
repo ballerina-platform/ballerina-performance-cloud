@@ -19,4 +19,4 @@
 set -e
 source base-scenario.sh
 
-jmeter -n -t ~/ballerina-performance-cloud/tests/"$scenario_name"/scripts/http-post-request.jmx -l ~/ballerina-performance-cloud/tests/"$scenario_name"/results/original.jtl -Jusers="$concurrent_users" -Jduration=1200 -Jhost=bal.perf.test -Jport=443 -Jprotocol=https -Jpath=transform "$payload_flags"
+jmeter -n -t "$scriptsDir/"http-post-request.jmx -l "$resultsDir/"original.jtl -Jusers="$concurrent_users" -Jduration=1200 -Jhost=bal.perf.test -Jport=443 -Jprotocol=https -Jpath=transform "$payload_flags"

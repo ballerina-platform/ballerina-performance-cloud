@@ -14,8 +14,8 @@
 # limitations under the License.
 #
 # ----------------------------------------------------------------------------
-# Execusion script for ballerina performance tests
+# Execution script for ballerina performance tests
 # ----------------------------------------------------------------------------
 set -e
 source base-scenario.sh
-jmeter -n -t ~/ballerina-performance-cloud/tests/"$scenario_name"/scripts/http-get-request.jmx -l ~/ballerina-performance-cloud/tests/"$scenario_name"/results/original.jtl -Jusers="$concurrent_users" -Jduration=1200 -Jhost=bal.perf.test -Jport=80 -Jprotocol=http -Jpath=hello
+jmeter -n -t "$scriptsDir/"http-get-request.jmx -l "$resultsDir/"original.jtl -Jusers="$concurrent_users" -Jduration=1200 -Jhost=bal.perf.test -Jport=80 -Jprotocol=http -Jpath=hello

@@ -53,3 +53,6 @@ if [[ -z $concurrent_users ]]; then
     echo "Please provide the number of concurrent users."
     exit 1
 fi
+
+scriptsDir="~/ballerina-performance-cloud/tests/"$scenario_name"/scripts"
+resultsDir="~/ballerina-performance-cloud/tests/"$scenario_name"/results"
