@@ -1,6 +1,6 @@
 [package]
 org = "wso2"
-name = "mysql_select"
+name = "mysql_update"
 version = "0.0.1"
 
 [build-options]

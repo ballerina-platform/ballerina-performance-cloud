@@ -1,6 +1,6 @@
 [container.image]
 repository = "ballerina"
-name = "mysql_select"
+name = "mysql_update"
 
 [cloud.deployment]
 min_memory = "256Mi"

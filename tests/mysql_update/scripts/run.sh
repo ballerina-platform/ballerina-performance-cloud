@@ -18,4 +18,4 @@
 # ----------------------------------------------------------------------------
 set -e
 generate-payloads.sh -p array -s ${2}
-jmeter -n -t ~/ballerina-performance-cloud/tests/"${1}"/scripts/http-post-request.jmx -l ~/ballerina-performance-cloud/tests/"${1}"/results/original.jtl -Jusers="${3}" -Jduration=1200 -Jhost=bal.perf.test -Jport=443 -Jprotocol=http -Jpath=db/select -Jresponse_size="${2}"
+jmeter -n -t ~/ballerina-performance-cloud/tests/"${1}"/scripts/http-post-request.jmx -l ~/ballerina-performance-cloud/tests/"${1}"/results/original.jtl -Jusers="${3}" -Jduration=1200 -Jhost=bal.perf.test -Jport=443 -Jprotocol=http -Jpath=db/update/2/2500 -Jresponse_size="${2}"
