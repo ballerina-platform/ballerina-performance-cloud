@@ -10,7 +10,6 @@ configurable string password = ?;
 configurable string database_name = ?;
 configurable int port = ?;
 configurable string table_name = ?;
-configurable string file_path = ?;
 
 service /db on new http:Listener(9092) {
     resource function post insertData() returns string|error {
@@ -20,7 +19,7 @@ service /db on new http:Listener(9092) {
         _ = check dbClient->execute("CREATE TABLE " + table_name +
                                     "(Id INTEGER NOT NULL AUTO_INCREMENT, Name  VARCHAR(300), Category VARCHAR(300), " +
                                     "Price INTEGER, PRIMARY KEY(Id))");
-        string[] values = check io:fileReadLines(file_path);
+        string[] values = check io:fileReadLines("./data/data.csv");
         foreach string value in values {
             string[] records = regex:split(value, ",");
             var e1 = check dbClient->execute("INSERT INTO " + table_name + "(Id, Name, Category, Price) VALUES (" +
