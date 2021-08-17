@@ -76,7 +76,7 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Ballerina Build
-      uses: ballerina-platform/ballerina-action@swan-lake-release
+      uses: ballerina-platform/ballerina-action@master
       env:
         CI_BUILD: true
         WORKING_DIR: tests/mysql_insertion
