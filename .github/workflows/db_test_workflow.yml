@@ -76,13 +76,13 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Ballerina Build
-      uses: ballerina-platform/ballerina-action@nightly
+      uses: ballerina-platform/ballerina-action@swan-lake-release
       env:
         CI_BUILD: true
         WORKING_DIR: tests/mysql_insertion
       with:
         args:
-          build --offline
+          build
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}:latest
     - name: Copy artifacts
