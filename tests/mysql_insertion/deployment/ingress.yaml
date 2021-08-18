@@ -18,7 +18,7 @@ spec:
           service:
             name: mysql-insertion
             port:
-              number: 9090
+              number: 9092
   tls:
   - hosts:
     - "bal.perf.test"
