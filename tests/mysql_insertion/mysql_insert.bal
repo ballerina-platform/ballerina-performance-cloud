@@ -13,45 +13,36 @@ configurable string database_name = ?;
 configurable int port = ?;
 configurable string table_name = ?;
 
+mysql:Client dbClient = check new (host = host, user = username, password = password);
+
 service /db on new http:Listener(9092) {
     resource function post .(http:Caller caller, http:Request clientRequest) {
-        mysql:Client|error dbClient = new (host = host, user = username, password = password,
-                                           database = database_name, port = port);
-        if (dbClient is mysql:Client) {
-            sql:ExecutionResult|error result = dbClient->execute("DROP TABLE IF EXISTS " + table_name);
-            if result is error {
-                log:printError("Error at db_insertion", 'error = result);
-                getError(caller, result.message());
-            }
-            result = dbClient->execute("CREATE TABLE " + table_name +
-                                        "(Id INTEGER NOT NULL AUTO_INCREMENT, Name  VARCHAR(300), " +
-                                        "Category VARCHAR(300), Price INTEGER, PRIMARY KEY(Id))");
-            if result is error {
-                log:printError("Error at db_insertion", 'error = result);
-                getError(caller, result.message());
-            }
-            string[]|error values = io:fileReadLines("./data/data.csv");
-            if values is error {
-                log:printError("Error at db_insertion", 'error = values);
-                getError(caller, values.message());
-            } else {
-                foreach string value in values {
-                    string[] records = regex:split(value, ",");
-                    result = dbClient->execute("INSERT INTO " + table_name + "(Id, Name, Category, Price) VALUES (" +
-                    records[0] + ",' " + records[1] + "',' " + records[2] + "', "+ records[3] + ")");
-                    if result is error {
-                        log:printError("Error at db_insertion", 'error = result);
-                        getError(caller, result.message());
-                    }
+        sql:ExecutionResult|error result = dbClient->execute("CREATE TABLE IF NOT EXISTS " + database_name + "." +
+        table_name + "(Id INTEGER NOT NULL AUTO_INCREMENT, Name  VARCHAR(300), " +
+        "Category VARCHAR(300), Price INTEGER, PRIMARY KEY(Id))");
+        if result is error {
+            log:printError("Error at db_insertion", 'error = result);
+            getError(caller, result.message());
+        }
+        string[]|error values = io:fileReadLines("./data/data.csv");
+        if values is error {
+            log:printError("Error at db_insertion", 'error = values);
+            getError(caller, values.message());
+        } else {
+            foreach string value in values {
+                string[] records = regex:split(value, ",");
+                result = dbClient->execute("INSERT INTO " + database_name + "." + table_name +
+                 "(Name, Category, Price) VALUES (" + "'"+ records[0] + "', '" + records[1] + "', "+ records[2] + ")");
+                if result is error {
+                    log:printError("Error at db_insertion", 'error = result);
+                    getError(caller, result.message());
                 }
             }
-            http:Response res = new;
-            res.statusCode = 200;
-            res.setPayload("Records inserted succesfully");
-            error? output = caller->respond(res);
-        } else {
-            getError(caller, dbClient.message());
         }
+        http:Response res = new;
+        res.statusCode = 200;
+        res.setPayload("Records inserted succesfully");
+        error? output = caller->respond(res);
     }
 }
 
