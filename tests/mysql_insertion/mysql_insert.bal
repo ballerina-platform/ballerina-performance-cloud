@@ -3,6 +3,7 @@ import ballerina/http;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
 import ballerina/regex;
+import ballerina/sql;
 
 configurable string host = ?;
 configurable string username = ?;
@@ -12,19 +13,43 @@ configurable int port = ?;
 configurable string table_name = ?;
 
 service /db on new http:Listener(9092) {
-    resource function post insertData() returns string|error {
-        mysql:Client dbClient = check new (host = host, user = username, password = password,
+    resource function post .(http:Caller caller, http:Request clientRequest) {
+        mysql:Client|error dbClient = new (host = host, user = username, password = password,
                                            database = database_name, port = port);
-        _ = check dbClient->execute("DROP TABLE IF EXISTS " + table_name);
-        _ = check dbClient->execute("CREATE TABLE " + table_name +
-                                    "(Id INTEGER NOT NULL AUTO_INCREMENT, Name  VARCHAR(300), Category VARCHAR(300), " +
-                                    "Price INTEGER, PRIMARY KEY(Id))");
-        string[] values = check io:fileReadLines("./data/data.csv");
-        foreach string value in values {
-            string[] records = regex:split(value, ",");
-            var e1 = check dbClient->execute("INSERT INTO " + table_name + "(Id, Name, Category, Price) VALUES (" +
-            records[0] + ",' " + records[1] + "',' " + records[2] + "', "+ records[3] + ")");
+        if (dbClient is mysql:Client) {
+                sql:ExecutionResult|error result = dbClient->execute("DROP TABLE IF EXISTS " + table_name);
+            if result is error {
+                getError(caller, result.message());
+            }
+            result = dbClient->execute("CREATE TABLE " + table_name +
+                                        "(Id INTEGER NOT NULL AUTO_INCREMENT, Name  VARCHAR(300), " +
+                                        "Category VARCHAR(300), Price INTEGER, PRIMARY KEY(Id))");
+            string[]|error values = io:fileReadLines("./data/data.csv");
+            if (values is error) {
+                getError(caller, values.message());
+            } else {
+                foreach string value in values {
+                    string[] records = regex:split(value, ",");
+                    result = dbClient->execute("INSERT INTO " + table_name + "(Id, Name, Category, Price) VALUES (" +
+                    records[0] + ",' " + records[1] + "',' " + records[2] + "', "+ records[3] + ")");
+                    if (result is error) {
+                        getError(caller, result.message());
+                    }
+                }
+            }
+            http:Response res = new;
+            res.statusCode = 200;
+            res.setPayload("Records inserted succesfully");
+            error? output = caller->respond(res);
+        } else {
+            getError(caller, dbClient.message());
         }
-        return "Records inserted succesfully";
     }
+}
+
+function getError(http:Caller caller, string msg) {
+    http:Response res = new;
+    res.statusCode = 500;
+    res.setPayload(msg);
+    error? result = caller->respond(res);
 }
