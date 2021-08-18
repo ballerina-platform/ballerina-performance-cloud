@@ -41,7 +41,7 @@ service /db on new http:Listener(9092) {
         }
         http:Response res = new;
         res.statusCode = 200;
-        res.setPayload("Records inserted succesfully");
+        res.setJsonPayload("Records inserted succesfully");
         error? output = caller->respond(res);
     }
 }
@@ -49,6 +49,6 @@ service /db on new http:Listener(9092) {
 function getError(http:Caller caller, string msg) {
     http:Response res = new;
     res.statusCode = 500;
-    res.setPayload(msg);
+    res.setJsonPayload(msg);
     error? result = caller->respond(res);
 }
