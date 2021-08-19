@@ -13,7 +13,4 @@ min_replicas = 1
 max_replicas = 1
 
 [[cloud.config.files]]
-    file="data.csv"
-    mount_path="/home/ballerina/data"
-[[cloud.config.files]]
     file="Config.toml"
