@@ -15,5 +15,5 @@ class RequestHandler(BaseHTTPRequestHandler):
             return
 
 if __name__ == '__main__':
-    server = HTTPServer(('localhost', 5000), RequestHandler)
+    server = HTTPServer(('0.0.0.0', 5000), RequestHandler)
     server.serve_forever()

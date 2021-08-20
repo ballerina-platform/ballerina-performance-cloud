@@ -29,28 +29,16 @@
 <div class="container">
     <div class="row">
         <h2>Hello World Service Comparison</h2>
-
     </div>
     <div class="row ">
         <div class="col-12 col-md-9">
             <form>
-                <p>Test Parameters:</p>
                 <div class="form-group row">
-                    <div class="form-check">
-                        <input class="form-check-input" name="params" onclick="drawSelectedCharts()"
-                               type="radio" value="60_1024"><label
-                            class="check-label">60 Users 1024b </label>
-                    </div>
                     <div class="form-check">
                         <input checked class="form-check-input" name="params" onclick="drawSelectedCharts()"
                                type="radio"
                                value="60_50"><label
                             class="check-label">60 Users 50b</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" name="params" onclick="drawSelectedCharts()" type="radio"
-                               value="200_1024"><label
-                            class="check-label">200 Users 1024b </label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" name="params" onclick="drawSelectedCharts() " type="radio"
@@ -203,10 +191,32 @@
         return coordinates;
     }
 
+    function getColorByLang(lang) {
+        if (lang.includes("ballerina")) {
+            return 'rgb(98,217,198)';
+        } else if (lang.includes("express")) {
+            return 'rgb(200,200,200)';
+        } else if (lang.includes("go")) {
+            return 'rgb(200,100,100)';
+        } else if (lang.includes("flask")) {
+            return 'rgb(125,200,125)';
+        } else if (lang.includes("python")) {
+            return 'rgb(255,150,250)';
+        } else if (lang.includes("node")) {
+            return 'rgb(145,135,145)';
+        } else {
+            let r = Math.floor(Math.random() * 255);
+            let g = Math.floor(Math.random() * 255);
+            let b = Math.floor(Math.random() * 255);
+            return 'rgb(' + r + ',' + g + ',' + b + ')';
+        }
+
+    }
+
     function drawChart(attribute, chartType, canvasId) {
         let dataset = [];
         const promises = [];
-        let urls = ["python_flask_hello", "python_hello" ,"node_express_hello", "node_hello", "go_hello", "ballerina_hello"];
+        let urls = ["python_flask_hello", "python_hello", "node_express_hello", "node_hello", "go_hello", "ballerina_hello"];
         urls.forEach(function (lang) {
             let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/" + lang + ".csv";
             promises.push(d3.csv(url).then(function (stats) {
@@ -214,12 +224,9 @@
                     let res = chartType.split("_");
                     let users = res[0];
                     let payload = res[1];
-                    let r = Math.floor(Math.random() * 255);
-                    let g = Math.floor(Math.random() * 255);
-                    let b = Math.floor(Math.random() * 255);
-                    let color = 'rgb(' + r + ',' + g + ',' + b + ')';
+                    let color = getColorByLang(lang);
                     let data = {
-                        label: lang.replace("_hello",""),
+                        label: lang.replace("_hello", ""),
                         showLine: true,
                         backgroundColor: color,
                         borderColor: color,

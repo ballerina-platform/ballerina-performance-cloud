@@ -1,0 +1,118 @@
+name: vm_test
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [ vm_test ]
+jobs:
+  ballerina-app:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+      matrix:
+        count: [1,2,3,4,5]
+        payload: [50]
+        users: [60]
+    env:
+      TEST_NAME: "vm_passthrough"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Login via Az module
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: Write backend values to outputs
+      id: backend
+      run: |
+        echo "::set-output name=name::backend-`echo ${TEST_NAME} | tr '_' '-'`-${{ matrix.users }}-${{ matrix.payload }}-${{ matrix.count }}-${{ GITHUB.RUN_NUMBER }}"
+    - name: Create Backend VM Instance
+      id: backinstance
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+          az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.backend.outputs.name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
+          --image "mi_1628837716018" --tags benchmark-number=${{ steps.backend.outputs.name }} --size Standard_F4s_v2
+          az vm open-port --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}" --name "${{ steps.backend.outputs.name }}" --port 9090
+          echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.backend.outputs.name }}" --query publicIps -o tsv)"
+    - name: Wait for Backend
+      run: sleep 60s
+      shell: bash
+    - name: Run Backend VM
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ steps.backinstance.outputs.ip-address }}
+        username: ${{ secrets.VM_USER }}
+        password: ${{ secrets.VM_PWD }}
+        command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
+        script: |
+          sudo chmod +x /base-image/execute-tests.sh
+          /base-image/execute-tests.sh
+    - name: Write values to outputs
+      id: write
+      run: |
+        echo "::set-output name=scenario-name::${TEST_NAME}"
+        echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ matrix.users }}-${{ matrix.payload }}-${{ matrix.count }}-${{ GITHUB.RUN_NUMBER }}"
+        echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
+        echo "::set-output name=custom-image-name::$(cat image.txt)"
+    - name: Create VM Instance
+      id: vminstance
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+          az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
+          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
+          echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
+    - name: Wait for VM instance
+      run: sleep 60s
+      shell: bash
+    - name: Execute performance tests
+      uses: appleboy/ssh-action@master
+      env: 
+        IP: ${{ steps.backinstance.outputs.ip-address }}
+        SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
+        GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
+        PAYLOAD: ${{ matrix.payload }}
+        USERS: ${{ matrix.users }}
+      with:
+        host: ${{ steps.vminstance.outputs.ip-address }}
+        username: ${{ secrets.VM_USER }}
+        password: ${{ secrets.VM_PWD }}
+        envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
+        command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
+        script: |
+          source /etc/profile.d/10-perf-vm.sh
+          execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
+    - name: Cleanup VM
+      if: always()
+      continue-on-error: true
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
+          var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
+          if [ -n "$var" ]
+          then
+              az resource delete --ids ${var}
+          else 
+              echo "Disk is already deleted"
+          fi
+    - name: Cleanup Backend VM
+      if: always()
+      continue-on-error: true
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.backend.outputs.name }} -otable --query "[].id" -otsv)
+          var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.backend.outputs.name }}'].id" -otable -otsv`
+          if [ -n "$var" ]
+          then
+              az resource delete --ids ${var}
+          else 
+              echo "Disk is already deleted"
+          fi

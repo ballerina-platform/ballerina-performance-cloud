@@ -111,7 +111,7 @@ jobs:
         azcliversion: 2.0.72
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_1624378105310" --tags benchmark-number=${{ steps.write.outputs.vm-name }}
+          --image "mi_1624378105310" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
           echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
     - name: Execute performance tests
       uses: appleboy/ssh-action@master

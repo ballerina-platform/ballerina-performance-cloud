@@ -23,15 +23,16 @@ jobs:
       run: |
         az aks create \
             --resource-group "${RESOURCE_GROUP}" \
-            --name "bal-perf-cluster-test" \
+            --name "bal-perf-cluster-test-11" \
             --service-principal "${AZURE_APP_ID}"\
             --client-secret "${AZURE_APP_PASSWORD}" \
+            --nodepool-name testnodes1 \
             --generate-ssh-keys
     - name: Configure AKS
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: 'bal-perf-cluster-test'
+        cluster-name: 'bal-perf-cluster-test-11'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy Niginx
       run: |
@@ -52,6 +53,12 @@ jobs:
         kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
         -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
         | head -n1
+    - name: Label Nodes
+      run: |
+        node=`kubectl get nodes | awk '{if (NR==2) {print $1}}'`
+        kubectl label nodes $node workertype=app
+        node=`kubectl get nodes | awk '{if (NR==3) {print $1}}'`
+        kubectl label nodes $node workertype=backend
   build:
     needs: setup
     runs-on: ubuntu-latest
@@ -59,9 +66,9 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [50]
-        users: [60, 200]
+        users: [60]
     env:
-      TEST_NAME: "ballerina_hello"
+      TEST_NAME: "test_passthrough"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -71,10 +78,10 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Ballerina Build
-      uses: ballerina-platform/ballerina-action@nightly
+      uses: ballerina-platform/ballerina-action@master # uses slbeta2
       env:
         CI_BUILD: true
-        WORKING_DIR: tests/ballerina_hello
+        WORKING_DIR: tests/test_passthrough
       with:
         args:
           build
@@ -94,7 +101,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: 'bal-perf-cluster-test'
+        cluster-name: 'bal-perf-cluster-test-11'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -120,8 +127,11 @@ jobs:
         azcliversion: 2.0.72
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }}
+          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
           echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
+    - name: Wait for VM instance
+      run: sleep 60s
+      shell: bash
     - name: Execute performance tests
       uses: appleboy/ssh-action@master
       env: 
@@ -136,6 +146,7 @@ jobs:
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
@@ -158,3 +169,21 @@ jobs:
           else 
               echo "Disk is already deleted"
           fi
+  # cleanup:
+  #   needs: build
+  #   name: clean up
+  #   if: always()
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: AZURE LOGIN
+  #     uses: azure/login@v1
+  #     with:
+  #       creds: ${{secrets.AZURE_CREDENTIALS}}
+  #   - name: Cleaning up the cluster
+  #     if: always()
+  #     uses: azure/CLI@v1
+  #     with:
+  #       azcliversion: 2.0.72
+  #       inlineScript: |
+  #         az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_bal-perf-cluster-test-11_eastus -y
+  #         az aks delete --name bal-perf-cluster-test-11 --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y

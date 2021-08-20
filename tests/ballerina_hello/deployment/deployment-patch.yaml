@@ -8,3 +8,5 @@ spec:
       containers:
       - name: "ballerina-hello-deployment"
         imagePullPolicy: Always
+      nodeSelector:
+        workertype: "app"

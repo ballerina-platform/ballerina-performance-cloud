@@ -1,11 +1,11 @@
 resources:
-  - mysql_select.yaml
+  - mysql_select.csv.yaml
   - ingress.yaml
   - mysql_deployment.yml
 patches:
-- path: deployment-patch.yaml
-  target:
-    group: apps
-    version: v1
-    kind: Deployment
-    name: mysql-select-deployment
+  - path: deployment-patch.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: mysql-select-deployment

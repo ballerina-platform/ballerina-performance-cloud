@@ -23,15 +23,16 @@ jobs:
       run: |
         az aks create \
             --resource-group "${RESOURCE_GROUP}" \
-            --name "${{ secrets.CLUSTER_NAME }}" \
+            --name "bal-perf-cluster-comp" \
             --service-principal "${AZURE_APP_ID}"\
             --client-secret "${AZURE_APP_PASSWORD}" \
+            --nodepool-name compnodepool \
             --generate-ssh-keys
     - name: Configure AKS
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ secrets.CLUSTER_NAME }}'
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy Niginx
       run: |
@@ -52,6 +53,12 @@ jobs:
         kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
         -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
         | head -n1
+    - name: Label Nodes
+      run: |
+        node=`kubectl get nodes | awk '{if (NR==2) {print $1}}'`
+        kubectl label nodes $node workertype=app
+        node=`kubectl get nodes | awk '{if (NR==3) {print $1}}'`
+        kubectl label nodes $node workertype=backend
   ballerina:
     needs: setup
     runs-on: ubuntu-latest
@@ -94,7 +101,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: ${{ secrets.CLUSTER_NAME }}
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -120,8 +127,11 @@ jobs:
         azcliversion: 2.0.72
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }}
+          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
           echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
+    - name: Wait for VM instance
+      run: sleep 60s
+      shell: bash
     - name: Execute performance tests
       uses: appleboy/ssh-action@master
       env: 
@@ -136,6 +146,7 @@ jobs:
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
@@ -184,7 +195,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ secrets.CLUSTER_NAME }}'
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -210,8 +221,11 @@ jobs:
         azcliversion: 2.0.72
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }}
+          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
           echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
+    - name: Wait for VM instance
+      run: sleep 60s
+      shell: bash
     - name: Execute performance tests
       uses: appleboy/ssh-action@master
       env: 
@@ -226,6 +240,7 @@ jobs:
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
@@ -274,7 +289,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ secrets.CLUSTER_NAME }}'
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -300,8 +315,11 @@ jobs:
         azcliversion: 2.0.72
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }}
+          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
           echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
+    - name: Wait for VM instance
+      run: sleep 60s
+      shell: bash
     - name: Execute performance tests
       uses: appleboy/ssh-action@master
       env: 
@@ -316,6 +334,7 @@ jobs:
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
@@ -364,7 +383,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ secrets.CLUSTER_NAME }}'
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -390,8 +409,11 @@ jobs:
         azcliversion: 2.0.72
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }}
+          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
           echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
+    - name: Wait for VM instance
+      run: sleep 60s
+      shell: bash
     - name: Execute performance tests
       uses: appleboy/ssh-action@master
       env: 
@@ -406,6 +428,7 @@ jobs:
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
@@ -454,7 +477,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ secrets.CLUSTER_NAME }}'
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -480,8 +503,11 @@ jobs:
         azcliversion: 2.0.72
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }}
+          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
           echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
+    - name: Wait for VM instance
+      run: sleep 60s
+      shell: bash
     - name: Execute performance tests
       uses: appleboy/ssh-action@master
       env: 
@@ -496,6 +522,7 @@ jobs:
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
@@ -544,7 +571,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ secrets.CLUSTER_NAME }}'
+        cluster-name: 'bal-perf-cluster-comp'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -570,8 +597,11 @@ jobs:
         azcliversion: 2.0.72
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }}
+          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
           echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
+    - name: Wait for VM instance
+      run: sleep 60s
+      shell: bash
     - name: Execute performance tests
       uses: appleboy/ssh-action@master
       env: 
@@ -586,6 +616,7 @@ jobs:
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
         command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh $IP $SCENARIO_NAME $GITHUB_TOKEN $PAYLOAD $USERS
@@ -623,5 +654,5 @@ jobs:
       with:
         azcliversion: 2.0.72
         inlineScript: |
-          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_${{ secrets.CLUSTER_NAME }}_eastus -y
-          az aks delete --name ${{ secrets.CLUSTER_NAME }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
+          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_bal-perf-cluster-comp_eastus -y
+          az aks delete --name bal-perf-cluster-comp --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y

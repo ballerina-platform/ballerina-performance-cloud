@@ -6,5 +6,5 @@ spec:
   template:
     spec:
       containers:
-      - name: "mysql-delete-deployment"
-        imagePullPolicy: Always
+        - name: "mysql-delete-deployment"
+          imagePullPolicy: Always

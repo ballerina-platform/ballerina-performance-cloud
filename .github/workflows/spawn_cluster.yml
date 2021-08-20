@@ -52,6 +52,12 @@ jobs:
         kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
         -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
         | head -n1
+    - name: Label Nodes
+      run: |
+        node=`kubectl get nodes | awk '{if (NR==2) {print $1}}'`
+        kubectl label nodes $node workertype=app
+        node=`kubectl get nodes | awk '{if (NR==3) {print $1}}'`
+        kubectl label nodes $node workertype=backend
   h1_h1_passthrough:
     needs: setup
     name: h1_h1_passthrough
@@ -119,6 +125,7 @@ jobs:
   cleanup:
     needs: h1c_transformation
     name: clean up
+    if: always()
     runs-on: ubuntu-latest
     steps:
     - name: AZURE LOGIN
@@ -136,7 +143,7 @@ jobs:
   notify:
     needs: cleanup
     name: Notify Ballerina Chat for performance drops
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' && always()
     runs-on: ubuntu-latest
     steps:
     - name: Docker run
