@@ -18,20 +18,19 @@ import ballerina/http;
 import ballerina/log;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
+import ballerina/sql;
 
 configurable string host = ?;
 configurable string username = ?;
 configurable string password = ?;
-configurable string database_name = ?;
 configurable int port = ?;
-configurable string table_name = ?;
 
 mysql:Client dbClient = check new (host = host, user = username, password = password);
 
 service /db on new http:Listener(9092) {
     resource function get .() returns string|error {
-        stream<record {}, error?> resultStream =
-                dbClient->query("SELECT COUNT(*) AS total FROM " + database_name + "." + table_name);
+        sql:ParameterizedQuery query = `SELECT COUNT(*) AS total FROM petdb.pet`;
+        stream<record {}, error?> resultStream = dbClient->query(query);
 
         record {|record {} value;|}|error? result = resultStream.next();
         check resultStream.close();

@@ -23,16 +23,14 @@ import ballerina/sql;
 configurable string host = ?;
 configurable string username = ?;
 configurable string password = ?;
-configurable string database_name = ?;
 configurable int port = ?;
-configurable string table_name = ?;
 
 mysql:Client dbClient = check new (host = host, user = username, password = password);
 
 service /db on new http:Listener(9092) {
     resource function delete .(int id) returns string|error {
         int count = 0;
-        string deleteQuery = "DELETE FROM " + database_name + "." + table_name + " WHERE id = " + id.toString();
+        sql:ParameterizedQuery deleteQuery = `DELETE FROM petdb.pet WHERE id = ${id}`;
 
         sql:ExecutionResult|error result = dbClient->execute(deleteQuery);
         if result is error {

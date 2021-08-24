@@ -36,8 +36,9 @@ mysql:Client dbClient = check new (host = host, user = username, password = pass
 service /db on new http:Listener(9092) {
     resource function post .() returns string|error {
         foreach string[] records in values {
-            sql:ExecutionResult|error result = dbClient->execute("INSERT INTO " + database_name + "." + table_name +
-             "(Name, Category, Price) VALUES (" + "'"+ records[0] + "', '" + records[1] + "', "+ records[2] + ")");
+            sql:ParameterizedQuery query = `INSERT INTO petdb.pet (Name, Category, Price)
+            VALUES (${records[0]}, ${records[1]}, ${records[2]})`;
+            sql:ExecutionResult|error result = dbClient->execute(query);
             if result is error {
                 log:printError("Error at db_insert", 'error = result);
                 return result;

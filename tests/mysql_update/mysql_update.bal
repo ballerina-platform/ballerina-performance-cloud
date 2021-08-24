@@ -23,9 +23,7 @@ import ballerina/sql;
 configurable string host = ?;
 configurable string username = ?;
 configurable string password = ?;
-configurable string database_name = ?;
 configurable int port = ?;
-configurable string table_name = ?;
 string price = "1400";
 
 mysql:Client dbClient = check new (host = host, user = username, password = password);
@@ -33,8 +31,7 @@ mysql:Client dbClient = check new (host = host, user = username, password = pass
 service /db on new http:Listener(9092) {
     resource function put .(int id) returns string|error {
         int count = 0;
-        string updateQuery = "UPDATE " + database_name + "." + table_name + " SET Price = " + price +
-         " where id = " + id.toString();
+        sql:ParameterizedQuery updateQuery = `UPDATE petdb.pet SET Price = ${price} where id = ${id}`;
 
         sql:ExecutionResult|error result = dbClient->execute(updateQuery);
         if result is error {

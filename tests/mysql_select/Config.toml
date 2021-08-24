@@ -1,6 +1,4 @@
 host = "mysql8-service"
 username = "user"
 password = "pass@word1234"
-database_name = "petdb"
 port = 3306
-table_name = "pet"
