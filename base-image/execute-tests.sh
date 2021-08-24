@@ -33,6 +33,7 @@ echo "$1 bal.perf.test" | sudo tee -a /etc/hosts
 
 echo "--------Running test ${2}--------"
 pushd "${REPO_NAME}"/tests/"${2}"/scripts/
+chmod +x run.sh
 ./run.sh "${2}" "${4}" "${5}"
 popd
 echo "--------End test--------"
