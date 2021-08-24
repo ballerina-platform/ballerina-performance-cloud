@@ -1,9 +1,9 @@
-name: mysql_insertion
+name: mysql_delete
 
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [ mysql_insertion ]
+    types: [ mysql_delete ]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,7 +13,7 @@ jobs:
         payload: [50]
         users: [60, 200]
     env:
-      TEST_NAME: "mysql_insertion"
+      TEST_NAME: "mysql_delete"
       TEST_ROOT: "tests"
     steps:
       - uses: actions/checkout@v2
@@ -26,7 +26,7 @@ jobs:
         uses: ballerina-platform/ballerina-action@master
         env:
           CI_BUILD: true
-          WORKING_DIR: tests/mysql_insertion
+          WORKING_DIR: tests/mysql_delete
         with:
           args:
             build
