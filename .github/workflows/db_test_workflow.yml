@@ -66,7 +66,7 @@ jobs:
         payload: [50]
         users: [60, 200]
     env:
-      TEST_NAME: "mysql_update"
+      TEST_NAME: "mysql_delete"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -79,7 +79,7 @@ jobs:
       uses: ballerina-platform/ballerina-action@master
       env:
         CI_BUILD: true
-        WORKING_DIR: tests/mysql_update
+        WORKING_DIR: tests/mysql_delete
       with:
         args:
           build
