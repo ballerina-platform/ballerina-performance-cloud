@@ -54,9 +54,9 @@ jobs:
         | head -n1
     - name: Label Nodes
       run: |
-        node=`kubectl get nodes | awk '{if (NR==2) {print $1}}'`
-        kubectl label nodes $node workertype=app
         node=`kubectl get nodes | awk '{if (NR==3) {print $1}}'`
+        kubectl label nodes $node workertype=app
+        node=`kubectl get nodes | awk '{if (NR==4) {print $1}}'`
         kubectl label nodes $node workertype=backend
   h1_h1_passthrough:
     needs: setup
