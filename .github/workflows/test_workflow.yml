@@ -23,7 +23,7 @@ jobs:
         AZURE_APP_ID: ${{ secrets.AZURE_APP_ID }}
         AZURE_APP_PASSWORD: ${{ secrets.AZURE_APP_PASSWORD }}
         RESOURCE_GROUP: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
-        PPG_ID: "/subscriptions/${{ secrets.TENANT_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
+        PPG_ID: "/subscriptions/${{ secrets.SUBSCRIPTION_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
       run: |
         az aks create \
             --resource-group "${RESOURCE_GROUP}" \
@@ -124,7 +124,7 @@ jobs:
         echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ matrix.users }}-${{ matrix.payload }}-${{ GITHUB.RUN_NUMBER }}"
         echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
         echo "::set-output name=custom-image-name::$(cat image.txt)"
-        echo "::set-output name=ppg-id::/subscriptions/${{ secrets.TENANT_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
+        echo "::set-output name=ppg-id::/subscriptions/${{ secrets.SUBSCRIPTION_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
     - name: Create VM Instance
       id: vminstance
       uses: azure/CLI@v1
