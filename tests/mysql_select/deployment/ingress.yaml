@@ -14,6 +14,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: mysql-select
+                name: mysql-select-sv
                 port:
                   number: 9092

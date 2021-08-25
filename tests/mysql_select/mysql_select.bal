@@ -16,9 +16,9 @@
 
 import ballerina/http;
 import ballerina/log;
-import ballerina/sql;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
+import ballerina/sql;
 
 configurable string host = ?;
 configurable string username = ?;
