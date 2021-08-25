@@ -23,13 +23,14 @@ jobs:
         AZURE_APP_ID: ${{ secrets.AZURE_APP_ID }}
         AZURE_APP_PASSWORD: ${{ secrets.AZURE_APP_PASSWORD }}
         RESOURCE_GROUP: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+        PPG_ID: "/subscriptions/${{ secrets.TENANT_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
       run: |
         az aks create \
             --resource-group "${RESOURCE_GROUP}" \
             --name "${{ github.event.inputs.clusterName }}" \
             --service-principal "${AZURE_APP_ID}"\
             --client-secret "${AZURE_APP_PASSWORD}" \
-            --ppg "bal-perf-ppg" \
+            --ppg "${PPG_ID}" \
             --generate-ssh-keys
     - name: Configure AKS
       uses: azure/aks-set-context@v1
@@ -123,6 +124,7 @@ jobs:
         echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ matrix.users }}-${{ matrix.payload }}-${{ GITHUB.RUN_NUMBER }}"
         echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
         echo "::set-output name=custom-image-name::$(cat image.txt)"
+        echo "::set-output name=ppg-id::/subscriptions/${{ secrets.TENANT_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
     - name: Create VM Instance
       id: vminstance
       uses: azure/CLI@v1
@@ -130,7 +132,7 @@ jobs:
         azcliversion: 2.0.72
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2 --ppg "bal-perf-ppg" 
+          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2 --ppg ${{ steps.write.outputs.ppg-id }} 
           echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
     - name: Wait for VM instance
       run: sleep 60s
