@@ -25,15 +25,15 @@ configurable string username = ?;
 configurable string password = ?;
 configurable int port = ?;
 
+mysql:Client dbClient = check new (host = host, user = username, password = password);
+
 service /db on new http:Listener(9092) {
     resource function get .() returns string|error {
-        mysql:Client dbClient = check new (host = host, user = username, password = password);
-        sql:ParameterizedQuery query = `SELECT COUNT(*) AS total FROM MYSQL_BBE.pet`;
+        sql:ParameterizedQuery query = `SELECT COUNT(*) AS total FROM petdb.pet`;
         stream<record {}, error?> resultStream = dbClient->query(query);
 
         record {|record {} value;|}|error? result = resultStream.next();
         check resultStream.close();
-        check dbClient.close();
         string msg = "No of records: ";
         if result is error {
             log:printError("Error at db_select", 'error = result);
