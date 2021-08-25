@@ -14,6 +14,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: mysql-insert
+                name: mysql-insert-sv
                 port:
                   number: 9092
