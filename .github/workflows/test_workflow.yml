@@ -159,21 +159,21 @@ jobs:
       if: always()
       run: |
         kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
-    - name: Cleanup VM
-      if: always()
-      continue-on-error: true
-      uses: azure/CLI@v1
-      with:
-        azcliversion: 2.0.72
-        inlineScript: |
-          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
-          var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
-          if [ -n "$var" ]
-          then
-              az resource delete --ids ${var}
-          else 
-              echo "Disk is already deleted"
-          fi
+    # - name: Cleanup VM
+    #   if: always()
+    #   continue-on-error: true
+    #   uses: azure/CLI@v1
+    #   with:
+    #     azcliversion: 2.0.72
+    #     inlineScript: |
+    #       az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
+    #       var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
+    #       if [ -n "$var" ]
+    #       then
+    #           az resource delete --ids ${var}
+    #       else 
+    #           echo "Disk is already deleted"
+    #       fi
   # cleanup:
   #   needs: build
   #   name: clean up
