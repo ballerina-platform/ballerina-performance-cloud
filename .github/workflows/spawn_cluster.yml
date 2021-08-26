@@ -122,8 +122,24 @@ jobs:
         waiting_interval: 600
         trigger_workflow: true
         wait_workflow: true
-  cleanup:
+  observability_enabled:
     needs: h1c_transformation
+    name: observability_enabled
+    runs-on: ubuntu-latest
+    steps:
+    - name: Trigger h1c_transformation
+      uses: convictional/trigger-workflow-and-wait@v1.3.0
+      with:
+        owner: ballerina-platform
+        repo: ballerina-performance-cloud
+        github_token: ${{ secrets.BALLERINA_BOT_TOKEN }}
+        workflow_file_name: observability_enabled.yml
+        ref: main
+        waiting_interval: 600
+        trigger_workflow: true
+        wait_workflow: true
+  cleanup:
+    needs: observability_enabled
     name: clean up
     if: always()
     runs-on: ubuntu-latest
