@@ -1,1 +1,2 @@
 Label,# Samples,Average,Median,90% Line,95% Line,99% Line,Min,Max,Error %,Throughput,Received KB/sec,Std. Dev.,Date,Payload,Users
+HTTP Request,2124385,30,18,68,72,80,1,1071,0.00%,1967.5,472.7,23.55,1630039131,50,60
