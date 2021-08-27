@@ -31,6 +31,7 @@ jobs:
             --service-principal "${AZURE_APP_ID}"\
             --client-secret "${AZURE_APP_PASSWORD}" \
             --ppg "${PPG_ID}" \
+            --enable-node-public-ip \
             --generate-ssh-keys
     - name: Configure AKS
       uses: azure/aks-set-context@v1
