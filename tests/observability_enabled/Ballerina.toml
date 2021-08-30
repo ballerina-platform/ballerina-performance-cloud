@@ -1,6 +1,6 @@
 [package]
 org = "wso2"
-name = "observability_enable"
+name = "observability_enabled"
 version = "0.0.1"
 
 [build-options]
