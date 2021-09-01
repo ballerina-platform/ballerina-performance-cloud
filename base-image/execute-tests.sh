@@ -17,10 +17,78 @@
 # Running the Load Test
 # ----------------------------------------------------------------------------
 set -e
+
+cluster_ip=""
+scenario_name=""
+github_token=""
+payload_size="0"
+concurrent_users=""
+
+function usage() {
+    echo ""
+    echo "Usage: "
+    echo "$0 [-c <cluster_ip>] [-s scenario_name] [-t github_token] [-p payload_size] [-u concurrent_users] [-h]"
+    echo ""
+    echo "-c: Kubernetes cluster IP"
+    echo "-s: Test scenario name"
+    echo "-t: Github token for the repository"
+    echo "-p: Payload size"
+    echo "-u: Concurrent users for the test"
+    echo ""
+}
+
+while getopts "c:s:t:p:u:h" opts; do
+    case $opts in
+    c)
+        cluster_ip=${OPTARG}
+        ;;
+    s)
+        scenario_name=${OPTARG}
+        ;;
+    t)
+        github_token=${OPTARG}
+        ;;
+    p)
+        payload_size=${OPTARG}
+        ;;
+    u)
+        concurrent_users=${OPTARG}
+        ;;
+    h)
+        usage
+        exit 0
+        ;;
+    \?)
+        usage
+        exit 1
+        ;;
+    esac
+done
+
+if [[ -z $cluster_ip ]]; then
+    echo "Please provide the cluster ip."
+    exit 1
+fi
+
+if [[ -z $scenario_name ]]; then
+    echo "Please provide the scenario name."
+    exit 1
+fi
+
+if [[ -z $github_token ]]; then
+    echo "Please provide the scenario name."
+    exit 1
+fi
+
+if [[ -z $concurrent_users ]]; then
+    echo "Please provide the number of concurrent users."
+    exit 1
+fi
+
 REPO_NAME="ballerina-performance-cloud"
 timestamp=$(date +%s)
-branch_name="nightly-${2}-${timestamp}"
-git clone https://ballerina-bot:"${3}"@github.com/ballerina-platform/"${REPO_NAME}"
+branch_name="nightly-$scenario_name-${timestamp}"
+git clone https://ballerina-bot:"$github_token"@github.com/ballerina-platform/"${REPO_NAME}"
 pushd "${REPO_NAME}"
 git checkout -b "${branch_name}"
 git config --global user.email "ballerina-bot@ballerina.org"
@@ -29,17 +97,26 @@ git status
 git remote -v
 popd
 
-echo "$1 bal.perf.test" | sudo tee -a /etc/hosts
+payload_flags=""
 
-echo "--------Running test ${2}--------"
-pushd "${REPO_NAME}"/tests/"${2}"/scripts/
+echo "$cluster_ip bal.perf.test" | sudo tee -a /etc/hosts
+
+if [[ $payload_size != "0" ]]; then
+    echo "--------Generating $payload_size Payload--------"
+    generate-payloads.sh -p array -s "$payload_size"
+    payload_flags+=" -Jresponse_size=$payload_size -Jpayload=$(pwd)/$payload_size""B.json"
+    echo "--------End of generating payload--------"
+fi
+
+echo "--------Running test $scenario_name--------"
+pushd "${REPO_NAME}"/tests/"$scenario_name"/scripts/
 chmod +x run.sh
-./run.sh "${2}" "${4}" "${5}"
+./run.sh -s "$scenario_name" -u "$concurrent_users" -f "$payload_flags"
 popd
 echo "--------End test--------"
 
 echo "--------Processing Results--------"
-pushd "${REPO_NAME}"/tests/"${2}"/results/
+pushd "${REPO_NAME}"/tests/"$scenario_name"/results/
 echo "--------Splitting Results--------"
 jtl-splitter.sh -- -f original.jtl -t 120 -u SECONDS -s
 ls -ltr
@@ -50,7 +127,7 @@ JMeterPluginsCMD.sh --generate-csv summary.csv --input-jtl original-measurement.
 echo "--------CSV generated--------"
 
 echo "--------Merge CSV--------"
-create-csv.sh summary.csv ~/"${REPO_NAME}"/summary/"${2}".csv ${4} ${5}
+create-csv.sh summary.csv ~/"${REPO_NAME}"/summary/"$scenario_name".csv "$payload_size" "$concurrent_users"
 echo "--------CSV merged--------"
 popd
 
@@ -58,7 +135,7 @@ echo "--------Committing CSV--------"
 pushd "${REPO_NAME}"
 git clean -xfd
 git add summary/
-git commit -m "Update ${2} test results on $(date)"
+git commit -m "Update $scenario_name test results on $(date)"
 git push origin "${branch_name}"
 popd
 echo "--------CSV committed--------"

@@ -14,9 +14,45 @@
 # limitations under the License.
 #
 # ----------------------------------------------------------------------------
-# Execution script for ballerina performance tests
+# Base script for executing jmeter performance test
 # ----------------------------------------------------------------------------
 set -e
-source base-scenario.sh
 
-jmeter -n -t "$scriptsDir/"http-post-request.jmx -l "$resultsDir/"original.jtl -Jusers="$concurrent_users" -Jduration=600 -Jhost=bal.perf.test -Jport=80 -Jprotocol=http -Jpath=db
+scenario_name=""
+concurrent_users=""
+payload_flags=""
+
+while getopts "s:u:f:h" opts; do
+    case $opts in
+    s)
+        scenario_name=${OPTARG}
+        ;;
+    u)
+        concurrent_users=${OPTARG}
+        ;;
+    f)
+        payload_flags=${OPTARG}
+        ;;
+    h)
+        usage
+        exit 0
+        ;;
+    \?)
+        usage
+        exit 1
+        ;;
+    esac
+done
+
+if [[ -z $scenario_name ]]; then
+    echo "Please provide the scenario name."
+    exit 1
+fi
+
+if [[ -z $concurrent_users ]]; then
+    echo "Please provide the number of concurrent users."
+    exit 1
+fi
+
+scriptsDir="~/ballerina-performance-cloud/tests/"$scenario_name"/scripts"
+resultsDir="~/ballerina-performance-cloud/tests/"$scenario_name"/results"
