@@ -105,6 +105,7 @@ if [[ $payload_size != "0" ]]; then
     echo "--------Generating $payload_size Payload--------"
     generate-payloads.sh -p array -s "$payload_size"
     payload_flags+=" -Jresponse_size=$payload_size -Jpayload=$(pwd)/$payload_size""B.json"
+    echo payload_flags
     echo "--------End of generating payload--------"
 fi
 
