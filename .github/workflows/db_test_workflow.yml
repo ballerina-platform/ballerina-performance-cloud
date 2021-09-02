@@ -1,4 +1,4 @@
-name: db_test_workflow
+name: Database Tests Workflow
 
 on:
   workflow_dispatch:
