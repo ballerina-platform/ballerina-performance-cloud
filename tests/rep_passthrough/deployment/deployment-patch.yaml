@@ -8,5 +8,4 @@ spec:
       containers:
       - name: "rep-passthrough-deployment"
         imagePullPolicy: Always
-      nodeSelector:
-        workertype: "app"
+

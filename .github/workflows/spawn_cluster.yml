@@ -1,4 +1,4 @@
-name: Spawn cluster
+name: Daily Performance Tests
 
 on:
   workflow_dispatch:
@@ -26,6 +26,10 @@ jobs:
             --name "${{ secrets.CLUSTER_NAME }}" \
             --service-principal "${AZURE_APP_ID}"\
             --client-secret "${AZURE_APP_PASSWORD}" \
+            --ppg "${PPG_ID}" \
+            --node-vm-size "Standard_F16s" \
+            --node-count 2 \
+            --location "eastus" \
             --generate-ssh-keys
     - name: Configure AKS
       uses: azure/aks-set-context@v1
@@ -52,12 +56,10 @@ jobs:
         kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
         -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
         | head -n1
-    - name: Label Nodes
+    - name: Cordon Node Zero
       run: |
-        node=`kubectl get nodes | awk '{if (NR==3) {print $1}}'`
-        kubectl label nodes $node workertype=app
-        node=`kubectl get nodes | awk '{if (NR==4) {print $1}}'`
-        kubectl label nodes $node workertype=backend
+        node=`kubectl get nodes | awk '{if (NR==2) {print $1}}'`
+        kubectl cordon $node
   h1_h1_passthrough:
     needs: setup
     name: h1_h1_passthrough

@@ -1,4 +1,4 @@
-name: Language Comparison
+name: Language Comparison Tests
 
 on:
   workflow_dispatch:
@@ -27,6 +27,10 @@ jobs:
             --service-principal "${AZURE_APP_ID}"\
             --client-secret "${AZURE_APP_PASSWORD}" \
             --nodepool-name compnodepool \
+            --ppg "${PPG_ID}" \
+            --node-vm-size "Standard_F16s" \
+            --node-count 2 \
+            --location "eastus" \
             --generate-ssh-keys
     - name: Configure AKS
       uses: azure/aks-set-context@v1
@@ -55,10 +59,8 @@ jobs:
         | head -n1
     - name: Label Nodes
       run: |
-        node=`kubectl get nodes | awk '{if (NR==3) {print $1}}'`
-        kubectl label nodes $node workertype=app
-        node=`kubectl get nodes | awk '{if (NR==4) {print $1}}'`
-        kubectl label nodes $node workertype=backend
+        node=`kubectl get nodes | awk '{if (NR==2) {print $1}}'`
+        kubectl cordon $node
   ballerina:
     needs: setup
     runs-on: ubuntu-latest
