@@ -73,7 +73,7 @@ jobs:
         payload: [50]
         users: [60]
     env:
-      TEST_NAME: "test_passthrough"
+      TEST_NAME: "observability_enabled"
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -83,10 +83,10 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Ballerina Build
-      uses: ballerina-platform/ballerina-action@master # uses slbeta2
+      uses: ballerina-platform/ballerina-action@nightly
       env:
         CI_BUILD: true
-        WORKING_DIR: tests/test_passthrough
+        WORKING_DIR: tests/observability_enabled
       with:
         args:
           build
@@ -160,21 +160,21 @@ jobs:
       if: always()
       run: |
         kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
-    # - name: Cleanup VM
-    #   if: always()
-    #   continue-on-error: true
-    #   uses: azure/CLI@v1
-    #   with:
-    #     azcliversion: 2.0.72
-    #     inlineScript: |
-    #       az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
-    #       var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
-    #       if [ -n "$var" ]
-    #       then
-    #           az resource delete --ids ${var}
-    #       else 
-    #           echo "Disk is already deleted"
-    #       fi
+    - name: Cleanup VM
+      if: always()
+      continue-on-error: true
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
+          var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
+          if [ -n "$var" ]
+          then
+              az resource delete --ids ${var}
+          else 
+              echo "Disk is already deleted"
+          fi
   cleanup:
     needs: build
     name: clean up
