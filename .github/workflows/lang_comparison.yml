@@ -1,4 +1,4 @@
-name: lang_comparison
+name: Language Comparison
 
 on:
   workflow_dispatch:
