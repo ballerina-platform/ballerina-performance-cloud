@@ -20,8 +20,6 @@ spec:
         env:
         - name: "SSL"
           value: "true"
-      nodeSelector:
-        workertype: "backend"
 ---
 apiVersion: v1
 kind: Service
