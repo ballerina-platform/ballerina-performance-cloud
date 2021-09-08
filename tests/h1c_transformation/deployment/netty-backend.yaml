@@ -17,8 +17,7 @@ spec:
         image: ldclakmal/netty-echo-backend:latest
         ports:
         - containerPort: 8688
-      nodeSelector:
-        workertype: "backend"
+
 ---
 apiVersion: v1
 kind: Service

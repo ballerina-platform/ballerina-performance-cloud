@@ -8,5 +8,4 @@ spec:
       containers:
       - name: "h2-h1c-passthro-deployment"
         imagePullPolicy: Always
-      nodeSelector:
-        workertype: "app"
+
