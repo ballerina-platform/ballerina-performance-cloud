@@ -32,8 +32,9 @@ jobs:
             --client-secret "${AZURE_APP_PASSWORD}" \
             --ppg "${PPG_ID}" \
             --node-vm-size "Standard_F16s" \
-            --node-count 2 \
+            --node-count 1 \
             --location "eastus" \
+            --node-osdisk-size "8192" \
             --generate-ssh-keys
     - name: Configure AKS
       uses: azure/aks-set-context@v1
@@ -41,10 +42,6 @@ jobs:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
         cluster-name: '${{ github.event.inputs.clusterName }}'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
-    - name: Cordon Node 0
-      run: |
-        node=`kubectl get nodes | awk '{if (NR==2) {print $1}}'`
-        kubectl cordon $node
     - name: Deploy Niginx
       run: |
         # Create a namespace for your ingress resources
