@@ -3,6 +3,10 @@
     padding: 0px;
 }
 
+.nav_bar {
+    padding-bottom: 25px;
+}
+
 .row-content {
     margin: 20px auto;
     padding: 50px 0px 50px 0px;
