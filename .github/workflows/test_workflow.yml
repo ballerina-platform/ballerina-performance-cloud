@@ -31,10 +31,9 @@ jobs:
             --service-principal "${AZURE_APP_ID}"\
             --client-secret "${AZURE_APP_PASSWORD}" \
             --ppg "${PPG_ID}" \
-            --node-vm-size "Standard_F16s" \
+            --node-vm-size "Standard_F16s_v2" \
             --node-count 1 \
             --location "eastus" \
-            --node-osdisk-size "8192" \
             --generate-ssh-keys
     - name: Configure AKS
       uses: azure/aks-set-context@v1
