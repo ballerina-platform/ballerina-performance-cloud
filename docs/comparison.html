@@ -47,13 +47,13 @@
                     <div class="form-check">
                         <input checked class="form-check-input" name="params" onclick="drawSelectedCharts()"
                                type="radio"
-                               value="60_50"><label
-                            class="check-label">60 Users 50b</label>
+                               value="60"><label
+                            class="check-label">60 Users</label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" name="params" onclick="drawSelectedCharts() " type="radio"
-                               value="200_50"><label
-                            class="check-label">200 Users 50b </label>
+                               value="200"><label
+                            class="check-label">200 Users</label>
                     </div>
                 </div>
             </form>
@@ -189,10 +189,10 @@
     }
 
 
-    function extractData(stats, users, payload, attribute) {
+    function extractData(stats, users, attribute) {
         let coordinates = [];
         stats.filter(function (row) {
-            return row['Users'] === users && row['Payload'] === payload;
+            return row['Users'] === users;
         }).map(function (value) {
                 let date = new Date(value['Date'] * 1000);
                 coordinates.push({"x": date.toISOString().slice(0, 10), "y": value[attribute].replace("%", "")});
@@ -231,16 +231,13 @@
             let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/" + lang + ".csv";
             promises.push(d3.csv(url).then(function (stats) {
                 if (chartType !== undefined) {
-                    let res = chartType.split("_");
-                    let users = res[0];
-                    let payload = res[1];
                     let color = getColorByLang(lang);
                     let data = {
                         label: lang.replace("_hello", ""),
                         showLine: true,
                         backgroundColor: color,
                         borderColor: color,
-                        data: extractData(stats, users, payload, attribute)
+                        data: extractData(stats, chartType, attribute)
                     }
                     dataset.push(data);
                 }
