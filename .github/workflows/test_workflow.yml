@@ -32,6 +32,8 @@ jobs:
             --client-secret "${AZURE_APP_PASSWORD}" \
             --ppg "${PPG_ID}" \
             --node-vm-size "Standard_F16s_v2" \
+            --node-osdisk-size 256 \
+            --node-osdisk-type Managed \
             --node-count 1 \
             --location "eastus" \
             --generate-ssh-keys
