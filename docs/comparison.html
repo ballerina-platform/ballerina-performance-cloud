@@ -198,7 +198,16 @@
                 coordinates.push({"x": date.toISOString().slice(0, 10), "y": value[attribute].replace("%", "")});
             }
         );
+        coordinates = sort_by_key(coordinates, 'x');
         return coordinates;
+    }
+
+    function sort_by_key(array, key) {
+        return array.sort(function (a, b) {
+            let x = new Date(a[key]).getTime();
+            let y = new Date(b[key]).getTime();
+            return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+        });
     }
 
     function getColorByLang(lang) {
