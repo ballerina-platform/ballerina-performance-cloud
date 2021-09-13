@@ -1,0 +1,34 @@
+name: test_hello
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [ test_hello ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+      matrix:
+        payload: [0]
+        users: [60]
+    env:
+      TEST_NAME: "ballerina_hello"
+      TEST_ROOT: "tests"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Ballerina Build
+      if: ${{ github.event.client_payload.zipURL != '' }}
+      run: |
+        wget -c ${{ github.event.client_payload.zipURL }}
+        unzip -q ballerina-swan-lake-beta3.zip
+        export CI_BUILD=true
+        export BAL_PATH=`pwd`/ballerina-swan-lake-beta3
+        pwd
+        echo "var ${BAL_PATH}"
+        ls -ltr
+        pushd tests/h1_h1_passthrough
+        ls -ltr
+        $BAL_PATH/bin/bal build --cloud=k8s
+        cat target/docker/${TEST_NAME}/Dockerfile
+        ls -ltr

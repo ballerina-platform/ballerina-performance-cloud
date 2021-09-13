@@ -6,59 +6,20 @@ on:
       zipURL:
         description: 'Ballerina Zip Distribution URL'
         required: false
-  repository_dispatch:
-    types: [ relase_passthrough ]
 jobs:
-  build:
+  h1_h1_passthrough:
+    name: h1_h1_passthrough
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 1
-      matrix:
-        payload: [50]
-        users: [60]
-    env:
-      TEST_NAME: "h1_h1_passthrough"
-      TEST_ROOT: "tests"
     steps:
-    - uses: actions/checkout@v2
-    - name: Login to DockerHub
-      uses: docker/login-action@v1
+    - name: Trigger h1_h1_passthrough
+      uses: convictional/trigger-workflow-and-wait@v1.3.0
       with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    - name: Ballerina Build
-      if: ${{ github.event.inputs.zipURL != '' }}
-      run: |
-        wget -c ${{ github.event.inputs.zipURL }}
-        unzip -q ballerina-swan-lake-beta3.zip
-        export CI_BUILD=true
-        export BAL_PATH=`pwd`/ballerina-swan-lake-beta3
-        pwd
-        echo "var ${BAL_PATH}"
-        ls -ltr
-        pushd tests/h1_h1_passthrough
-        ls -ltr
-        $BAL_PATH/bin/bal build --cloud=k8s
-        cat target/docker/${TEST_NAME}/Dockerfile
-        ls -ltr
-    - name: Docker push
-      run: docker push ballerina/${TEST_NAME}:latest
-    - name: Copy artifacts
-      run: |
-        ls -ltr
-        cp -a ${TEST_ROOT}/${TEST_NAME}/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
-    - name: 'Install Kustomize'
-      run: |
-        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
-    - name: 'Run Kustomize'
-      run: |
-          kustomize build ${TEST_ROOT}/${TEST_NAME}/deployment > ${TEST_ROOT}/${TEST_NAME}/final.yaml
-    - name: Configure AKS
-      uses: azure/aks-set-context@v1
-      with:
-        creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: ${{ secrets.CLUSTER_NAME }}
-        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
-    - name: Deploy artifacts
-      run: |
-        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
+        owner: ballerina-platform
+        repo: ballerina-performance-cloud
+        github_token: ${{ secrets.BALLERINA_BOT_TOKEN }}
+        workflow_file_name: test_hello.yml
+        ref: main
+        inputs: '{ "zipURL":'"${{ github.event.inputs.zipURL }}"'}'
+        waiting_interval: 600
+        trigger_workflow: true
+        wait_workflow: true
