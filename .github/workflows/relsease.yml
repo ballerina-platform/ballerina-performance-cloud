@@ -1,5 +1,4 @@
 name: Relase Pack Test
-
 on:
   workflow_dispatch:
     inputs:
@@ -14,7 +13,7 @@ jobs:
     - name: Trigger h1_h1_passthrough
       uses: convictional/trigger-workflow-and-wait@v1.3.0
       with:
-        owner: ballerina-platform
+        owner: anuruddhal
         repo: ballerina-performance-cloud
         github_token: ${{ secrets.BALLERINA_BOT_TOKEN }}
         workflow_file_name: test_hello.yml
