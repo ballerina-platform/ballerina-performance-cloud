@@ -18,7 +18,7 @@ jobs:
         github_token: ${{ secrets.BALLERINA_BOT_TOKEN }}
         workflow_file_name: test_hello.yml
         ref: main
-        inputs: "{ \"zipURL\":\"${{ github.event.inputs.zipURL }} \"}"
+        inputs: '{"zipURL":"http://dist-dev.ballerina.io/downloads/swan-lake-beta3/ballerina-swan-lake-beta3.zip"}'
         waiting_interval: 600
         trigger_workflow: true
         wait_workflow: true
