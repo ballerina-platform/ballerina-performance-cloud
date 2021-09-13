@@ -11,14 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Trigger h1_h1_passthrough
-      uses: convictional/trigger-workflow-and-wait@v1.3.0
+      uses: felixp8/dispatch-and-wait@v0.1.0
       with:
         owner: anuruddhal
         repo: ballerina-performance-cloud
-        github_token: ${{ secrets.BALLERINA_BOT_TOKEN }}
-        workflow_file_name: test_hello.yml
-        ref: main
-        inputs: '{"zipURL":"http://dist-dev.ballerina.io/downloads/swan-lake-beta3/ballerina-swan-lake-beta3.zip"}'
-        waiting_interval: 600
-        trigger_workflow: true
-        wait_workflow: true
+        token: ${{ secrets.BALLERINA_BOT_TOKEN }}
+        event_type: ping
+        client_payload: '{"zipURL":"http://dist-dev.ballerina.io/downloads/swan-lake-beta3/ballerina-swan-lake-beta3.zip"}'
+        wait_time: 60
+        max_time: 180
