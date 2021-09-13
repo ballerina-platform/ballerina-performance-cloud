@@ -34,7 +34,7 @@ jobs:
             --node-vm-size "Standard_F16s_v2" \
             --node-osdisk-size 256 \
             --node-osdisk-type Managed \
-            --node-count 1 \
+            --node-count 2 \
             --location "eastus" \
             --generate-ssh-keys
     - name: Configure AKS
