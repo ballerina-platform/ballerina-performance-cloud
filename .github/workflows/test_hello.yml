@@ -27,7 +27,7 @@ jobs:
         pwd
         echo "var ${BAL_PATH}"
         ls -ltr
-        pushd tests/h1_h1_passthrough
+        pushd tests/${TEST_NAME}
         ls -ltr
         $BAL_PATH/bin/bal build --cloud=k8s
         cat target/docker/${TEST_NAME}/Dockerfile

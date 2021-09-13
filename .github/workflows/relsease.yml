@@ -16,7 +16,7 @@ jobs:
         owner: anuruddhal
         repo: ballerina-performance-cloud
         token: ${{ secrets.BALLERINA_BOT_TOKEN }}
-        event_type: ping
+        event_type: test_hello
         client_payload: '{"zipURL":"http://dist-dev.ballerina.io/downloads/swan-lake-beta3/ballerina-swan-lake-beta3.zip"}'
         wait_time: 60
         max_time: 180
