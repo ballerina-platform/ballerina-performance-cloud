@@ -13,7 +13,7 @@ jobs:
         payload: [0]
         users: [60]
     env:
-      TEST_NAME: "ballerina_hello"
+      TEST_NAME: ${{github.event.action}}
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2

@@ -19,4 +19,4 @@ jobs:
         event_type: test_hello
         client_payload: '{"zipURL":"${{github.event.inputs.zipURL}}"}'
         wait_time: 5
-        max_time: 45
+        max_time: 2400
