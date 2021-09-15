@@ -32,3 +32,12 @@ jobs:
         $BAL_PATH/bin/bal build --cloud=k8s
         cat target/docker/${TEST_NAME}/Dockerfile
         ls -ltr
+    - name: Ballerina Build
+      if: ${{ github.event.client_payload.zipURL == '' }}
+      uses: ballerina-platform/ballerina-action@nightly
+      env:
+        CI_BUILD: true
+        WORKING_DIR: tests/ballerina_hello
+      with:
+        args:
+          build

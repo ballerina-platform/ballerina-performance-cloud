@@ -6,7 +6,7 @@ on:
         description: 'Ballerina Zip Distribution URL'
         required: false
 jobs:
-  h1_h1_passthrough:
+  release_test:
     name: h1_h1_passthrough
     runs-on: ubuntu-latest
     steps:
@@ -18,5 +18,5 @@ jobs:
         token: ${{ secrets.BALLERINA_BOT_TOKEN }}
         event_type: test_hello
         client_payload: '{"zipURL":"${{github.event.inputs.zipURL}}"}'
-        wait_time: 60
-        max_time: 180
+        wait_time: 5
+        max_time: 45
