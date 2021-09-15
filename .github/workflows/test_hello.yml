@@ -17,6 +17,10 @@ jobs:
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
+    - name: Write values to outputs
+      id: write
+      run: |
+        echo "::set-output name=scenario-name::${TEST_NAME}"
     - name: Ballerina Build
       if: ${{ github.event.client_payload.zipURL != '' }}
       run: |
@@ -37,7 +41,7 @@ jobs:
       uses: ballerina-platform/ballerina-action@nightly
       env:
         CI_BUILD: true
-        WORKING_DIR: tests/ballerina_hello
+        WORKING_DIR: tests/${{ steps.write.outputs.scenario-name }}
       with:
         args:
           build

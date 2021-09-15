@@ -7,10 +7,10 @@ on:
         required: false
 jobs:
   release_test:
-    name: h1_h1_passthrough
+    name: test_workflow
     runs-on: ubuntu-latest
     steps:
-    - name: Trigger h1_h1_passthrough
+    - name: Trigger test workflow
       uses: felixp8/dispatch-and-wait@v0.1.0
       with:
         owner: anuruddhal
