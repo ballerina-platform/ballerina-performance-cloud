@@ -3,7 +3,7 @@ name: HTTP Tests Workflow
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [ h1_h1_passthrough, h1_transformation, h1c_h1c_passthrough, h1c_transformation ]
+    types: [h1_h1_passthrough, h1_transformation, h1c_h1c_passthrough, h1c_transformation, observability_enabled]
 jobs:
   build:
     runs-on: ubuntu-latest
