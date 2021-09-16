@@ -1,9 +1,9 @@
-name: h1c_transformation
+name: HTTP Tests Workflow
 
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [ h1c_transformation ]
+    types: [ h1_h1_passthrough, h1_transformation, h1c_h1c_passthrough, h1c_transformation ]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,7 +13,7 @@ jobs:
         payload: [50, 1024]
         users: [60, 200]
     env:
-      TEST_NAME: "h1c_transformation"
+      TEST_NAME: ${{github.event.action}}
       TEST_ROOT: "tests"
     steps:
     - uses: actions/checkout@v2
@@ -22,14 +22,33 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    - name: Ballerina Build
+    - name: Write Test Name to outputs
+      id: testname
+      run: |
+        echo "::set-output name=test-name::${TEST_NAME}"
+    - name: Ballerina Build from Nightly Pack
+      if: ${{ github.event.client_payload.zipURL == '' }}
       uses: ballerina-platform/ballerina-action@nightly
       env:
         CI_BUILD: true
-        WORKING_DIR: tests/h1c_transformation
+        WORKING_DIR: tests/${{ steps.testname.outputs.test-name }}
       with:
         args:
           build
+    - name: Ballerina Build from Distribution ZIP
+      if: ${{ github.event.client_payload.zipURL != '' }}
+      run: |
+        wget -c ${{ github.event.client_payload.zipURL }}
+        filename=$(basename -- "${{ github.event.client_payload.zipURL }}")
+        filename="${filename%.*}"
+        echo "Distribution: ${filename}"
+        unzip -q ${filename}.zip
+        export CI_BUILD=true
+        export BAL_PATH=`pwd`/${filename}
+        echo "var ${BAL_PATH}"
+        pushd tests/${TEST_NAME}
+        ls -ltr
+        $BAL_PATH/bin/bal build
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}:latest
     - name: Copy artifacts
@@ -90,8 +109,8 @@ jobs:
         username: ${{ secrets.VM_USER }}
         password: ${{ secrets.VM_PWD }}
         envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS
-        command_timeout: '180m' #3 hours
         timeout: 300s #5 mins
+        command_timeout: '180m' #3 hours
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS
@@ -100,9 +119,9 @@ jobs:
       run: |
         kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
     - name: Cleanup VM
-      uses: azure/CLI@v1
       if: always()
       continue-on-error: true
+      uses: azure/CLI@v1
       with:
         azcliversion: 2.0.72
         inlineScript: |
@@ -111,6 +130,6 @@ jobs:
           if [ -n "$var" ]
           then
               az resource delete --ids ${var}
-          else 
+          else
               echo "Disk is already deleted"
           fi
