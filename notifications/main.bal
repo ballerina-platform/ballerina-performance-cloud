@@ -21,54 +21,66 @@ import ballerina/http;
 import ballerina/os;
 import ballerina/log;
 
-const int avgDelta = 50;
-const float tpsDelta = 1000;
+const float avgRateLimit = 10.0;
+const float tpsRateLimit = 10.0;
 
 final http:Client chatWebhookAPI = check new ("https://chat.googleapis.com");
 
 type EnvError distinct error;
 
 public function main() returns error? {
-    file:MetaData[] readDirResults = check file:readDir("/summary");
-    foreach int i in 0 ..< readDirResults.length() {
-        file:MetaData summaryFile = readDirResults[i];
-        if (summaryFile.dir) {
-            continue;
-        }
-        string baseName = check file:basename(summaryFile.absPath);
-        string scenarioName = baseName.substring(0, baseName.length() - 4);
+    string scenarioName = os:getEnv("SCENARIO_NAME");
+    if (scenarioName == "") {
+        return error EnvError("Env variable SCENARIO_NAME not found");
+    }
+    log:printInfo("Started running notification service for " + scenarioName);
+    log:printInfo("Response Average threshold " + avgRateLimit.toString() + "%");
+    log:printInfo("TPS threshold " + tpsRateLimit.toString() + "%");
+    string absPath = "/summary/" + scenarioName + ".csv";
+    string baseName = check file:basename(absPath);
 
-        string[][] listResult = check io:fileReadCsv(summaryFile.absPath);
-        if (listResult.length() <= 1) {
-            continue;
-        }
-        string[] lastEntry = listResult[listResult.length() - 1];
-        string[] beforeLastEntry = getBeforeLastEntry(listResult);
+    string[][] listResult = check io:fileReadCsv(absPath);
+    if (listResult.length() <= 1) {
+        log:printInfo("Only contains the header, skipping");
+        return;
+    }
+    string[] lastEntry = listResult[listResult.length() - 1];
+    log:printInfo("Newly added row : " + lastEntry.toString());
+    string[] beforeLastEntry = getBeforeLastEntry(listResult);
+    log:printInfo("Comparission row : " + lastEntry.toString());
 
-        string toDate = time:utcToString([check int:fromString(lastEntry[13])]);
-        string fromDate = time:utcToString([check int:fromString(beforeLastEntry[13])]);
+    string toDate = time:utcToString([check int:fromString(lastEntry[13])]);
+    string fromDate = time:utcToString([check int:fromString(beforeLastEntry[13])]);
 
-        //Average
-        int newAverage = check int:fromString(lastEntry[2]);
-        int oldAverage = check int:fromString(beforeLastEntry[2]);
-        log:printInfo("new avg of " + scenarioName + " " + newAverage.toString());
-        log:printInfo("old avg of " + scenarioName + " " + oldAverage.toString());
-        float avgPercentage = ((<float>newAverage - <float>oldAverage) * 100.0 / <float>oldAverage);
-        if (avgPercentage > 10.0) {
-            check sendNotification("Average response time increased by " + avgPercentage.toString() + "% for the `" + scenarioName + "` sample. \n" + 
-            "Click here for the list of PRs merged within the time period " + getGithubSearchUrl(fromDate, toDate));
-        }
+    //Average
+    int newAverage = check int:fromString(lastEntry[2]);
+    int oldAverage = check int:fromString(beforeLastEntry[2]);
+    log:printInfo("new avg of " + scenarioName + " " + newAverage.toString());
+    log:printInfo("old avg of " + scenarioName + " " + oldAverage.toString());
+    float avgPercentage = ((<float>newAverage - <float>oldAverage) * 100.0 / <float>oldAverage);
+    log:printInfo("Average Delta " + avgPercentage.toString());
+    if (avgPercentage > avgRateLimit) {
+        log:printInfo("Sending Notification");
+        check sendNotification("Average response time increased by " + avgPercentage.toString() + "% for the `" + scenarioName + "` sample. \n" + 
+        "Click here for the list of PRs merged within the time period " + getGithubSearchUrl(fromDate, toDate));
+    } else {
+        log:printInfo("Notification send skipped as delta threshold is not reached.");
+    }
 
-        //TPS
-        float newTps = check float:fromString(lastEntry[10]);
-        float oldTps = check float:fromString(beforeLastEntry[10]);
-        log:printInfo("new tps of " + scenarioName + " " + newTps.toString());
-        log:printInfo("old tps of " + scenarioName + " " + oldTps.toString());
-        float tpsPercentage = ((<float>oldTps - <float>newTps) * 100.0 / <float>oldTps);
-        if (tpsPercentage > 10.0) {
-            check sendNotification("Throughput decreased by " + tpsPercentage.toString() + "% for the `" + scenarioName + "` sample. \n" + 
-            "Click here for the list of PRs merged within the time period " + getGithubSearchUrl(fromDate, toDate));
-        }
+    //TPS
+    float newTps = check float:fromString(lastEntry[10]);
+    float oldTps = check float:fromString(beforeLastEntry[10]);
+    log:printInfo("new tps of " + scenarioName + " " + newTps.toString());
+    log:printInfo("old tps of " + scenarioName + " " + oldTps.toString());
+    float tpsPercentage = ((<float>oldTps - <float>newTps) * 100.0 / <float>oldTps);
+    log:printInfo("TPS Delta " + tpsPercentage.toString());
+    if (tpsPercentage > tpsRateLimit) {
+        log:printInfo("Sending Notification");
+        check sendNotification("Throughput decreased by " + tpsPercentage.toString() + "% for the `" + scenarioName + "` sample. \n" + 
+        "Click here for the list of PRs merged within the time period " + getGithubSearchUrl(fromDate, toDate));
+    } else {
+        log:printInfo("Notification send skipped as delta threshold is not reached.");
+
     }
 }
 

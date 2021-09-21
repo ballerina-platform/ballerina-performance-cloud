@@ -23,6 +23,9 @@ scenario_name=""
 github_token=""
 payload_size="0"
 concurrent_users=""
+space_id=""
+message_key=""
+chat_token=""
 
 function usage() {
     echo ""
@@ -34,10 +37,13 @@ function usage() {
     echo "-t: Github token for the repository"
     echo "-p: Payload size"
     echo "-u: Concurrent users for the test"
+    echo "-i: Space ID of the chat room"
+    echo "-m: Message Key of the chat"
+    echo "-a: Chat token"
     echo ""
 }
 
-while getopts "c:s:t:p:u:h" opts; do
+while getopts "c:s:t:p:u:i:m:a:h" opts; do
     case $opts in
     c)
         cluster_ip=${OPTARG}
@@ -53,6 +59,15 @@ while getopts "c:s:t:p:u:h" opts; do
         ;;
     u)
         concurrent_users=${OPTARG}
+        ;;
+    i)
+        space_id=${OPTARG}
+        ;;
+    m)
+        message_key=${OPTARG}
+        ;;
+    a)
+        chat_token=${OPTARG}
         ;;
     h)
         usage
@@ -130,6 +145,15 @@ echo "--------CSV generated--------"
 echo "--------Merge CSV--------"
 create-csv.sh summary.csv ~/"${REPO_NAME}"/summary/"$scenario_name".csv "$payload_size" "$concurrent_users"
 echo "--------CSV merged--------"
+
+if [[ -z $space_id || -z $message_key || -z $chat_token ]]; then
+    echo "--- Notification Service skipped as configurations not set"
+else 
+    echo "--------Starting Notification Service--------"
+    docker run -v ~/${REPO_NAME}/summary/:/summary -e SPACE_ID=$space_id -e MESSAGE_KEY=$message_key -e CHAT_TOKEN=$chat_token -e SCENARIO_NAME=$scenario_name ballerina/chat_notifications
+    echo "--------Notification Service executed--------"
+fi
+
 popd
 
 echo "--------Committing CSV--------"
