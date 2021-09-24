@@ -77,7 +77,7 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Ballerina Build
-      uses: ballerina-platform/ballerina-action@master
+      uses: ballerina-platform/ballerina-action@nightly
       env:
         BALLERINA_STAGE_CENTRAL: true
         CI_BUILD: true
