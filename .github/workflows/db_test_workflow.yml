@@ -79,6 +79,7 @@ jobs:
     - name: Ballerina Build
       uses: ballerina-platform/ballerina-action@master
       env:
+        BALLERINA_STAGE_CENTRAL: true
         CI_BUILD: true
         WORKING_DIR: tests/mysql_delete
       with:

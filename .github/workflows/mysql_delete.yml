@@ -23,8 +23,9 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Ballerina Build
-        uses: ballerina-platform/ballerina-action@master
+        uses: ballerina-platform/ballerina-action@nightly
         env:
+          BALLERINA_STAGE_CENTRAL: true
           CI_BUILD: true
           WORKING_DIR: tests/mysql_delete
         with:
@@ -75,7 +76,7 @@ jobs:
           azcliversion: 2.0.72
           inlineScript: |
             az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-            --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }}
+            --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }}  --size Standard_F4s_v2
             echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
       - name: Wait for VM instance
         run: sleep 60s
@@ -96,6 +97,7 @@ jobs:
           username: ${{ secrets.VM_USER }}
           password: ${{ secrets.VM_PWD }}
           envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN
+          timeout: 300s #5 mins
           command_timeout: '180m' #3 hours
           script: |
             source /etc/profile.d/10-perf-vm.sh
