@@ -39,7 +39,6 @@ service /db on new http:Listener(9092) {
             log:printError("Error at db_select", 'error = result);
             return result;
         } else if result is record {|record {} value;|} {
-            log:printInfo(result.value["total"].toString());
             return result.value["total"].toString();
         } else {
             return "";

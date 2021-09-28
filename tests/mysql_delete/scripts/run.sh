@@ -18,4 +18,4 @@
 # ----------------------------------------------------------------------------
 set -e
 source base-scenario.sh
-jmeter -n -t "$scriptsDir/"http-delete-request.jmx -l "$resultsDir/"original.jtl -Jusers="$concurrent_users" -Jduration=600 -Jhost=bal.perf.test -Jport=80 -Jprotocol=http -Jpath=db?id=5
+JVM_ARGS="-Xms512m -Xmx512m" jmeter -n -t "$scriptsDir/"http-delete-request.jmx -l "$resultsDir/"original.jtl -Jusers="$concurrent_users" -Jduration=600 -Jhost=bal.perf.test -Jport=80 -Jprotocol=http -Jpath=db?id=5
