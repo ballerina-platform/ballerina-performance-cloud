@@ -79,7 +79,7 @@ jobs:
         event_type: h1_h1_passthrough
         client_payload: '{"zipURL":"${{github.event.inputs.zipURL}}"}'
         wait_time: 600
-        max_time: 8100
+        max_time: 10800
   h1_transformation:
     needs: h1_h1_passthrough
     name: h1_transformation
@@ -94,7 +94,7 @@ jobs:
         event_type: h1_transformation
         client_payload: '{"zipURL":"${{github.event.inputs.zipURL}}"}'
         wait_time: 600
-        max_time: 8100
+        max_time: 10800
   h1c_h1c_passthrough:
     needs: h1_transformation
     name: h1c_h1c_passthrough
@@ -109,7 +109,7 @@ jobs:
         event_type: h1c_h1c_passthrough
         client_payload: '{"zipURL":"${{github.event.inputs.zipURL}}"}'
         wait_time: 600
-        max_time: 8100
+        max_time: 10800
   h1c_transformation:
     needs: h1c_h1c_passthrough
     name: h1c_transformation
@@ -124,7 +124,7 @@ jobs:
         event_type: h1c_transformation
         client_payload: '{"zipURL":"${{github.event.inputs.zipURL}}"}'
         wait_time: 600
-        max_time: 8100
+        max_time: 10800
   observability_enabled:
     needs: h1c_transformation
     name: observability_enabled
@@ -139,7 +139,7 @@ jobs:
         event_type: observability_enabled
         client_payload: '{"zipURL":"${{github.event.inputs.zipURL}}"}'
         wait_time: 600
-        max_time: 8100
+        max_time: 10800
   cleanup:
     needs: observability_enabled
     name: clean up
