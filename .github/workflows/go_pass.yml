@@ -1,0 +1,156 @@
+name: Go Passthrough service
+
+on:
+  workflow_dispatch:
+    inputs:
+      clusterName:
+        description: 'Cluster name'
+        default: 'bal-perf-cluster-test'
+        required: false
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 600
+    steps:
+    - name: CHECKOUT
+      uses: actions/checkout@v2
+    - name: AZURE LOGIN
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: Create Cluster
+      env:
+        AZURE_APP_ID: ${{ secrets.AZURE_APP_ID }}
+        AZURE_APP_PASSWORD: ${{ secrets.AZURE_APP_PASSWORD }}
+        RESOURCE_GROUP: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+        PPG_ID: "/subscriptions/${{ secrets.SUBSCRIPTION_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
+      run: |
+        az aks create \
+            --resource-group "${RESOURCE_GROUP}" \
+            --name "${{ github.event.inputs.clusterName }}" \
+            --service-principal "${AZURE_APP_ID}"\
+            --client-secret "${AZURE_APP_PASSWORD}" \
+            --ppg "${PPG_ID}" \
+            --node-vm-size "Standard_F16s_v2" \
+            --node-osdisk-size 256 \
+            --node-osdisk-type Managed \
+            --node-count 1 \
+            --location "eastus" \
+            --generate-ssh-keys
+    - name: Configure AKS
+      uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: '${{ github.event.inputs.clusterName }}'
+        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+    - name: Deploy Niginx
+      run: |
+        # Create a namespace for your ingress resources
+        kubectl create namespace ingress-basic
+
+        # Add the ingress-nginx repository
+        helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+
+        # Use Helm to deploy an NGINX ingress controller
+        helm install nginx-ingress ingress-nginx/ingress-nginx \
+            --namespace ingress-basic \
+            --set controller.replicaCount=2 \
+            --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
+            --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
+            --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux
+        # Wait for ingress ip
+        kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
+        -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
+        | head -n1
+  build:
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      max-parallel: 1
+      matrix:
+        payload: [50]
+        users: [60]
+    env:
+      TEST_NAME: "go_pass"
+      TEST_ROOT: "tests"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+    - name: Docker build
+      run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}
+    - name: Docker push
+      run: docker push ballerina/${TEST_NAME}
+    - name: Configure AKS
+      uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: '${{ github.event.inputs.clusterName }}'
+        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+    - name: Deploy artifacts
+      run: |
+        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
+    - name: Login via Az module
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: Write values to outputs
+      id: write
+      run: |
+        echo "::set-output name=cluster-ip::$(kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
+                                              -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
+                                              | head -n1)"
+        echo "::set-output name=scenario-name::${TEST_NAME}"
+        echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ matrix.users }}-${{ matrix.payload }}-${{ GITHUB.RUN_NUMBER }}"
+        echo "::set-output name=custom-image-name::$(cat image.txt)"
+    - name: Create VM Instance
+      id: vminstance
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+          az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
+          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
+          echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
+    - name: Wait for VM instance
+      run: sleep 60s
+      shell: bash
+    - name: Execute performance tests
+      uses: appleboy/ssh-action@master
+      env: 
+        IP: ${{ steps.write.outputs.cluster-ip }}
+        SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
+        PAYLOAD: ${{ matrix.payload }}
+        USERS: ${{ matrix.users }}
+      with:
+        host: ${{ steps.vminstance.outputs.ip-address }}
+        username: ${{ secrets.VM_USER }}
+        password: ${{ secrets.VM_PWD }}
+        envs: IP,SCENARIO_NAME,PAYLOAD,USERS
+        command_timeout: '180m' #3 hours
+        timeout: 300s #5 mins
+        script: |
+          source /etc/profile.d/10-perf-vm.sh
+          execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+    - name: Undeploy Kubernetes artifacts
+      if: always()
+      run: |
+        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
+    - name: Cleanup VM
+      if: always()
+      continue-on-error: true
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
+          var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
+          if [ -n "$var" ]
+          then
+              az resource delete --ids ${var}
+          else 
+              echo "Disk is already deleted"
+          fi
