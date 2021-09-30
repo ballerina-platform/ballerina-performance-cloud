@@ -94,7 +94,12 @@ jobs:
                                               | head -n1)"
         echo "::set-output name=scenario-name::${TEST_NAME}"
         echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ matrix.users }}-${{ matrix.payload }}-${{ GITHUB.RUN_NUMBER }}"
+        echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
+        echo "::set-output name=space-id::${{ secrets.SPACE_ID }}"
+        echo "::set-output name=message-key::${{ secrets.MESSAGE_KEY }}"
+        echo "::set-output name=chat-token::${{ secrets.CHAT_TOKEN }}"
         echo "::set-output name=custom-image-name::$(cat image.txt)"
+        echo "::set-output name=ppg-id::/subscriptions/${{ secrets.SUBSCRIPTION_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
     - name: Create VM Instance
       id: vminstance
       uses: azure/CLI@v1
