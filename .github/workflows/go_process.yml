@@ -1,23 +1,31 @@
-name: Go Passthrough service
+name: Go processing service
 
 on:
   workflow_dispatch:
-    inputs:
-      clusterName:
-        description: 'Cluster name'
-        default: 'bal-perf-cluster-test'
-        required: false
 jobs:
-  setup:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 600
+    strategy:
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        count: [1,2,3,4,5,6]
+        payload: [0]
+        users: [60]
+    env:
+      TEST_NAME: "go_process"
+      TEST_ROOT: "tests"
     steps:
-    - name: CHECKOUT
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
     - name: AZURE LOGIN
       uses: azure/login@v1
       with:
         creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: Cluster outputs
+      id: cluster
+      run: |
+        echo "::set-output name=cluster-name::bal-perf-pro-${{ matrix.count }}"
     - name: Create Cluster
       env:
         AZURE_APP_ID: ${{ secrets.AZURE_APP_ID }}
@@ -27,7 +35,7 @@ jobs:
       run: |
         az aks create \
             --resource-group "${RESOURCE_GROUP}" \
-            --name "${{ github.event.inputs.clusterName }}" \
+            --name "${{ steps.cluster.outputs.cluster-name }}" \
             --service-principal "${AZURE_APP_ID}"\
             --client-secret "${AZURE_APP_PASSWORD}" \
             --ppg "${PPG_ID}" \
@@ -41,7 +49,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ github.event.inputs.clusterName }}'
+        cluster-name: '${{ steps.cluster.outputs.cluster-name }}'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy Niginx
       run: |
@@ -62,19 +70,6 @@ jobs:
         kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
         -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
         | head -n1
-  build:
-    runs-on: ubuntu-latest
-    needs: setup
-    strategy:
-      max-parallel: 1
-      matrix:
-        payload: [50]
-        users: [60]
-    env:
-      TEST_NAME: "go_process"
-      TEST_ROOT: "tests"
-    steps:
-    - uses: actions/checkout@v2
     - name: Login to DockerHub
       uses: docker/login-action@v1
       with:
@@ -84,12 +79,6 @@ jobs:
       run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}
-    - name: Configure AKS
-      uses: azure/aks-set-context@v1
-      with:
-        creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: '${{ github.event.inputs.clusterName }}'
-        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
         kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/k8s.yaml
@@ -123,13 +112,17 @@ jobs:
       env: 
         IP: ${{ steps.write.outputs.cluster-ip }}
         SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
+        GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
+        SPACE_ID: ${{steps.write.outputs.space-id}}
+        MESSAGE_KEY: ${{steps.write.outputs.message-key}}
+        CHAT_TOKEN: ${{steps.write.outputs.chat-token}}
         PAYLOAD: ${{ matrix.payload }}
         USERS: ${{ matrix.users }}
       with:
         host: ${{ steps.vminstance.outputs.ip-address }}
         username: ${{ secrets.VM_USER }}
         password: ${{ secrets.VM_PWD }}
-        envs: IP,SCENARIO_NAME,PAYLOAD,USERS
+        envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN
         command_timeout: '180m' #3 hours
         timeout: 300s #5 mins
         script: |
@@ -154,3 +147,11 @@ jobs:
           else 
               echo "Disk is already deleted"
           fi
+    - name: Cleaning up the cluster
+      if: always()
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_${{ steps.cluster.outputs.cluster-name }}_eastus -y
+          az aks delete --name ${{ steps.cluster.outputs.cluster-name }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
