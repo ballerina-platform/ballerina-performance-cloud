@@ -32,7 +32,7 @@ spec:
         app: "go-process"
     spec:
       containers:
-      - image: "ballerina/go_pass"
+      - image: "ballerina/go_process"
         imagePullPolicy: "Always"
         lifecycle:
           preStop:
