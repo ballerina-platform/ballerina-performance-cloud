@@ -25,10 +25,10 @@ configurable string username = ?;
 configurable string password = ?;
 configurable int port = ?;
 
-final mysql:Client dbClient = check new (host = host, user = username, password = password);
+mysql:Client dbClient = check new (host = host, user = username, password = password);
 
-isolated service /db on new http:Listener(9092) {
-    resource isolated function delete .(int id) returns string|error {
+service /db on new http:Listener(9092) {
+    resource function delete .(int id) returns string|error {
         int count = 0;
         sql:ParameterizedQuery deleteQuery = `DELETE FROM petdb.pet WHERE id = ${id}`;
 
