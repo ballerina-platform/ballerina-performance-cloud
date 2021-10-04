@@ -65,7 +65,7 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [0]
-        users: [5, 5, 10, 30, 60]
+        users: [40, 50, 55, 60, 200]
     env:
       TEST_NAME: "mysql_delete"
       TEST_ROOT: "tests"
@@ -77,9 +77,9 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Ballerina Build
-        uses: ballerina-platform/ballerina-action@master
+        uses: ballerina-platform/ballerina-action@nightly
         env:
-#          BALLERINA_STAGE_CENTRAL: true
+          BALLERINA_STAGE_CENTRAL: true
           CI_BUILD: true
           WORKING_DIR: tests/mysql_delete
         with:
