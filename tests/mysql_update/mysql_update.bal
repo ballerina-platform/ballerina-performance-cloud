@@ -15,6 +15,7 @@
 // under the License.
 
 import ballerina/http;
+import ballerina/io;
 import ballerina/log;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
@@ -30,10 +31,12 @@ mysql:Client dbClient = check new (host = host, user = username, password = pass
 
 service /db on new http:Listener(9092) {
     resource function put .(int id) returns string|error {
+        io:println("Operation started. The id: " +  id.toString());
         int count = 0;
         sql:ParameterizedQuery updateQuery = `UPDATE petdb.pet SET Price = ${price} where id = ${id}`;
 
         sql:ExecutionResult|error result = dbClient->execute(updateQuery);
+        io:println("Operation ended. The id: " +  id.toString());
         if result is error {
             log:printError("Error at db_update", 'error = result);
             return result;
