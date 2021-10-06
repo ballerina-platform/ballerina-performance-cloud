@@ -159,6 +159,10 @@ jobs:
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+    - name: Pod logs
+      if: always()
+      run: |
+        kubectl logs -l logs=true
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
@@ -259,6 +263,10 @@ jobs:
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+    - name: Pod logs
+      if: always()
+      run: |
+        kubectl logs -l logs=true
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
@@ -359,6 +367,10 @@ jobs:
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+    - name: Pod logs
+      if: always()
+      run: |
+        kubectl logs -l logs=true
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
@@ -459,6 +471,10 @@ jobs:
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+    - name: Pod logs
+      if: always()
+      run: |
+        kubectl logs -l logs=true
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
@@ -559,6 +575,10 @@ jobs:
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+    - name: Pod logs
+      if: always()
+      run: |
+        kubectl logs -l logs=true
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |
@@ -659,6 +679,10 @@ jobs:
         script: |
           source /etc/profile.d/10-perf-vm.sh
           execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+    - name: Pod logs
+      if: always()
+      run: |
+        kubectl logs -l logs=true
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |

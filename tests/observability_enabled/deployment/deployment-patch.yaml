@@ -9,6 +9,5 @@ spec:
         logs: "true"
     spec:
       containers:
-      - name: "h2-h2-passthrou-deployment"
+      - name: "observability-e-deployment"
         imagePullPolicy: Always
-

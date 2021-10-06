@@ -30,6 +30,7 @@ spec:
     metadata:
       labels:
         app: "python-flask"
+        logs: "true"
     spec:
       containers:
       - image: "ballerina/python_flask_hello"
