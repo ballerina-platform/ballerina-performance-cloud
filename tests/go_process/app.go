@@ -25,7 +25,7 @@ type server struct{}
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	var buffer bytes.Buffer
-	for i := 0; i <= 1000; i++ {
+	for i := 0; i <= 800; i++ {
 		buffer.WriteString(strconv.Itoa(FibonacciLoop(i)) + " ")
 	}
 	w.Write([]byte(buffer.String()))
