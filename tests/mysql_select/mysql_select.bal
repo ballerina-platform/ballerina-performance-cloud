@@ -25,10 +25,10 @@ configurable string username = ?;
 configurable string password = ?;
 configurable int port = ?;
 
-mysql:Client dbClient = check new (host = host, user = username, password = password);
+final mysql:Client dbClient = check new (host = host, user = username, password = password);
 
-service /db on new http:Listener(9092) {
-    resource function get .() returns string|error {
+isolated service /db on new http:Listener(9092) {
+    resource isolated function get .() returns string|error {
         sql:ParameterizedQuery query = `SELECT COUNT(*) AS total FROM petdb.pet`;
         stream<record {}, error?> resultStream = dbClient->query(query);
 
