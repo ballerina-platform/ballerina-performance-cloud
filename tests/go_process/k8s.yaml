@@ -30,6 +30,7 @@ spec:
     metadata:
       labels:
         app: "go-process"
+        logs: "true"
     spec:
       containers:
       - image: "ballerina/go_process"

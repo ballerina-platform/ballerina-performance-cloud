@@ -30,6 +30,7 @@ spec:
     metadata:
       labels:
         app: "python-hello"
+        logs: "true"
     spec:
       containers:
       - image: "ballerina/python_hello"

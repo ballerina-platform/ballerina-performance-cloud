@@ -4,6 +4,9 @@ metadata:
   name: no-name
 spec:
   template:
+    metadata:
+      labels:
+        logs: "true"
     spec:
       containers:
       - name: "rep-passthrough-deployment"

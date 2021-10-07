@@ -30,6 +30,7 @@ spec:
     metadata:
       labels:
         app: "go-pass"
+        logs: "true"
     spec:
       containers:
       - image: "ballerina/go_pass"

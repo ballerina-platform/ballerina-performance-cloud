@@ -11,6 +11,7 @@ spec:
     metadata:
       labels:
         app: netty-backend
+        logs: "true"
     spec:
       containers:
       - name: netty-container

@@ -41,6 +41,7 @@ spec:
     metadata:
       labels:
         app: mysql8
+        logs: "true"
     spec:
       containers:
         - name: mysql8

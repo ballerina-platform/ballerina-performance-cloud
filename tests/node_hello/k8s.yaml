@@ -30,6 +30,7 @@ spec:
     metadata:
       labels:
         app: "node-hello"
+        logs: "true"
     spec:
       containers:
       - image: "ballerina/node_hello"
