@@ -18,14 +18,13 @@ metadata:
 data:
   initdb.sql: |
     CREATE TABLE petdb.pet (Id INTEGER NOT NULL AUTO_INCREMENT, Name  VARCHAR(300), Category VARCHAR(300), Price INTEGER, PRIMARY KEY(Id));
-    UNLOCK TABLES;
-    INSERT INTO pet VALUES ('John', 'Cat', 1000);
-    INSERT INTO pet VALUES ('John', 'Dog', 2000);
-    INSERT INTO pet VALUES ('Tommy', 'Dog', 1000);
-    INSERT INTO pet VALUES ('Harry', 'Dog', 2000);
-    INSERT INTO pet VALUES ('Benny', 'Cat', 1000);
-    INSERT INTO pet VALUES ('Tigger', 'Cat', 2000);
-    INSERT INTO pet VALUES ('Emma', 'Cat', 1000);
+    INSERT INTO petdb.pet VALUES ('John', 'Cat', 1000);
+    INSERT INTO petdb.pet VALUES ('John', 'Dog', 2000);
+    INSERT INTO petdb.pet VALUES ('Tommy', 'Dog', 1000);
+    INSERT INTO petdb.pet VALUES ('Harry', 'Dog', 2000);
+    INSERT INTO petdb.pet VALUES ('Benny', 'Cat', 1000);
+    INSERT INTO petdb.pet VALUES ('Tigger', 'Cat', 2000);
+    INSERT INTO petdb.pet VALUES ('Emma', 'Cat', 1000);
 ---
 ## Deployment
 apiVersion: apps/v1
