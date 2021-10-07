@@ -31,10 +31,10 @@ string[][] values = [["Bella","Cat","3000"], ["Lucy","Cat","1000"], ["Emma","Cat
                      ["Moose","Cat","2500"], ["Tigger","Cat","1700"], ["Levi","Dog","1200"], ["Benny","Dog","1500"],
                      ["Joey","Dog","1100"], ["Harry","Dog","1200"], ["Thor","Dog","1800"], ["rusty","Dog","1200"],
                      ["Bo","Dog","1600"], ["Teddy","Dog","2500"], ["Bear","Dog","2500"]];
-mysql:Client dbClient = check new (host = host, user = username, password = password);
+final mysql:Client dbClient = check new (host = host, user = username, password = password);
 
-service /db on new http:Listener(9092) {
-    resource function post .() returns string|error {
+isolated service /db on new http:Listener(9092) {
+    resource isolated function post .() returns string|error {
         foreach string[] records in values {
             sql:ParameterizedQuery query = `INSERT INTO petdb.pet (Name, Category, Price)
             VALUES (${records[0]}, ${records[1]}, ${records[2]})`;

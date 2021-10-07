@@ -33,7 +33,7 @@
           <stringProp name="HTTPSampler.port">${__P(port,9092)}</stringProp>
           <stringProp name="HTTPSampler.protocol">${__P(protocol,http)}</stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-          <stringProp name="HTTPSampler.path">${__P(path)}</stringProp>
+          <stringProp name="HTTPSampler.path">db?id=${random}</stringProp>
           <stringProp name="HTTPSampler.method">DELETE</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">false</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">true</boolProp>
@@ -56,6 +56,15 @@
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
+        <RandomVariableConfig guiclass="TestBeanGUI" testclass="RandomVariableConfig" testname="Random Variable" enabled="true">
+          <stringProp name="maximumValue">20</stringProp>
+          <stringProp name="minimumValue">1</stringProp>
+          <stringProp name="outputFormat">00</stringProp>
+          <boolProp name="perThread">true</boolProp>
+          <stringProp name="randomSeed">1</stringProp>
+          <stringProp name="variableName">random</stringProp>
+        </RandomVariableConfig>
+        <hashTree/>
       </hashTree>
     </hashTree>
   </hashTree>
