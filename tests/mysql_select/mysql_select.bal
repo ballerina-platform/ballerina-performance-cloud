@@ -34,11 +34,11 @@ isolated service /db on new http:Listener(9092) {
 
         record {|record {} value;|}|error? result = resultStream.next();
         check resultStream.close();
-        string msg = "No of records: ";
         if result is error {
             log:printError("Error at db_select", 'error = result);
             return result;
         } else if result is record {|record {} value;|} {
+            log:printInfo("Total count: " + result.value["total"].toString());
             return result.value["total"].toString();
         } else {
             return "";

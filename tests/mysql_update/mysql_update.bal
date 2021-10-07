@@ -27,20 +27,14 @@ configurable string password = ?;
 configurable int port = ?;
 string price = "1400";
 
-mysql:Client dbClient = check new (host = host, user = username, password = password);
+final mysql:Client dbClient = check new (host = host, user = username, password = password);
 
-service /db on new http:Listener(9092) {
-    resource function put .(int id) returns string|error {
-        if id == 3 {
-            io:println("Operation started. The id: " +  id.toString());
-        }
+isolated service /db on new http:Listener(9092) {
+    resource isolated function put .(int id) returns string|error {
         int count = 0;
         sql:ParameterizedQuery updateQuery = `UPDATE petdb.pet SET Price = ${price} where id = ${id}`;
 
         sql:ExecutionResult|error result = dbClient->execute(updateQuery);
-        if id == 3 {
-            io:println("Operation ended. The id: " +  id.toString());
-        }
         if result is error {
             log:printError("Error at db_update", 'error = result);
             return result;
