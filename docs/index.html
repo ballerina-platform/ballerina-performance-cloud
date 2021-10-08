@@ -164,6 +164,7 @@
 
     $(".period").click(function () {
         let period = this.id;
+        fromDate = new Date();
         switch (period) {
             case "1w":
                 fromDate.setDate(fromDate.getDate() - 7);
