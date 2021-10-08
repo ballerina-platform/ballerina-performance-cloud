@@ -72,7 +72,7 @@ if [ "$download" = true ]; then
         echo "Do not specify JMeter distribution file with download option."
         exit 1
     fi
-    jmeter_version="4.0"
+    jmeter_version="5.4"
     jmeter_dist="apache-jmeter-${jmeter_version}.tgz"
     jmeter_download_url="https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${jmeter_version}.tgz"
     if [[ ! -f $jmeter_dist ]]; then
@@ -187,6 +187,6 @@ done
 # Set cmdrunner version in JMeterPluginsCMD.sh
 sed -i "s/cmdrunner-.*\.jar/$cmdrunner_jar/g" $extracted_dirname/bin/JMeterPluginsCMD.sh
 
-export PATH=$PATH:/base-image/apache-jmeter-4.0/bin/
-echo 'export PATH=$PATH:/base-image/apache-jmeter-4.0/bin/' | sudo tee -a /etc/profile.d/10-perf-vm.sh
-echo "JVM_ARGS=\"-XX:InitialRAMPercentage=25.0 -XX:MaxRAMPercentage=75.0 -Dnashorn.args=--no-deprecation-warning\"" | sudo tee -a /base-image/apache-jmeter-4.0/bin/setenv.sh
+export PATH=$PATH:/base-image/apache-jmeter-5.4/bin/
+echo 'export PATH=$PATH:/base-image/apache-jmeter-5.4/bin/' | sudo tee -a /etc/profile.d/10-perf-vm.sh
+echo "JVM_ARGS=\"-XX:InitialRAMPercentage=25.0 -XX:MaxRAMPercentage=75.0 -Dnashorn.args=--no-deprecation-warning\"" | sudo tee -a /base-image/apache-jmeter-5.4/bin/setenv.sh
