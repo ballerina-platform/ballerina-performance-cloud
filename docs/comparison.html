@@ -163,6 +163,7 @@
             default:
                 break;
         }
+        document.getElementById("fromDate").value = fromDate.toJSON().slice(0, 19);
         drawSelectedCharts();
     });
 
