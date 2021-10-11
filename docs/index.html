@@ -93,10 +93,8 @@
                 <input class="period btn-light" id="1y" type="button" value="1y"/>
             </div>
         </div>
-        <div class="col-sm-4" id="date-selector">
+        <div class="col-sm-8" id="date-selector">
             From: <input class="ui-widget" id="fromDate" type="datetime-local">
-        </div>
-        <div class="col-sm-4" id="date-selector">
             To: <input class="ui-widget" id="toDate" type="datetime-local">
         </div>
     </div>
@@ -184,13 +182,8 @@
             default:
                 break;
         }
+        document.getElementById("fromDate").value = fromDate.toJSON().slice(0, 19);
         drawSelectedCharts();
-    });
-
-    Date.prototype.toDateInputValue = (function () {
-        let local = new Date(this);
-        local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
-        return local.toJSON().slice(0, 10);
     });
 
     $(document).ready(function () {
