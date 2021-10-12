@@ -187,6 +187,6 @@ done
 # Set cmdrunner version in JMeterPluginsCMD.sh
 sed -i "s/cmdrunner-.*\.jar/$cmdrunner_jar/g" $extracted_dirname/bin/JMeterPluginsCMD.sh
 
-export PATH=$PATH:/base-image/apache-jmeter-5.4/bin/
-echo 'export PATH=$PATH:/base-image/apache-jmeter-5.4/bin/' | sudo tee -a /etc/profile.d/10-perf-vm.sh
-echo "JVM_ARGS=\"-XX:InitialRAMPercentage=25.0 -XX:MaxRAMPercentage=75.0 -Dnashorn.args=--no-deprecation-warning\"" | sudo tee -a /base-image/apache-jmeter-5.4/bin/setenv.sh
+export PATH=$PATH:/opt/base-image/apache-jmeter-5.4/bin/
+echo 'export PATH=$PATH:/opt/base-image/apache-jmeter-5.4/bin/' | sudo tee -a /etc/profile.d/10-perf-vm.sh
+echo "JVM_ARGS=\"-XX:InitialRAMPercentage=25.0 -XX:MaxRAMPercentage=75.0 -Dnashorn.args=--no-deprecation-warning\"" | sudo tee -a /opt/base-image/apache-jmeter-5.4/bin/setenv.sh
