@@ -40,8 +40,8 @@ jobs:
         dist-image-tags: 'number:${{ GITHUB.RUN_NUMBER }}'
         customizer-source: ${{ GITHUB.WORKSPACE }}/base-image
         customizer-script: |
-          sudo cp -r /tmp/base-image/ /
-          sh /base-image/init.sh
+          sudo cp -r /tmp/base-image/ /opt/
+          sh /opt/base-image/init.sh
     - name: Cleaning up existing VM Image
       uses: azure/CLI@v1
       with:
