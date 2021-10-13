@@ -20,6 +20,9 @@ on:
         description: 'Cluster name'
         default: 'bal-perf-cluster-test'
         required: false
+      image:
+        description: 'Cluster name'
+        required: true
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -170,7 +173,7 @@ jobs:
         echo "::set-output name=space-id::${{ secrets.SPACE_ID }}"
         echo "::set-output name=message-key::${{ secrets.MESSAGE_KEY }}"
         echo "::set-output name=chat-token::${{ secrets.CHAT_TOKEN }}"
-        echo "::set-output name=custom-image-name::$(cat image.txt)"
+        echo "::set-output name=custom-image-name::${{ github.event.inputs.image }}"
         echo "::set-output name=ppg-id::/subscriptions/${{ secrets.SUBSCRIPTION_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
     - name: Create VM Instance
       id: vminstance
