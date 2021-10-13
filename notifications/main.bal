@@ -36,7 +36,7 @@ public function main() returns error? {
     log:printInfo("Started running notification service for " + scenarioName);
     log:printInfo("Response Average threshold " + avgRateLimit.toString() + "%");
     log:printInfo("TPS threshold " + tpsRateLimit.toString() + "%");
-    string absPath = "/summary/" + scenarioName + ".csv";
+    string absPath = "/summary/summary.csv";
     string baseName = check file:basename(absPath);
 
     string[][] listResult = check io:fileReadCsv(absPath);
