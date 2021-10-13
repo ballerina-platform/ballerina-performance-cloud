@@ -10,8 +10,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      TEST_NAME: "h1_h1_passthrough"
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -42,30 +40,30 @@ jobs:
         customizer-script: |
           sudo cp -r /tmp/base-image/ /opt/
           sh /opt/base-image/init.sh
-    - name: Cleaning up existing VM Image
-      uses: azure/CLI@v1
-      with:
-        azcliversion: 2.25.0
-        inlineScript: |
-          var=`az group list --tag imageTemplateName=imagebuilderTemplate_${{ steps.write.outputs.old-image-id }} -otable --query "[].name" -otsv`
-          if [ -n "$var" ]
-          then
-              az group delete --name ${var} -y
-              az image builder delete --name imagebuilderTemplate_${{ steps.write.outputs.old-image-id }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }}
-              az image delete --name mi_${{ steps.write.outputs.old-image-id }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }}
-          else 
-              echo "Template artifacts not found in Azure"
-          fi
-    - name: Create local changes
-      run: |
-        echo ${{ steps.imageBuilder.outputs.custom-image-uri }} | rev | cut -d/ -f1 | rev | sed -e "s/^"mi_"//" > image.txt
-    - name: Commit files
-      run: |
-        git config --local user.email "ballerina-bot@ballerina.org"
-        git config --local user.name "ballerina-bot"
-        git commit -m "Bump VM Version" -a
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.BALLERINA_BOT_TOKEN }}
-        branch: update-vm-image-${{ GITHUB.RUN_NUMBER }}
+    # - name: Cleaning up existing VM Image
+    #   uses: azure/CLI@v1
+    #   with:
+    #     azcliversion: 2.25.0
+    #     inlineScript: |
+    #       var=`az group list --tag imageTemplateName=imagebuilderTemplate_${{ steps.write.outputs.old-image-id }} -otable --query "[].name" -otsv`
+    #       if [ -n "$var" ]
+    #       then
+    #           az group delete --name ${var} -y
+    #           az image builder delete --name imagebuilderTemplate_${{ steps.write.outputs.old-image-id }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+    #           az image delete --name mi_${{ steps.write.outputs.old-image-id }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+    #       else 
+    #           echo "Template artifacts not found in Azure"
+    #       fi
+    # - name: Create local changes
+    #   run: |
+    #     echo ${{ steps.imageBuilder.outputs.custom-image-uri }} | rev | cut -d/ -f1 | rev | sed -e "s/^"mi_"//" > image.txt
+    # - name: Commit files
+    #   run: |
+    #     git config --local user.email "ballerina-bot@ballerina.org"
+    #     git config --local user.name "ballerina-bot"
+    #     git commit -m "Bump VM Version" -a
+    # - name: Push changes
+    #   uses: ad-m/github-push-action@master
+    #   with:
+    #     github_token: ${{ secrets.BALLERINA_BOT_TOKEN }}
+    #     branch: update-vm-image-${{ GITHUB.RUN_NUMBER }}
