@@ -39,7 +39,7 @@ jobs:
               echo "Github repo should be in `ballerina-platform` org"
               exit 1
             fi
-            cd $repoName
+            cd $repoName/load-tests
             tests=$(ls -d */ | cut -f1 -d'/' | jq -R -s -c 'split("\n")[:-1]')
             echo "::set-output name=test::${tests}"
           else
@@ -120,7 +120,7 @@ jobs:
         users: [60]
     env:
       TEST_NAME: "${{ matrix.repo_name }}"
-      TEST_ROOT: "tests"
+      TEST_ROOT: "load-tests"
     steps:
     - uses: actions/checkout@v2
     - name: Login to DockerHub
@@ -132,7 +132,7 @@ jobs:
       uses: ballerina-platform/ballerina-action@nightly
       env:
         CI_BUILD: true
-        WORKING_DIR: tests/${{ matrix.repo_name }}
+        WORKING_DIR: load-tests/${{ matrix.repo_name }}/src
       with:
         args:
           build
@@ -141,7 +141,7 @@ jobs:
     - name: Copy artifacts
       run: |
         ls -ltr
-        cp -a ${TEST_ROOT}/${TEST_NAME}/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
+        cp -a ${TEST_ROOT}/${TEST_NAME}/src/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
     - name: 'Install Kustomize'
       run: |
         curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
