@@ -150,7 +150,7 @@ fi
 echo "--------Committing CSV--------"
 pushd "${repo_name}"
 git clean -xfd
-git add summary/
+git add load-tests/$scenario_name/results/summary.csv
 git commit -m "Update $scenario_name test results on $(date)"
 git push origin "${branch_name}"
 popd
