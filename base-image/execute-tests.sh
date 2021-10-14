@@ -167,11 +167,11 @@ else
   echo "--------Splitting Completed--------"
 
   echo "--------Generating CSV--------"
-  JMeterPluginsCMD.sh --generate-csv summary.csv --input-jtl original-measurement.jtl --plugin-type AggregateReport
+  JMeterPluginsCMD.sh --generate-csv temp_summary.csv --input-jtl original-measurement.jtl --plugin-type AggregateReport
   echo "--------CSV generated--------"
 
   echo "--------Merge CSV--------"
-  create-csv.sh summary.csv ~/"${repo_name}"/load-tests/"$scenario_name"/results/summary.csv "$payload_size" "$concurrent_users"
+  create-csv.sh temp_summary.csv ~/"${repo_name}"/load-tests/"$scenario_name"/results/summary.csv "$payload_size" "$concurrent_users"
   echo "--------CSV merged--------"
 fi
 
@@ -188,7 +188,7 @@ popd
 echo "--------Committing CSV--------"
 pushd "${repo_name}"
 git clean -xfd
-git add load-tests/"$scenario_name"/results/
+git add load-tests/"$scenario_name"/results/summary.csv
 git commit -m "Update $scenario_name test results on $(date)"
 git push origin "${branch_name}"
 popd
