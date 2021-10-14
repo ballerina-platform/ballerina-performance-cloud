@@ -124,13 +124,29 @@ payload_flags=""
 
 echo "$cluster_ip bal.perf.test" | sudo tee -a /etc/hosts
 
-if [[ $payload_size != "0" ]]; then
-    echo "--------Generating $payload_size Payload--------"
-    generate-payloads.sh -p array -s "$payload_size"
-    payload_flags+=" -Jresponse_size=$payload_size -Jpayload=$(pwd)/$payload_size""B.json"
-    echo payload_flags
-    echo "--------End of generating payload--------"
-fi
+function executeScript() {
+  FILE="${repo_name}"/load-tests/"$scenario_name"/scripts/"${1}"
+  if test -f "$FILE"; then
+      echo "-------- Executing $1 --------"
+      pushd "${repo_name}"/load-tests/"${scenario_name}"/scripts/
+      chmod +x "${1}"
+      sudo ./"${1}"
+      echo "-------- $1 executed --------"
+  fi
+}
+
+function generatePayload() {
+    if [[ $1 != "0" ]]; then
+        echo "--------Generating $payload_size Payload--------"
+        generate-payloads.sh -p array -s "$payload_size"
+        payload_flags+=" -Jresponse_size=$payload_size -Jpayload=$(pwd)/$payload_size""B.json"
+        echo payload_flags
+        echo "--------End of generating payload--------"
+    fi
+}
+
+executeScript "pre_run.sh"
+generatePayload "$payload_size"
 
 echo "--------Running test $scenario_name--------"
 pushd "${repo_name}"/load-tests/"$scenario_name"/scripts/
@@ -139,18 +155,40 @@ chmod +x run.sh
 popd
 echo "--------End test--------"
 
+POST_RUN_FILE="${repo_name}"/load-tests/"$scenario_name"/scripts/post_run.sh
+if test -f "$POST_RUN_FILE"; then
+  executeScript "post_run.sh"
+else
+  echo "--------Processing Results--------"
+  pushd "${repo_name}"/load-tests/"$scenario_name"/results/
+  echo "--------Splitting Results--------"
+  jtl-splitter.sh -- -f original.jtl -t 120 -u SECONDS -s
+  ls -ltr
+  echo "--------Splitting Completed--------"
+
+  echo "--------Generating CSV--------"
+  JMeterPluginsCMD.sh --generate-csv summary.csv --input-jtl original-measurement.jtl --plugin-type AggregateReport
+  echo "--------CSV generated--------"
+
+  echo "--------Merge CSV--------"
+  create-csv.sh summary.csv ~/"${repo_name}"/load-tests/"$scenario_name"/results/summary.csv "$payload_size" "$concurrent_users"
+  echo "--------CSV merged--------"
+fi
+
 if [[ -z $space_id || -z $message_key || -z $chat_token ]]; then
     echo "--- Notification Service skipped as configurations not set"
 else 
     echo "--------Starting Notification Service--------"
-    sudo docker run -v ~/${repo_name}/load-tests/$scenario_name/results/:/summary -e SPACE_ID=$space_id -e MESSAGE_KEY=$message_key -e CHAT_TOKEN=$chat_token -e SCENARIO_NAME=$scenario_name ballerina/chat_notifications
+    sudo docker run -v ~/"${repo_name}"/load-tests/"$scenario_name"/results/:/summary -e SPACE_ID="$space_id" -e MESSAGE_KEY="$message_key" -e CHAT_TOKEN="$chat_token" -e SCENARIO_NAME="$scenario_name" ballerina/chat_notifications
     echo "--------Notification Service executed--------"
 fi
+
+popd
 
 echo "--------Committing CSV--------"
 pushd "${repo_name}"
 git clean -xfd
-git add summary/
+git add load-tests/"$scenario_name"/results/
 git commit -m "Update $scenario_name test results on $(date)"
 git push origin "${branch_name}"
 popd
