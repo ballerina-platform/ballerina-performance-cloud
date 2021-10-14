@@ -167,11 +167,11 @@ else
   echo "--------Splitting Completed--------"
 
   echo "--------Generating CSV--------"
-  JMeterPluginsCMD.sh --generate-csv summary.csv --input-jtl original-measurement.jtl --plugin-type AggregateReport
+  JMeterPluginsCMD.sh --generate-csv temp_summary.csv --input-jtl original-measurement.jtl --plugin-type AggregateReport
   echo "--------CSV generated--------"
 
   echo "--------Merge CSV--------"
-  create-csv.sh summary.csv ~/"${repo_name}"/load-tests/"$scenario_name"/results/summary.csv "$payload_size" "$concurrent_users"
+  create-csv.sh temp_summary.csv ~/"${repo_name}"/load-tests/"$scenario_name"/results/summary.csv "$payload_size" "$concurrent_users"
   echo "--------CSV merged--------"
 fi
 
