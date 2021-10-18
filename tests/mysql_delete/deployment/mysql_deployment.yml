@@ -1,4 +1,3 @@
-# this pvc will be used to store downloaded init.sql file
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -11,7 +10,6 @@ spec:
     requests:
       storage: 50Mi
 ---
-# this pvc will be used to store mysql database
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -39,7 +37,7 @@ spec:
       labels:
         app: mysql8
     spec:
-      initContainers:  # this init container download init.sql file using "curl -o <downloaded file name with path> <download url>" command.
+      initContainers:
         - name: init-script-downloader
           image: appropriate/curl
           args:
