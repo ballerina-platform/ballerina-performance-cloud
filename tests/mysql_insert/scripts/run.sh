@@ -16,6 +16,6 @@
 # ----------------------------------------------------------------------------
 # Execution script for ballerina performance tests
 # ----------------------------------------------------------------------------
-set -e
-source base-scenario.sh
-jmeter -n -t "$scriptsDir/"http-post-request.jmx -l "$resultsDir/"original.jtl -Jusers="$concurrent_users" -Jduration=600 -Jhost=bal.perf.test -Jport=80 -Jprotocol=http -Jpath=db
+#set -e
+#source base-scenario.sh
+/Users/user/Downloads/apache-jmeter-5.4/bin/jmeter -n -t http-put-request.jmx -l original.jtl -Jusers=42 -Jduration=600 -Jhost=192.168.64.41 -Jport=31754 -Jprotocol=http

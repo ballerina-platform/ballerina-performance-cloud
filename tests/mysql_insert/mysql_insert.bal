@@ -27,23 +27,26 @@ configurable string database_name = ?;
 configurable int port = ?;
 configurable string table_name = ?;
 
-string[][] values = [["Bella","Cat","3000"], ["Lucy","Cat","1000"], ["Emma","Cat","1500"], ["Bob","Cat","1400"],
-                     ["Moose","Cat","2500"], ["Tigger","Cat","1700"], ["Levi","Dog","1200"], ["Benny","Dog","1500"],
-                     ["Joey","Dog","1100"], ["Harry","Dog","1200"], ["Thor","Dog","1800"], ["rusty","Dog","1200"],
-                     ["Bo","Dog","1600"], ["Teddy","Dog","2500"], ["Bear","Dog","2500"]];
-final mysql:Client dbClient = check new (host = host, user = username, password = password);
+final string name = "Bella";
+final string category = "Cat";
+final int price = 3000;
+
+final mysql:Client dbClient = check new (host = host, user = username, password = password, port = port);
 
 isolated service /db on new http:Listener(9092) {
-    resource isolated function post .() returns string|error {
-        foreach string[] records in values {
-            sql:ParameterizedQuery query = `INSERT INTO petdb.pet (Name, Category, Price)
-            VALUES (${records[0]}, ${records[1]}, ${records[2]})`;
-            sql:ExecutionResult|error result = dbClient->execute(query);
-            if result is error {
-                log:printError("Error at db_insert", 'error = result);
-                return result;
-            }
+    resource isolated function post .(http:Caller caller) {
+        sql:ParameterizedQuery query = `INSERT INTO petdb.pet (Name, Category, Price)
+        VALUES (${name}, ${category}, ${price})`;
+        sql:ExecutionResult|error result = dbClient->execute(query);
+        http:Response response = new;
+        if result is error {
+            log:printError("Error at db_insert", 'error = result);
+            response.statusCode = 500;
+            response.setPayload(result.toString());
+        } else {
+            response.statusCode = 200;
+            response.setPayload("Records inserted succesfully");
         }
-        return "Records inserted succesfully";
+        error? output = caller->respond(response);
     }
 }

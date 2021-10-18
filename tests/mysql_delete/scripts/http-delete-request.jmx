@@ -57,9 +57,9 @@
           <hashTree/>
         </hashTree>
         <RandomVariableConfig guiclass="TestBeanGUI" testclass="RandomVariableConfig" testname="Random Variable" enabled="true">
-          <stringProp name="maximumValue">20</stringProp>
+          <stringProp name="maximumValue">300</stringProp>
           <stringProp name="minimumValue">1</stringProp>
-          <stringProp name="outputFormat">00</stringProp>
+          <stringProp name="outputFormat">000</stringProp>
           <boolProp name="perThread">true</boolProp>
           <stringProp name="randomSeed">1</stringProp>
           <stringProp name="variableName">random</stringProp>

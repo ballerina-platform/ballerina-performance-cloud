@@ -1,32 +1,29 @@
-apiVersion: v1
+# this pvc will be used to store downloaded init.sql file
 kind: PersistentVolumeClaim
+apiVersion: v1
 metadata:
-  name: mysql-pv-claim
-  labels:
-    app: mysql8
+  name: init-script
 spec:
   accessModes:
     - ReadWriteOnce
+  volumeMode: Filesystem
   resources:
     requests:
-      storage: 1Gi #1 GB
+      storage: 50Mi
 ---
+# this pvc will be used to store mysql database
+kind: PersistentVolumeClaim
 apiVersion: v1
-kind: ConfigMap
 metadata:
-  name: mysql-initdb-config
-data:
-  initdb.sql: |
-    CREATE TABLE petdb.pet (Id INTEGER NOT NULL AUTO_INCREMENT, Name  VARCHAR(300), Category VARCHAR(300), Price INTEGER, PRIMARY KEY(Id));
-    INSERT INTO petdb.pet VALUES ('John', 'Cat', 1000);
-    INSERT INTO petdb.pet VALUES ('John', 'Dog', 2000);
-    INSERT INTO petdb.pet VALUES ('Tommy', 'Dog', 1000);
-    INSERT INTO petdb.pet VALUES ('Harry', 'Dog', 2000);
-    INSERT INTO petdb.pet VALUES ('Benny', 'Cat', 1000);
-    INSERT INTO petdb.pet VALUES ('Tigger', 'Cat', 2000);
-    INSERT INTO petdb.pet VALUES ('Emma', 'Cat', 1000);
+  name: mysql-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
 ---
-## Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,39 +33,42 @@ spec:
     matchLabels:
       app: mysql8
   strategy:
-    type : Recreate
+    type: Recreate
   template:
     metadata:
       labels:
         app: mysql8
     spec:
+      initContainers:
+        - name: init-script-downloader
+          image: appropriate/curl
+          args:
+            - "-o"
+            - "/tmp/data/init.sql"
+            - "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/tests/mysql_select/scripts/init.sql"
+          volumeMounts:
+            - name: init-script
+              mountPath: /tmp/data
       containers:
         - name: mysql8
           image: mysql:8.0.22
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: Root0++
-            - name: MYSQL_USER
-              value: user
-            - name: MYSQL_PASSWORD
-              value: pass@word1234
-            - name: MYSQL_DATABASE
-              value: petdb
-          args: ["--default-authentication-plugin=mysql_native_password"]
+              value: password
           ports:
             - containerPort: 3306
           volumeMounts:
-            - name: mysql-persistent-storage
+            - name: data
               mountPath: /var/lib/mysql
-            - name: mysql-initdb
+            - name: init-script
               mountPath: /docker-entrypoint-initdb.d
       volumes:
-        - name: mysql-persistent-storage
+        - name: init-script
           persistentVolumeClaim:
-            claimName: mysql-pv-claim
-        - name: mysql-initdb
-          configMap:
-            name: mysql-initdb-config
+            claimName: init-script
+        - name: data
+          persistentVolumeClaim:
+            claimName: mysql-data-pvc
 ---
 ## Service
 apiVersion: v1

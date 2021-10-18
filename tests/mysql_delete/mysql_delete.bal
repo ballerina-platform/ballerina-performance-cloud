@@ -25,22 +25,26 @@ configurable string username = ?;
 configurable string password = ?;
 configurable int port = ?;
 
-final mysql:Client dbClient = check new (host = host, user = username, password = password);
+final mysql:Client dbClient = check new (host = host, user = username, password = password, port = port);
 
 isolated service /db on new http:Listener(9092) {
-    resource isolated function delete .(int id) returns string|error {
+    resource isolated function delete .(http:Caller caller, int id) {
         int count = 0;
         sql:ParameterizedQuery deleteQuery = `DELETE FROM petdb.pet WHERE id = ${id}`;
         sql:ExecutionResult|error result = dbClient->execute(deleteQuery);
+        http:Response response = new;
         if result is error {
             log:printError("Error at db_delete", 'error = result);
-            return result;
+            response.statusCode = 500;
+            response.setPayload(result.toString());
         } else {
+            response.statusCode = 200;
             int? deleteRowCount = result?.affectedRowCount;
             if (deleteRowCount is int) {
                 count = deleteRowCount;
             }
-            return "Affected row:" + count.toString();
+            response.setPayload("Affected row:" + count.toString());
         }
+        error? output = caller->respond(response);
     }
 }
