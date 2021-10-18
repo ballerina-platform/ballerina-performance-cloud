@@ -25,23 +25,29 @@ configurable string username = ?;
 configurable string password = ?;
 configurable int port = ?;
 
-final mysql:Client dbClient = check new (host = host, user = username, password = password);
+final mysql:Client dbClient = check new (host = host, user = username, password = password, port = port);
 
 isolated service /db on new http:Listener(9092) {
-    resource isolated function get .() returns string|error {
+    resource isolated function get .(http:Caller caller) {
         sql:ParameterizedQuery query = `SELECT COUNT(*) AS total FROM petdb.pet`;
         stream<record {}, error?> resultStream = dbClient->query(query);
 
         record {|record {} value;|}|error? result = resultStream.next();
-        check resultStream.close();
+        error? output = resultStream.close();
+        http:Response response = new;
         if result is error {
             log:printError("Error at db_select", 'error = result);
-            return result;
-        } else if result is record {|record {} value;|} {
-            log:printInfo("Total count: " + result.value["total"].toString());
-            return result.value["total"].toString();
+            response.statusCode = 500;
+            response.setPayload(result.toString());
         } else {
-            return "";
+            response.statusCode = 200;
+            if result is record {|record {} value;|} {
+                log:printInfo("Total count: " + result.value["total"].toString());
+                response.setPayload("Total count: " + result.value["total"].toString());
+            } else {
+                response.setPayload("Total count: ");
+            }
         }
+        output = caller->respond(response);
     }
 }

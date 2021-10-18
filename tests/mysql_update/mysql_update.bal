@@ -15,7 +15,6 @@
 // under the License.
 
 import ballerina/http;
-import ballerina/io;
 import ballerina/log;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
@@ -25,25 +24,29 @@ configurable string host = ?;
 configurable string username = ?;
 configurable string password = ?;
 configurable int port = ?;
-string price = "1400";
+final string price = "1400";
 
-final mysql:Client dbClient = check new (host = host, user = username, password = password);
+final mysql:Client dbClient = check new (host = host, user = username, password = password, port = port);
 
 isolated service /db on new http:Listener(9092) {
-    resource isolated function put .(int id) returns string|error {
+    resource isolated function put .(http:Caller caller, int id) {
         int count = 0;
         sql:ParameterizedQuery updateQuery = `UPDATE petdb.pet SET Price = ${price} where id = ${id}`;
 
         sql:ExecutionResult|error result = dbClient->execute(updateQuery);
+        http:Response response = new;
         if result is error {
             log:printError("Error at db_update", 'error = result);
-            return result;
+            response.statusCode = 500;
+            response.setPayload(result.toString());
         } else {
-            int? deleteRowCount = result?.affectedRowCount;
-            if (deleteRowCount is int) {
-                count = deleteRowCount;
+            response.statusCode = 200;
+            int? updateRowCount = result?.affectedRowCount;
+            if (updateRowCount is int) {
+                count = updateRowCount;
             }
-            return "Affected row:" + count.toString();
+            response.setPayload("Affected row:" + count.toString());
         }
+        error? output = caller->respond(response);
     }
 }

@@ -65,7 +65,7 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [0]
-        users: [40, 50, 55, 60, 200]
+        users: [50, 52, 55, 60, 200]
     env:
       TEST_NAME: "mysql_select"
       TEST_ROOT: "tests"
