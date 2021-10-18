@@ -81,7 +81,7 @@ jobs:
         env:
           BALLERINA_STAGE_CENTRAL: true
           CI_BUILD: true
-          WORKING_DIR: load-tests/mysql_select
+          WORKING_DIR: load-tests/mysql_select/src
         with:
           args:
             build

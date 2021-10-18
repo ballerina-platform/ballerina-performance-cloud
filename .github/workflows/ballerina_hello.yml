@@ -26,7 +26,7 @@ jobs:
       uses: ballerina-platform/ballerina-action@nightly
       env:
         CI_BUILD: true
-        WORKING_DIR: load-tests/ballerina_hello
+        WORKING_DIR: load-tests/ballerina_hello/src
       with:
         args:
           build
