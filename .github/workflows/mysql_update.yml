@@ -68,7 +68,7 @@ jobs:
         users: [40, 50, 52, 55, 60]
     env:
       TEST_NAME: "mysql_update"
-      TEST_ROOT: "tests"
+      TEST_ROOT: "load-tests"
     steps:
       - uses: actions/checkout@v2
       - name: Login to DockerHub
@@ -81,7 +81,7 @@ jobs:
         env:
           BALLERINA_STAGE_CENTRAL: true
           CI_BUILD: true
-          WORKING_DIR: tests/mysql_update
+          WORKING_DIR: load-tests/mysql_update
         with:
           args:
             build
@@ -90,7 +90,7 @@ jobs:
       - name: Copy artifacts
         run: |
           ls -ltr
-          cp -a ${TEST_ROOT}/${TEST_NAME}/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
+          cp -a ${TEST_ROOT}/${TEST_NAME}/src/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
       - name: 'Install Kustomize'
         run: |
           curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
@@ -138,6 +138,7 @@ jobs:
       - name: Execute performance tests
         uses: appleboy/ssh-action@master
         env:
+          REPO_NAME: "ballerina-performance-cloud"
           IP: ${{ steps.write.outputs.cluster-ip }}
           SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
           GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
@@ -150,12 +151,12 @@ jobs:
           host: ${{ steps.vminstance.outputs.ip-address }}
           username: ${{ secrets.VM_USER }}
           password: ${{ secrets.VM_PWD }}
-          envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN
+          envs: REPO_NAME,IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN
           command_timeout: '180m' #3 hours
           timeout: 300s #5 mins
           script: |
             source /etc/profile.d/10-perf-vm.sh
-            execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+            execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
       - name: Pod logs
         if: always()
         run: |
