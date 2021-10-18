@@ -14,7 +14,7 @@ jobs:
         users: [60, 200]
     env:
       TEST_NAME: "ballerina_hello"
-      TEST_ROOT: "tests"
+      TEST_ROOT: "load-tests"
     steps:
     - uses: actions/checkout@v2
     - name: Login to DockerHub
@@ -26,7 +26,7 @@ jobs:
       uses: ballerina-platform/ballerina-action@nightly
       env:
         CI_BUILD: true
-        WORKING_DIR: tests/ballerina_hello
+        WORKING_DIR: load-tests/ballerina_hello
       with:
         args:
           build
@@ -35,7 +35,7 @@ jobs:
     - name: Copy artifacts
       run: |
         ls -ltr
-        cp -a ${TEST_ROOT}/${TEST_NAME}/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
+        cp -a ${TEST_ROOT}/${TEST_NAME}/src/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
     - name: 'Install Kustomize'
       run: |
         curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
@@ -82,7 +82,8 @@ jobs:
       shell: bash
     - name: Execute performance tests
       uses: appleboy/ssh-action@master
-      env: 
+      env:
+        REPO_NAME: "ballerina-performance-cloud"
         IP: ${{ steps.write.outputs.cluster-ip }}
         SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
         GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
@@ -95,12 +96,12 @@ jobs:
         host: ${{ steps.vminstance.outputs.ip-address }}
         username: ${{ secrets.VM_USER }}
         password: ${{ secrets.VM_PWD }}
-        envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN
+        envs: REPO_NAME,IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN
         timeout: 300s #5 mins
         command_timeout: '180m' #3 hours
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+          execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
     - name: Pod logs
       if: always()
       run: |
