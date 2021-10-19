@@ -14,7 +14,7 @@ jobs:
         users: [60, 200]
     env:
       TEST_NAME: ${{github.event.action}}
-      TEST_ROOT: "tests"
+      TEST_ROOT: "load-tests"
     steps:
     - uses: actions/checkout@v2
     - name: Login to DockerHub
@@ -31,7 +31,7 @@ jobs:
       uses: ballerina-platform/ballerina-action@nightly
       env:
         CI_BUILD: true
-        WORKING_DIR: tests/${{ steps.testname.outputs.test-name }}
+        WORKING_DIR: load-tests/${{ steps.testname.outputs.test-name }}/src
       with:
         args:
           build
@@ -46,7 +46,7 @@ jobs:
         export CI_BUILD=true
         export BAL_PATH=`pwd`/${filename}
         echo "var ${BAL_PATH}"
-        pushd tests/${TEST_NAME}
+        pushd load-tests/${TEST_NAME}/src
         ls -ltr
         $BAL_PATH/bin/bal build
     - name: Docker push
@@ -54,7 +54,7 @@ jobs:
     - name: Copy artifacts
       run: |
         ls -ltr
-        cp -a ${TEST_ROOT}/${TEST_NAME}/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
+        cp -a ${TEST_ROOT}/${TEST_NAME}/src/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
     - name: 'Install Kustomize'
       run: |
         curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
@@ -87,6 +87,8 @@ jobs:
         echo "::set-output name=message-key::${{ secrets.MESSAGE_KEY }}"
         echo "::set-output name=chat-token::${{ secrets.CHAT_TOKEN }}"
         echo "::set-output name=custom-image-name::$(cat image.txt)"
+        echo "::set-output name=ppg-id::/subscriptions/${{ secrets.SUBSCRIPTION_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
+
     - name: Create VM Instance
       id: vminstance
       uses: azure/CLI@v1
@@ -94,7 +96,7 @@ jobs:
         azcliversion: 2.0.72
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
+          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2 --ppg ${{ steps.write.outputs.ppg-id }} 
           echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
     - name: Wait for VM instance
       run: sleep 60s
@@ -102,6 +104,7 @@ jobs:
     - name: Execute performance tests
       uses: appleboy/ssh-action@master
       env:
+        REPO_NAME: "ballerina-performance-cloud"
         IP: ${{ steps.write.outputs.cluster-ip }}
         SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
         GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
@@ -114,12 +117,16 @@ jobs:
         host: ${{ steps.vminstance.outputs.ip-address }}
         username: ${{ secrets.VM_USER }}
         password: ${{ secrets.VM_PWD }}
-        envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN
+        envs: REPO_NAME,IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN
         timeout: 300s #5 mins
         command_timeout: '180m' #3 hours
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+          execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+    - name: Pod logs
+      if: always()
+      run: |
+        kubectl logs -l logs=true
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |

@@ -15,7 +15,7 @@ jobs:
         users: [60]
     env:
       TEST_NAME: "go_process"
-      TEST_ROOT: "tests"
+      TEST_ROOT: "load-tests"
     steps:
     - uses: actions/checkout@v2
     - name: AZURE LOGIN
@@ -76,7 +76,7 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Docker build
-      run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}
+      run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}/src
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}
     - name: Deploy artifacts
@@ -114,7 +114,8 @@ jobs:
       shell: bash
     - name: Execute performance tests
       uses: appleboy/ssh-action@master
-      env: 
+      env:
+        REPO_NAME: "ballerina-performance-cloud"
         IP: ${{ steps.write.outputs.cluster-ip }}
         SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
         GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
@@ -127,12 +128,16 @@ jobs:
         host: ${{ steps.vminstance.outputs.ip-address }}
         username: ${{ secrets.VM_USER }}
         password: ${{ secrets.VM_PWD }}
-        envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN
+        envs: REPO_NAME,IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN
         command_timeout: '180m' #3 hours
         timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+          execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+    - name: Pod logs
+      if: always()
+      run: |
+        kubectl logs -l logs=true
     - name: Undeploy Kubernetes artifacts
       if: always()
       run: |

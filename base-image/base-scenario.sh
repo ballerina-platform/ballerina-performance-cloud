@@ -21,9 +21,13 @@ set -e
 scenario_name=""
 concurrent_users=""
 payload_flags=""
+repo_name=""
 
-while getopts "s:u:f:h" opts; do
+while getopts "r:s:u:f:h" opts; do
     case $opts in
+    r)
+        repo_name=${OPTARG}
+        ;;
     s)
         scenario_name=${OPTARG}
         ;;
@@ -44,6 +48,11 @@ while getopts "s:u:f:h" opts; do
     esac
 done
 
+if [[ -z $repo_name ]]; then
+    echo "Please provide the repo name."
+    exit 1
+fi
+
 if [[ -z $scenario_name ]]; then
     echo "Please provide the scenario name."
     exit 1
@@ -54,5 +63,5 @@ if [[ -z $concurrent_users ]]; then
     exit 1
 fi
 
-scriptsDir="/home/bal-admin/ballerina-performance-cloud/tests/"$scenario_name"/scripts"
-resultsDir="/home/bal-admin/ballerina-performance-cloud/tests/"$scenario_name"/results"
+scriptsDir="/home/bal-admin/"$repo_name"/load-tests/"$scenario_name"/scripts"
+resultsDir="/home/bal-admin/"$repo_name"/load-tests/"$scenario_name"/results"

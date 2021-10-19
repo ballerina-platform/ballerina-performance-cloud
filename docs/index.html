@@ -4,6 +4,8 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+    <meta name="robots" content="noindex">
+    <meta name="googlebot" content="noindex">
 
     <!-- Bootstrap CSS -->
     <link crossorigin="anonymous" href="./css/bootstrap.min.css" rel="stylesheet">
@@ -82,6 +84,21 @@
         </div>
     </div>
     <div class="row">
+        <div class="col-sm-3" id="range-selector">
+            <div class="btn-toolbar  pull-right">
+                <input class="period btn-light" id="1w" type="button" value="1w"/>
+                <input autofocus class="period btn-light" id="1m" type="button" value="1m"/>
+                <input class="period btn-light" id="3m" type="button" value="3m"/>
+                <input class="period btn-light" id="6m" type="button" value="6m"/>
+                <input class="period btn-light" id="1y" type="button" value="1y"/>
+            </div>
+        </div>
+        <div class="col-sm-8" id="date-selector">
+            From: <input class="ui-widget" id="fromDate" type="datetime-local">
+            To: <input class="ui-widget" id="toDate" type="datetime-local">
+        </div>
+    </div>
+    <div class="row">
         <div class="col-sm row-content">
             <div class="col-12">
                 <h3>Throughput (Req/sec)</h3>
@@ -134,15 +151,50 @@
 </div>
 
 <script>
-    // A $( document ).ready() block.
+    let throughputChart;
+    let averageChart;
+    let stdDevChart;
+    let percentileChart;
+    let errorChart;
+    let toDate = new Date();
+    let fromDate = new Date();
+    fromDate.setMonth(toDate.getMonth() - 1);
+
+    $(".period").click(function () {
+        let period = this.id;
+        fromDate = new Date();
+        switch (period) {
+            case "1w":
+                fromDate.setDate(fromDate.getDate() - 7);
+                break;
+            case "1m":
+                fromDate.setMonth(fromDate.getMonth() - 1);
+                break;
+            case "3m":
+                fromDate.setMonth(fromDate.getMonth() - 3);
+                break;
+            case "6m":
+                fromDate.setMonth(fromDate.getMonth() - 6);
+                break;
+            case "1y":
+                fromDate.setFullYear(fromDate.getFullYear() - 1);
+                break;
+            default:
+                break;
+        }
+        document.getElementById("fromDate").value = fromDate.toJSON().slice(0, 19);
+        drawSelectedCharts();
+    });
+
     $(document).ready(function () {
         let value = document.getElementById("scenario").value;
+        document.getElementById("fromDate").value = fromDate.toJSON().slice(0, 19);
+        document.getElementById("toDate").value = toDate.toJSON().slice(0, 19);
         onSelectChange(value)
     });
 
     function onSelectChange(value) {
         let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/" + value + ".csv";
-        console.log(url);
         drawCharts(url, getSelected());
     }
 
@@ -155,12 +207,19 @@
         return params;
     }
 
+    $("#date-selector").change(function () {
+        fromDate = new Date($("#fromDate").val());
+        toDate = new Date($("#toDate").val())
+        if (new Date(fromDate).getTime() < new Date(toDate).getTime()) {
+            drawSelectedCharts();
+        }
+    });
+
     function drawSelectedCharts() {
         let value = document.getElementById("scenario").value;
         let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/" + value + ".csv";
         let params = getSelected();
         drawCharts(url, params);
-        return params
     }
 
     function drawChart(dataset, canvas) {
@@ -199,12 +258,6 @@
 
     }
 
-    let throughputChart;
-    let averageChart;
-    let stdDevChart;
-    let percentileChart;
-    let errorChart;
-
     function destroyCharts() {
         if (throughputChart !== undefined) {
             throughputChart.destroy();
@@ -229,7 +282,9 @@
             return row['Users'] === users && row['Payload'] === payload;
         }).map(function (value) {
                 let date = new Date(value['Date'] * 1000);
-                coordinates.push({"x": date.toLocaleString(), "y": value[attribute].replace("%", "")});
+                if (fromDate.getTime() < date.getTime() && date.getTime() < toDate.getTime()) {
+                    coordinates.push({"x": date.toLocaleString(), "y": value[attribute].replace("%", "")});
+                }
             }
         );
         coordinates = sort_by_key(coordinates, 'x');
