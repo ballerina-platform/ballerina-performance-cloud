@@ -23,9 +23,7 @@ import ballerina/sql;
 configurable string host = ?;
 configurable string username = ?;
 configurable string password = ?;
-configurable string database_name = ?;
 configurable int port = ?;
-configurable string table_name = ?;
 
 final string name = "Bella";
 final string category = "Cat";
