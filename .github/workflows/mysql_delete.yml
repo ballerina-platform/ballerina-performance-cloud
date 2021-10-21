@@ -65,7 +65,7 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [0]
-        users: [40, 50, 52, 55, 60]
+        users: [55, 60, 70 , 100]
     env:
       TEST_NAME: "mysql_delete"
       TEST_ROOT: "load-tests"
