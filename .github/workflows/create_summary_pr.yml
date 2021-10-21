@@ -4,7 +4,7 @@ on:
     branches:
     - 'nightly-**'
     paths:
-    - 'summary/**'
+    - 'load-tests/**'
 jobs:
   createPullRequest:
     runs-on: ubuntu-latest
