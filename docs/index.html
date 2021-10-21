@@ -218,7 +218,8 @@
 
     function drawSelectedCharts() {
         let value = document.getElementById("scenario").value;
-        let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/" + value + ".csv";
+        let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/load-tests/"
+            + value + "/results/summary.csv";
         let params = getSelected();
         drawCharts(url, params);
     }
