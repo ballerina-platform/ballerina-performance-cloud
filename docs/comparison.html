@@ -298,7 +298,8 @@
         const promises = [];
         let urls = ["python_flask_hello", "python_hello", "node_express_hello", "node_hello", "go_hello", "ballerina_hello"];
         urls.forEach(function (lang) {
-            let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/" + lang + ".csv";
+            let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/load-tests/"
+                + lang + "/results/summary.csv";
             promises.push(d3.csv(url).then(function (stats) {
                 if (chartType !== undefined) {
                     let color = getColorByLang(lang);

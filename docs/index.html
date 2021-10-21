@@ -194,7 +194,8 @@
     });
 
     function onSelectChange(value) {
-        let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/summary/" + value + ".csv";
+        let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/load-tests/"
+            + value + "/results/summary.csv";
         drawCharts(url, getSelected());
     }
 
