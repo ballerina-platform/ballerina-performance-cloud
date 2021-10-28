@@ -147,6 +147,7 @@ jobs:
         export BAL_PATH=`pwd`/ballerina-dist
         echo "var ${BAL_PATH}"
         pushd load-tests/${TEST_NAME}/src
+        chmod +x $BAL_PATH/bin/bal
         $BAL_PATH/bin/bal build
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}:latest
