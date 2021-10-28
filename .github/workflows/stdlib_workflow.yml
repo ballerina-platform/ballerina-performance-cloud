@@ -26,6 +26,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Setup custom image
+        id: image
+        run: |
+          echo "::set-output name=custom-image-name::$(cat image.txt)"
       - name: Setup outputs
         id: write
         run: |
@@ -54,7 +58,6 @@ jobs:
             tests=${tests//$'\n'/}
             echo "::set-output name=test::${tests}"
           fi
-          echo "::set-output name=custom-image-name::$(cat image.txt)"
       - name: AZURE LOGIN
         uses: azure/login@v1
         with:
@@ -105,7 +108,7 @@ jobs:
           | head -n1
     outputs:
       matrix: ${{ steps.write.outputs.test }}
-      custom-image-name: ${{ steps.write.outputs.custom-image-name }}
+      custom-image-name: ${{ steps.image.outputs.custom-image-name }}
   run_test:
     needs: setup
     runs-on: ubuntu-latest
