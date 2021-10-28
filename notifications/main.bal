@@ -47,17 +47,17 @@ public function main() returns error? {
     string[] lastEntry = listResult[listResult.length() - 1];
     log:printInfo("Newly added row : " + lastEntry.toString());
     string[] beforeLastEntry = getBeforeLastEntry(listResult);
-    log:printInfo("Comparission row : " + lastEntry.toString());
+    log:printInfo("Comparison row : " + lastEntry.toString());
 
     string toDate = time:utcToString([check int:fromString(lastEntry[13])]);
     string fromDate = time:utcToString([check int:fromString(beforeLastEntry[13])]);
 
     //Average
-    int newAverage = check int:fromString(lastEntry[2]);
-    int oldAverage = check int:fromString(beforeLastEntry[2]);
+    float newAverage = check float:fromString(lastEntry[2]);
+    float oldAverage = check float:fromString(beforeLastEntry[2]);
     log:printInfo("new avg of " + scenarioName + " " + newAverage.toString());
     log:printInfo("old avg of " + scenarioName + " " + oldAverage.toString());
-    float avgPercentage = ((<float>newAverage - <float>oldAverage) * 100.0 / <float>oldAverage);
+    float avgPercentage = ((newAverage - oldAverage) * 100.0 / oldAverage);
     log:printInfo("Average Delta " + avgPercentage.toString());
     if (avgPercentage > avgRateLimit) {
         log:printInfo("Sending Notification");
