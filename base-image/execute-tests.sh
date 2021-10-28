@@ -131,6 +131,7 @@ function executeScript() {
       pushd "${repo_name}"/load-tests/"${scenario_name}"/scripts/
       chmod +x "${1}"
       sudo ./"${1}"
+      popd
       echo "-------- $1 executed --------"
   fi
 }
