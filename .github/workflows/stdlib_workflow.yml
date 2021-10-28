@@ -139,16 +139,14 @@ jobs:
     - name: Ballerina Build from Distribution ZIP
       if: ${{ github.event.inputs.zipURL != '' }}
       run: |
-        wget -c ${{ github.event.inputs.zipURL }}
-        filename=$(basename -- "${{ github.event.inputs.zipURL }}")
-        filename="${filename%.*}"
-        echo "Distribution: ${filename}"
-        unzip -q ${filename}.zip
+        echo default login ballerina-bot password ${{ secrets.BALLERINA_BOT_TOKEN }} >> _netrc
+        curl --netrc-file _netrc -L -o ballerina-dist.zip ${{ github.event.inputs.zipURL }}
+        mkdir ballerina-dist
+        unzip -q ballerina-dist.zip -d ballerina-dist
         export CI_BUILD=true
-        export BAL_PATH=`pwd`/${filename}
+        export BAL_PATH=`pwd`/ballerina-dist
         echo "var ${BAL_PATH}"
         pushd load-tests/${TEST_NAME}/src
-        ls -ltr
         $BAL_PATH/bin/bal build
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}:latest
