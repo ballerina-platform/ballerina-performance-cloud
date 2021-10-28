@@ -174,6 +174,8 @@ else
   echo "--------Merge CSV--------"
   create-csv.sh temp_summary.csv ~/"${repo_name}"/load-tests/"$scenario_name"/results/summary.csv "$payload_size" "$concurrent_users"
   echo "--------CSV merged--------"
+
+  popd
 fi
 
 if [[ -z $space_id || -z $message_key || -z $chat_token ]]; then
@@ -183,8 +185,6 @@ else
     sudo docker run -v ~/"${repo_name}"/load-tests/"$scenario_name"/results/:/summary -e SPACE_ID="$space_id" -e MESSAGE_KEY="$message_key" -e CHAT_TOKEN="$chat_token" -e SCENARIO_NAME="$scenario_name" ballerina/chat_notifications
     echo "--------Notification Service executed--------"
 fi
-
-popd
 
 echo "--------Committing CSV--------"
 pushd "${repo_name}"
