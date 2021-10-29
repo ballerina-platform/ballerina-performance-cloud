@@ -10,9 +10,9 @@ jobs:
       max-parallel: 1
       fail-fast: false
       matrix:
-        count: [1,2,3,4,5,6]
+        count: [1,2,3,4,5,6,7,8,9,10]
         payload: [50]
-        users: [60]
+        users: [5]
     env:
       TEST_NAME: "go_pass"
       TEST_ROOT: "load-tests"
