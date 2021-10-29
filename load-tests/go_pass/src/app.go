@@ -52,12 +52,7 @@ func logSetup() {
 */
 
 // Serve a reverse proxy for a given url
-func serveReverseProxy(target string, res http.ResponseWriter, req *http.Request) {
-	// parse the url
-	url, _ := url.Parse(target)
-
-	// create the reverse proxy
-	proxy := httputil.NewSingleHostReverseProxy(url)
+func serveReverseProxy(url *url.URL, res http.ResponseWriter, req *http.Request, proxy *httputil.ReverseProxy) {
 
 	// Update the headers to allow for SSL redirection
 	req.URL.Host = url.Host
@@ -100,10 +95,9 @@ func parseRequestBody(request *http.Request) requestPayloadStruct {
 }
 
 // Given a request send it to the appropriate url
-func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
+func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request, url *url.URL, proxy *httputil.ReverseProxy) {
 	_ = parseRequestBody(req)
-	url := "http://backend:1338/hello"
-	serveReverseProxy(url, res, req)
+	serveReverseProxy(url, res, req, proxy)
 }
 
 /*
@@ -113,10 +107,16 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 func main() {
 	// Log setup values
 	logSetup()
+	target := "http://backend:1338/hello"
 
-	// start server
-	http.HandleFunc("/", handleRequestAndRedirect)
-	if err := http.ListenAndServe(getListenAddress(), nil); err != nil {
-		panic(err)
+	url, _ := url.Parse(target)
+	proxy := httputil.NewSingleHostReverseProxy(url)
+
+	server := &http.Server{
+		Addr: getListenAddress(),
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handleRequestAndRedirect(w, r, url, proxy)
+		}),
 	}
+	log.Fatal(server.ListenAndServe())
 }
