@@ -130,7 +130,7 @@ jobs:
       id: vminstance
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
           --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
@@ -173,7 +173,7 @@ jobs:
       continue-on-error: true
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
           var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
@@ -235,7 +235,7 @@ jobs:
       id: vminstance
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
           --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
@@ -278,7 +278,7 @@ jobs:
       continue-on-error: true
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
           var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
@@ -340,7 +340,7 @@ jobs:
       id: vminstance
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
           --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
@@ -383,7 +383,7 @@ jobs:
       continue-on-error: true
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
           var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
@@ -445,7 +445,7 @@ jobs:
       id: vminstance
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
           --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
@@ -488,7 +488,7 @@ jobs:
       continue-on-error: true
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
           var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
@@ -550,7 +550,7 @@ jobs:
       id: vminstance
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
           --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
@@ -593,7 +593,7 @@ jobs:
       continue-on-error: true
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
           var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
@@ -655,7 +655,7 @@ jobs:
       id: vminstance
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
           --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
@@ -698,7 +698,7 @@ jobs:
       continue-on-error: true
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
           var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
@@ -721,7 +721,7 @@ jobs:
       if: always()
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_bal-perf-cluster-comp_eastus -y
           az aks delete --name bal-perf-cluster-comp --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y

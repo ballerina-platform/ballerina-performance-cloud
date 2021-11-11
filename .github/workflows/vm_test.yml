@@ -29,7 +29,7 @@ jobs:
       id: backinstance
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.backend.outputs.name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
           --image "mi_1628837716018" --tags benchmark-number=${{ steps.backend.outputs.name }} --size Standard_F4s_v2
@@ -63,7 +63,7 @@ jobs:
       id: vminstance
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
           --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
@@ -102,7 +102,7 @@ jobs:
       continue-on-error: true
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
           var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
@@ -117,7 +117,7 @@ jobs:
       continue-on-error: true
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.0.72
+        azcliversion: "agentazcliversion"
         inlineScript: |
           az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.backend.outputs.name }} -otable --query "[].id" -otsv)
           var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.backend.outputs.name }}'].id" -otable -otsv`
