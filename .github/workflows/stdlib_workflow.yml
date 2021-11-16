@@ -110,8 +110,8 @@ jobs:
         id: branch
         run: |
           repoName=${{ github.event.inputs.repo-name }}
-          git clone https://ballerina-bot:${{ secrets.BALLERINA_BOT_TOKEN }}@github.com/ballerina-platform/"${repoName}"
-          cd $repoName
+          git clone https://ballerina-bot:${{ secrets.BALLERINA_BOT_TOKEN }}@github.com/ballerina-platform/"${repoName}" remote_repo
+          cd remote_repo
           timestamp=$(date +%s -u)
           branch_name="nightly-${timestamp}"
           git checkout -b ${branch_name}
