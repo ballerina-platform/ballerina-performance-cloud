@@ -27,6 +27,7 @@ space_id=""
 message_key=""
 chat_token=""
 repo_name=""
+branch_name=""
 function usage() {
     echo ""
     echo "Usage: "
@@ -41,10 +42,11 @@ function usage() {
     echo "-i: Space ID of the chat room"
     echo "-m: Message Key of the chat"
     echo "-a: Chat token"
+    echo "-b: branch name"
     echo ""
 }
 
-while getopts "r:c:s:t:p:u:i:m:a:h" opts; do
+while getopts "r:c:s:t:p:u:i:m:a:b:h" opts; do
     case $opts in
     r)
         repo_name=${OPTARG}
@@ -72,6 +74,9 @@ while getopts "r:c:s:t:p:u:i:m:a:h" opts; do
         ;;
     a)
         chat_token=${OPTARG}
+        ;;
+    b)
+        branch_name=${OPTARG}
         ;;
     h)
         usage
@@ -109,11 +114,22 @@ if [[ -z $concurrent_users ]]; then
     exit 1
 fi
 
-timestamp=$(date +%s)
-branch_name="nightly-$scenario_name-${timestamp}"
+if [[ -z $concurrent_users ]]; then
+    echo "Please provide the number of concurrent users."
+    exit 1
+fi
+
 git clone https://ballerina-bot:"$github_token"@github.com/ballerina-platform/"${repo_name}"
 pushd "${repo_name}"
-git checkout -b "${branch_name}"
+
+if [[ -z $branch_name ]]; then
+    timestamp=$(date +%s -u)
+    branch_name="nightly-$scenario_name-${timestamp}"
+    git checkout -b "${branch_name}"
+else 
+    git checkout ${branch_name}
+fi
+
 git config --global user.email "ballerina-bot@ballerina.org"
 git config --global user.name "ballerina-bot"
 git status

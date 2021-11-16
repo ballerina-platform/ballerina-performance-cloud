@@ -106,9 +106,18 @@ jobs:
           kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
           -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
           | head -n1
+      - name: Create results branch
+        id: branch
+        run: |
+          timestamp=$(date +%s -u)
+          branch_name="nightly-${timestamp}"
+          git checkout -b ${branch_name}
+          git push origin ${branch_name}
+          echo "::set-output name=branch-name::${branch_name}"
     outputs:
       matrix: ${{ steps.write.outputs.test }}
       custom-image-name: ${{ steps.image.outputs.custom-image-name }}
+      branch-name: ${{ steps.branch.outputs.branch-name }}
   run_test:
     needs: setup
     runs-on: ubuntu-latest
@@ -215,16 +224,17 @@ jobs:
         CHAT_TOKEN: ${{steps.write.outputs.chat-token}}
         PAYLOAD: ${{ matrix.payload }}
         USERS: ${{ matrix.users }}
+        BRANCH: ${{ needs.setup.outputs.branch-name }}
       with:
         host: ${{ steps.vminstance.outputs.ip-address }}
         username: ${{ secrets.VM_USER }}
         password: ${{ secrets.VM_PWD }}
-        envs: REPO_NAME,IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN
+        envs: REPO_NAME,IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN,BRANCH
         command_timeout: '180m' #3 hours
         timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+          execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN -b $BRANCH
     - name: Pod logs
       if: always()
       run: |
