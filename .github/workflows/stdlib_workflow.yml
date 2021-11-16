@@ -106,14 +106,18 @@ jobs:
           kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
           -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
           | head -n1
-      - name: Create results branch
+      - name: Create results branch in target repo
         id: branch
         run: |
+          repoName=${{ github.event.inputs.repo-name }}
+          git clone https://ballerina-bot:${{ secrets.BALLERINA_BOT_TOKEN }}@github.com/ballerina-platform/"${repoName}"
+          cd $repoName
           timestamp=$(date +%s -u)
           branch_name="nightly-${timestamp}"
           git checkout -b ${branch_name}
           git push origin ${branch_name}
           echo "::set-output name=branch-name::${branch_name}"
+          
     outputs:
       matrix: ${{ steps.write.outputs.test }}
       custom-image-name: ${{ steps.image.outputs.custom-image-name }}
