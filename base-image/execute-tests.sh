@@ -114,11 +114,6 @@ if [[ -z $concurrent_users ]]; then
     exit 1
 fi
 
-if [[ -z $concurrent_users ]]; then
-    echo "Please provide the number of concurrent users."
-    exit 1
-fi
-
 git clone https://ballerina-bot:"$github_token"@github.com/ballerina-platform/"${repo_name}"
 pushd "${repo_name}"
 
@@ -146,7 +141,7 @@ function executeScript() {
       echo "-------- Executing $1 --------"
       pushd "${repo_name}"/load-tests/"${scenario_name}"/scripts/
       chmod +x "${1}"
-      sudo ./"${1}"
+      sudo ./"${1}" -r "$repo_name" -s "$scenario_name" -u "$concurrent_users" -f "$payload_flags"
       popd
       echo "-------- $1 executed --------"
   fi
@@ -169,6 +164,7 @@ echo "--------Running test $scenario_name--------"
 pushd "${repo_name}"/load-tests/"$scenario_name"/scripts/
 chmod +x run.sh
 ./run.sh -r "$repo_name" -s "$scenario_name" -u "$concurrent_users" -f "$payload_flags"
+concurrent_users=$(grep "users=" jmeter.log | sed -e 's/.*=//')
 popd
 echo "--------End test--------"
 
