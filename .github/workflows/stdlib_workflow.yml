@@ -233,7 +233,7 @@ jobs:
         PAYLOAD: ${{ matrix.payload }}
         USERS: ${{ matrix.users }}
         BRANCH: ${{ needs.setup.outputs.branch-name }}
-        WORKFLOW_TYPE: ${{ github.event.inputs.dispatchType }}
+        WORKFLOW_TYPE: "${{ github.event.inputs.dispatchType }}"
       with:
         host: ${{ steps.vminstance.outputs.ip-address }}
         username: ${{ secrets.VM_USER }}
