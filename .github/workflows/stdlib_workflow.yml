@@ -20,6 +20,10 @@ on:
         description: 'Cluster name'
         default: 'bal-perf-cluster-test'
         required: false
+      dispatchType:
+        description: 'Repository dispatch type'
+        default: ''
+        required: false
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -229,16 +233,17 @@ jobs:
         PAYLOAD: ${{ matrix.payload }}
         USERS: ${{ matrix.users }}
         BRANCH: ${{ needs.setup.outputs.branch-name }}
+        WORKFLOW_TYPE: ${{ github.event.inputs.dispatchType }}
       with:
         host: ${{ steps.vminstance.outputs.ip-address }}
         username: ${{ secrets.VM_USER }}
         password: ${{ secrets.VM_PWD }}
-        envs: REPO_NAME,IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN,BRANCH
+        envs: REPO_NAME,IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN,BRANCH, WORKFLOW_TYPE
         command_timeout: '180m' #3 hours
         timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN -b $BRANCH
+          execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN -b $BRANCH -d $WORKFLOW_TYPE
     - name: Pod logs
       if: always()
       run: |

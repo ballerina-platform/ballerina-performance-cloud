@@ -16,7 +16,6 @@
 
 import ballerina/io;
 import ballerina/time;
-import ballerina/file;
 import ballerina/http;
 import ballerina/os;
 import ballerina/log;
@@ -37,7 +36,6 @@ public function main() returns error? {
     log:printInfo("Response Average threshold " + avgRateLimit.toString() + "%");
     log:printInfo("TPS threshold " + tpsRateLimit.toString() + "%");
     string absPath = "/summary/summary.csv";
-    string baseName = check file:basename(absPath);
 
     string[][] listResult = check io:fileReadCsv(absPath);
     if (listResult.length() <= 1) {
