@@ -28,6 +28,7 @@ message_key=""
 chat_token=""
 repo_name=""
 branch_name=""
+dispatch_type=""
 function usage() {
     echo ""
     echo "Usage: "
@@ -43,10 +44,11 @@ function usage() {
     echo "-m: Message Key of the chat"
     echo "-a: Chat token"
     echo "-b: branch name"
+    echo "-d: Repository dispatch type"
     echo ""
 }
 
-while getopts "r:c:s:t:p:u:i:m:a:b:h" opts; do
+while getopts "r:c:s:t:p:u:i:m:a:b:d:h" opts; do
     case $opts in
     r)
         repo_name=${OPTARG}
@@ -77,6 +79,9 @@ while getopts "r:c:s:t:p:u:i:m:a:b:h" opts; do
         ;;
     b)
         branch_name=${OPTARG}
+        ;;
+    d)
+        dispatch_type=${OPTARG}
         ;;
     h)
         usage
@@ -197,12 +202,36 @@ else
     echo "--------Notification Service executed--------"
 fi
 
-echo "--------Committing CSV--------"
-pushd "${repo_name}"
-sudo git clean -xfd
-git add load-tests/"$scenario_name"/results/summary.csv
-git commit -m "Update $scenario_name test results on $(date)"
-git push origin "${branch_name}"
-popd
-echo "--------CSV committed--------"
-echo "--------Results processed--------"
+if [[ ! -z $dispatch_type ]]; then
+    pushd "${repo_name}"/load-tests/"$scenario_name"/results/
+    STATUS="success"
+    SUMMARY_STRING=$(sed -n '$p' summary.csv)
+    ERROR_RATE=$(echo $SUMMARY_STRING | cut -d ',' -f10)
+    ERROR_RATE=$(echo $ERROR_RATE | sed 's/%//')
+    ERROR_RATE_LIMIT="5.00"
+    if [ 1 -eq "$(echo "${ERROR_RATE} > ${ERROR_RATE_LIMIT}" | bc)" ]; then
+        STATUS="failed"
+    fi
+    DATA_STRING=$( jq -n \
+                  --arg status "$STATUS" \
+                  --arg summary "$SUMMARY_STRING" \
+                  --arg errorRate "$ERROR_RATE" \
+                  '{"event_type": "build", "client_payload": { "status": $status, "result": $summary, "errorRate": $errorRate}}' )
+
+    curl -X POST \
+        -H "Accept: application/vnd.github.v3+json" \
+        -H "Authorization: token $github_token" \
+        --data $DATA_STRING \
+        https://api.github.com/repos/ballerina-platform/$repo_name/dispatches
+    popd
+else
+    echo "--------Committing CSV--------"
+    pushd "${repo_name}"
+    sudo git clean -xfd
+    git add load-tests/"$scenario_name"/results/summary.csv
+    git commit -m "Update $scenario_name test results on $(date)"
+    git push origin "${branch_name}"
+    popd
+    echo "--------CSV committed--------"
+    echo "--------Results processed--------"
+fi
