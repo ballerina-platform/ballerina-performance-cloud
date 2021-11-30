@@ -216,13 +216,14 @@ if [[ ! -z $dispatch_type ]]; then
                   --arg status "$STATUS" \
                   --arg summary "$SUMMARY_STRING" \
                   --arg errorRate "$ERROR_RATE" \
-                  '{"event_type": "build", "client_payload": { "status": $status, "result": $summary, "errorRate": $errorRate}}' )
+                  --arg eventType "$dispatch_type" \
+                  '{"event_type": $eventType, "client_payload": { "status": $status, "result": $summary, "errorRate": $errorRate}}' )
 
     curl -X POST \
         -H "Accept: application/vnd.github.v3+json" \
         -H "Authorization: token $github_token" \
-        --data $DATA_STRING \
-        https://api.github.com/repos/ballerina-platform/$repo_name/dispatches
+        --data "$DATA_STRING" \
+        "https://api.github.com/repos/ballerina-platform/$repo_name/dispatches"
     popd
 else
     echo "--------Committing CSV--------"

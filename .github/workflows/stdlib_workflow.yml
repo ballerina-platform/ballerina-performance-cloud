@@ -208,6 +208,7 @@ jobs:
         echo "::set-output name=chat-token::${{ secrets.CHAT_TOKEN }}"
         echo "::set-output name=custom-image-name::${{ needs.setup.outputs.custom-image-name }}"
         echo "::set-output name=ppg-id::/subscriptions/${{ secrets.SUBSCRIPTION_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
+        echo "::set-output name=dispatch-type::\"${{ github.event.inputs.dispatchType }}\""
     - name: Create VM Instance
       id: vminstance
       uses: azure/CLI@v1
@@ -233,7 +234,7 @@ jobs:
         PAYLOAD: ${{ matrix.payload }}
         USERS: ${{ matrix.users }}
         BRANCH: ${{ needs.setup.outputs.branch-name }}
-        WORKFLOW_TYPE: "${{ github.event.inputs.dispatchType }}"
+        WORKFLOW_TYPE: ${{steps.write.outputs.dispatch-type}}
       with:
         host: ${{ steps.vminstance.outputs.ip-address }}
         username: ${{ secrets.VM_USER }}
