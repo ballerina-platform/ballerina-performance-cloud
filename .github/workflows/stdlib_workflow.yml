@@ -246,7 +246,7 @@ jobs:
         timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN -b {BRANCH:-""} -d ${WORKFLOW_TYPE:-""}
+          execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN -b ${BRANCH:-""} -d ${WORKFLOW_TYPE:-""}
     - name: Pod logs
       if: always()
       run: |
