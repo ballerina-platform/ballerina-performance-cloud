@@ -217,7 +217,8 @@ if [[ ! -z $dispatch_type ]]; then
                   --arg summary "$SUMMARY_STRING" \
                   --arg errorRate "$ERROR_RATE" \
                   --arg eventType "$dispatch_type" \
-                  '{"event_type": $eventType, "client_payload": { "status": $status, "result": $summary, "errorRate": $errorRate}}' )
+                  --arg scenarioName "$scenario_name" \
+                  '{"event_type": $eventType, "client_payload": { "name": $scenarioName, "status": $status, "result": $summary, "errorRate": $errorRate}}' )
 
     curl -X POST \
         -H "Accept: application/vnd.github.v3+json" \
