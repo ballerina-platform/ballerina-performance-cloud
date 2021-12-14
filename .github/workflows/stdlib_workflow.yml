@@ -223,6 +223,9 @@ jobs:
     - name: Wait for VM instance
       run: sleep 60s
       shell: bash
+    - name: Wait for pods
+      run: |
+        kubectl wait --for=condition=ready pod -l load=true --timeout=10m || true
     - name: Execute performance tests
       uses: appleboy/ssh-action@master
       env: 
