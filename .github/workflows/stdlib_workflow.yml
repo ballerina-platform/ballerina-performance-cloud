@@ -233,9 +233,6 @@ jobs:
         IP: ${{ steps.write.outputs.cluster-ip }}
         SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
         GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
-        SPACE_ID: ${{steps.write.outputs.space-id}}
-        MESSAGE_KEY: ${{steps.write.outputs.message-key}}
-        CHAT_TOKEN: ${{steps.write.outputs.chat-token}}
         PAYLOAD: ${{ matrix.payload }}
         USERS: ${{ matrix.users }}
         BRANCH: ${{ needs.setup.outputs.branch-name }}
@@ -244,12 +241,12 @@ jobs:
         host: ${{ steps.vminstance.outputs.ip-address }}
         username: ${{ secrets.VM_USER }}
         password: ${{ secrets.VM_PWD }}
-        envs: REPO_NAME,IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN,BRANCH, WORKFLOW_TYPE
+        envs: REPO_NAME,IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,BRANCH, WORKFLOW_TYPE
         command_timeout: '180m' #3 hours
         timeout: 300s #5 mins
         script: |
           source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN -b ${BRANCH:-""} -d ${WORKFLOW_TYPE:-""}
+          execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -b ${BRANCH:-""} -d ${WORKFLOW_TYPE:-""}
     - name: Pod logs
       if: always()
       run: |
