@@ -18,7 +18,7 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    - name: Docker push
+    - name: Docker build
       run: |
         docker build -t ballerina/perf_base_container:latest ./base-image
     - name: Docker push
