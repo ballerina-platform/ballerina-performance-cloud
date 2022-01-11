@@ -1,0 +1,27 @@
+name: Base container update
+
+on:
+  workflow_dispatch:
+  push:
+      branches:
+          - 'main'
+      paths:
+          - 'base-image/**'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+    - name: Docker push
+      run: |
+        docker build -t ballerina/perf_base_container:latest ./base-image
+    - name: Docker push
+      run: |
+        docker images
+        docker push ballerina/perf_base_container:latest
