@@ -1,0 +1,48 @@
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  labels:
+    app: "jmeter"
+  name: "j-deployment"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "jmeter"
+  template:
+    metadata:
+      labels:
+        app: "jmeter"
+    spec:
+      containers:
+      - image: "ballerina/perf_base_container:latest"
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - "sleep"
+              - "15"
+        name: "j-deployment"
+        env:
+        - name: CLUSTER_IP
+          value: <<CLUSTER_IP>>
+        - name: REPO_NAME
+          value: <<REPO_NAME>>
+        - name: SCENARIO_NAME
+          value: <<SCENARIO_NAME>>
+        - name: GITHUB_TOKEN
+          value: <<GITHUB_TOKEN>>
+        - name: PAYLOAD_SIZE
+          value: <<PAYLOAD_SIZE>>
+        - name: SPACE_ID
+          value: <<SPACE_ID>>
+        - name: MESSAGE_KEY
+          value: <<MESSAGE_KEY>>
+        - name: DISPATCH_TYPE
+          value: <<DISPATCH_TYPE>>
+        - name: BRANCH_NAME
+          value: <<BRANCH_NAME>>
+        - name: CONCURRENT_USERS
+          value: <<CONCURRENT_USERS>>
+        - name: CHAT_TOKEN
+          value: <<CHAT_TOKEN>>

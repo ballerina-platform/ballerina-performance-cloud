@@ -18,113 +18,41 @@
 # ----------------------------------------------------------------------------
 set -e
 
-cluster_ip=""
-scenario_name=""
-github_token=""
-payload_size="0"
-concurrent_users=""
-space_id=""
-message_key=""
-chat_token=""
-repo_name=""
-branch_name=""
-dispatch_type=""
-function usage() {
-    echo ""
-    echo "Usage: "
-    echo "$0 [-c <cluster_ip>] [-s scenario_name] [-t github_token] [-p payload_size] [-u concurrent_users] [-h]"
-    echo ""
-    echo "-r: Name of the repo containing tests"
-    echo "-c: Kubernetes cluster IP"
-    echo "-s: Test scenario name"
-    echo "-t: Github token for the repository"
-    echo "-p: Payload size"
-    echo "-u: Concurrent users for the test"
-    echo "-i: Space ID of the chat room"
-    echo "-m: Message Key of the chat"
-    echo "-a: Chat token"
-    echo "-b: branch name"
-    echo "-d: Repository dispatch type"
-    echo ""
-}
+payload_size=${PAYLOAD_SIZE}
+branch_name=${BRANCH_NAME}
+concurrent_users=${CONCURRENT_USERS}
 
-while getopts "r:c:s:t:p:u:i:m:a:b:d:h" opts; do
-    case $opts in
-    r)
-        repo_name=${OPTARG}
-        ;;
-    c)
-        cluster_ip=${OPTARG}
-        ;;
-    s)
-        scenario_name=${OPTARG}
-        ;;
-    t)
-        github_token=${OPTARG}
-        ;;
-    p)
-        payload_size=${OPTARG}
-        ;;
-    u)
-        concurrent_users=${OPTARG}
-        ;;
-    i)
-        space_id=${OPTARG}
-        ;;
-    m)
-        message_key=${OPTARG}
-        ;;
-    a)
-        chat_token=${OPTARG}
-        ;;
-    b)
-        branch_name=${OPTARG}
-        ;;
-    d)
-        dispatch_type=${OPTARG}
-        ;;
-    h)
-        usage
-        exit 0
-        ;;
-    \?)
-        usage
-        exit 1
-        ;;
-    esac
-done
-
-if [[ -z $repo_name ]]; then
+if [[ -z ${REPO_NAME} ]]; then
     echo "Please provide the repo name."
     exit 1
 fi
 
-if [[ -z $cluster_ip ]]; then
+if [[ -z ${CLUSTER_IP} ]]; then
     echo "Please provide the cluster ip."
     exit 1
 fi
 
-if [[ -z $scenario_name ]]; then
+if [[ -z ${SCENARIO_NAME} ]]; then
     echo "Please provide the scenario name."
     exit 1
 fi
 
-if [[ -z $github_token ]]; then
-    echo "Please provide the scenario name."
+if [[ -z ${GITHUB_TOKEN} ]]; then
+    echo "Please provide the github name."
     exit 1
 fi
 
-if [[ -z $concurrent_users ]]; then
+if [[ -z ${concurrent_users} ]]; then
     echo "Please provide the number of concurrent users."
     exit 1
 fi
 
-git clone https://ballerina-bot:"$github_token"@github.com/ballerina-platform/"${repo_name}"
-pushd "${repo_name}"
+git clone https://ballerina-bot:"${GITHUB_TOKEN}"@github.com/ballerina-platform/"${REPO_NAME}"
+pushd "${REPO_NAME}"
 
 if [[ -z $branch_name ]]; then
     timestamp=$(date +%s -u)
-    branch_name="nightly-$scenario_name-${timestamp}"
+    branch_name="nightly-${SCENARIO_NAME}-${timestamp}"
     git checkout -b "${branch_name}"
 else 
     git checkout ${branch_name}
@@ -138,15 +66,15 @@ popd
 
 payload_flags=""
 
-echo "$cluster_ip bal.perf.test" | sudo tee -a /etc/hosts
+echo "${CLUSTER_IP} bal.perf.test" | sudo tee -a /etc/hosts
 
 function executeScript() {
-  FILE="${repo_name}"/load-tests/"$scenario_name"/scripts/"${1}"
+  FILE="${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/scripts/"${1}"
   if test -f "$FILE"; then
       echo "-------- Executing $1 --------"
-      pushd "${repo_name}"/load-tests/"${scenario_name}"/scripts/
+      pushd "${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/scripts/
       chmod +x "${1}"
-      sudo ./"${1}" -r "$repo_name" -s "$scenario_name" -u "$concurrent_users" -f "$payload_flags"
+       ./"${1}" -r "${REPO_NAME}" -s "${SCENARIO_NAME}" -u "${concurrent_users}" -f "$payload_flags"
       popd
       echo "-------- $1 executed --------"
   fi
@@ -154,31 +82,31 @@ function executeScript() {
 
 function generatePayload() {
     if [[ $1 != "0" ]]; then
-        echo "--------Generating $payload_size Payload--------"
-        generate-payloads.sh -p array -s "$payload_size"
-        payload_flags+=" -Jresponse_size=$payload_size -Jpayload=$(pwd)/$payload_size""B.json"
+        echo "--------Generating ${payload_size} Payload--------"
+        generate-payloads.sh -p array -s "${payload_size}"
+        payload_flags+=" -Jresponse_size=${payload_size} -Jpayload=$(pwd)/${payload_size}""B.json"
         echo payload_flags
         echo "--------End of generating payload--------"
     fi
 }
 
 executeScript "pre_run.sh"
-generatePayload "$payload_size"
+generatePayload "${payload_size}"
 
-echo "--------Running test $scenario_name--------"
-pushd "${repo_name}"/load-tests/"$scenario_name"/scripts/
+echo "--------Running test ${SCENARIO_NAME}--------"
+pushd "${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/scripts/
 chmod +x run.sh
-./run.sh -r "$repo_name" -s "$scenario_name" -u "$concurrent_users" -f "$payload_flags"
+./run.sh -r "${REPO_NAME}" -s "${SCENARIO_NAME}" -u "${concurrent_users}" -f "$payload_flags"
 concurrent_users=$(grep "users=" jmeter.log | sed -e 's/.*=//')
 popd
 echo "--------End test--------"
 
-POST_RUN_FILE="${repo_name}"/load-tests/"$scenario_name"/scripts/post_run.sh
+POST_RUN_FILE="${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/scripts/post_run.sh
 if test -f "$POST_RUN_FILE"; then
   executeScript "post_run.sh"
 else
   echo "--------Processing Results--------"
-  pushd "${repo_name}"/load-tests/"$scenario_name"/results/
+  pushd "${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/results/
   echo "--------Splitting Results--------"
   jtl-splitter.sh -- -f original.jtl -t 120 -u SECONDS -s
   ls -ltr
@@ -189,21 +117,21 @@ else
   echo "--------CSV generated--------"
 
   echo "--------Merge CSV--------"
-  create-csv.sh temp_summary.csv ~/"${repo_name}"/load-tests/"$scenario_name"/results/summary.csv "$payload_size" "$concurrent_users"
+  create-csv.sh temp_summary.csv /home/ballerina/"${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/results/summary.csv "${payload_size}" "${concurrent_users}"
   echo "--------CSV merged--------"
   popd
 fi
 
-if [[ -z $space_id || -z $message_key || -z $chat_token ]]; then
+if [[ -z ${SPACE_ID} || -z ${MESSAGE_KEY} || -z ${CHAT_TOKEN} ]]; then
     echo "--- Notification Service skipped as configurations not set"
 else 
     echo "--------Starting Notification Service--------"
-    sudo docker run -v ~/"${repo_name}"/load-tests/"$scenario_name"/results/:/summary -e SPACE_ID="$space_id" -e MESSAGE_KEY="$message_key" -e CHAT_TOKEN="$chat_token" -e SCENARIO_NAME="$scenario_name" ballerina/chat_notifications
+     docker run -v /home/ballerina/"${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/results/:/summary -e SPACE_ID="${SPACE_ID}" -e MESSAGE_KEY="${MESSAGE_KEY}" -e CHAT_TOKEN="${CHAT_TOKEN}" -e SCENARIO_NAME="${SCENARIO_NAME}" ballerina/chat_notifications
     echo "--------Notification Service executed--------"
 fi
 
-if [[ ! -z $dispatch_type ]]; then
-    pushd "${repo_name}"/load-tests/"$scenario_name"/results/
+if [[ ! -z ${DISPATCH_TYPE} ]]; then
+    pushd "${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/results/
     STATUS="success"
     SUMMARY_STRING=$(sed -n '$p' summary.csv)
     ERROR_RATE=$(echo $SUMMARY_STRING | cut -d ',' -f10)
@@ -216,22 +144,22 @@ if [[ ! -z $dispatch_type ]]; then
                   --arg status "$STATUS" \
                   --arg summary "$SUMMARY_STRING" \
                   --arg errorRate "$ERROR_RATE" \
-                  --arg eventType "$dispatch_type" \
-                  --arg scenarioName "$scenario_name" \
+                  --arg eventType "${DISPATCH_TYPE}" \
+                  --arg scenarioName "${SCENARIO_NAME}" \
                   '{"event_type": $eventType, "client_payload": { "name": $scenarioName, "status": $status, "result": $summary, "errorRate": $errorRate}}' )
 
     curl -X POST \
         -H "Accept: application/vnd.github.v3+json" \
-        -H "Authorization: token $github_token" \
+        -H "Authorization: token ${GITHUB_TOKEN}" \
         --data "$DATA_STRING" \
-        "https://api.github.com/repos/ballerina-platform/$repo_name/dispatches"
+        "https://api.github.com/repos/ballerina-platform/${REPO_NAME}/dispatches"
     popd
 else
     echo "--------Committing CSV--------"
-    pushd "${repo_name}"
-    sudo git clean -xfd
-    git add load-tests/"$scenario_name"/results/summary.csv
-    git commit -m "Update $scenario_name test results on $(date)"
+    pushd "${REPO_NAME}"
+     git clean -xfd
+    git add load-tests/"${SCENARIO_NAME}"/results/summary.csv
+    git commit -m "Update ${SCENARIO_NAME} test results on $(date)"
     git push origin "${branch_name}"
     popd
     echo "--------CSV committed--------"

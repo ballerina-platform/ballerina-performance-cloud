@@ -63,5 +63,5 @@ if [[ -z $concurrent_users ]]; then
     exit 1
 fi
 
-scriptsDir="/home/bal-admin/"$repo_name"/load-tests/"$scenario_name"/scripts"
-resultsDir="/home/bal-admin/"$repo_name"/load-tests/"$scenario_name"/results"
+scriptsDir="/home/ballerina/"$repo_name"/load-tests/"$scenario_name"/scripts"
+resultsDir="/home/ballerina/"$repo_name"/load-tests/"$scenario_name"/results"
