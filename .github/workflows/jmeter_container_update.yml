@@ -24,4 +24,4 @@ jobs:
     - name: Docker push
       run: |
         docker images
-        docker push ballerina/jmeter_container:latest:latest
+        docker push ballerina/jmeter_container:latest
