@@ -188,5 +188,6 @@ done
 sed -i "s/cmdrunner-.*\.jar/$cmdrunner_jar/g" $extracted_dirname/bin/JMeterPluginsCMD.sh
 
 export PATH=$PATH:/home/ballerina/apache-jmeter-5.4/bin/
-
+$PluginsManagerCMD upgrades
+ls /home/ballerina/apache-jmeter-5.4/lib/ext
 echo "JVM_ARGS=\"-XX:InitialRAMPercentage=25.0 -XX:MaxRAMPercentage=75.0 -Dnashorn.args=--no-deprecation-warning\"" | tee -a /home/ballerina/apache-jmeter-5.4/bin/setenv.sh
