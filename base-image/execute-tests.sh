@@ -126,7 +126,7 @@ if [[ -z ${SPACE_ID} || -z ${MESSAGE_KEY} || -z ${CHAT_TOKEN} ]]; then
     echo "--- Notification Service skipped as configurations not set"
 else 
     echo "--------Starting Notification Service--------"
-     docker run -v /home/ballerina/"${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/results/:/summary -e SPACE_ID="${SPACE_ID}" -e MESSAGE_KEY="${MESSAGE_KEY}" -e CHAT_TOKEN="${CHAT_TOKEN}" -e SCENARIO_NAME="${SCENARIO_NAME}" ballerina/chat_notifications
+    # docker run -v /home/ballerina/"${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/results/:/summary -e SPACE_ID="${SPACE_ID}" -e MESSAGE_KEY="${MESSAGE_KEY}" -e CHAT_TOKEN="${CHAT_TOKEN}" -e SCENARIO_NAME="${SCENARIO_NAME}" ballerina/chat_notifications
     echo "--------Notification Service executed--------"
 fi
 
