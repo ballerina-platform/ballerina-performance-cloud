@@ -87,42 +87,23 @@ jobs:
         echo "::set-output name=message-key::${{ secrets.MESSAGE_KEY }}"
         echo "::set-output name=chat-token::${{ secrets.CHAT_TOKEN }}"
         echo "::set-output name=custom-image-name::$(cat image.txt)"
-        echo "::set-output name=ppg-id::/subscriptions/${{ secrets.SUBSCRIPTION_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
+    - name: Deploy Jmeter container
+      run: |
+        sed -i -e 's/<<CLUSTER_IP>>/${{ steps.write.outputs.cluster-ip }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<REPO_NAME>>/ballerina-performance-cloud/g' base-image/k8s.yaml
+        sed -i -e 's/<<SCENARIO_NAME>>/${{ steps.write.outputs.scenario-name }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<GITHUB_TOKEN>>/${{steps.write.outputs.git-token}}/g' base-image/k8s.yaml
+        sed -i -e 's/<<PAYLOAD_SIZE>>/${{ matrix.payload }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<SPACE_ID>>/${{steps.write.outputs.space-id}}/g' base-image/k8s.yaml
+        sed -i -e 's/<<MESSAGE_KEY>>/${{steps.write.outputs.message-key}}/g' base-image/k8s.yaml
+        sed -i -e 's/<<CHAT_TOKEN>>/${{steps.write.outputs.chat-token}}/g' base-image/k8s.yaml
+        sed -i -e 's/<<DISPATCH_TYPE>>//g' base-image/k8s.yaml
+        sed -i -e 's/<<BRANCH_NAME>>//g' base-image/k8s.yaml
+        sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
 
-    - name: Create VM Instance
-      id: vminstance
-      uses: azure/CLI@v1
-      with:
-        azcliversion: "agentazcliversion"
-        inlineScript: |
-          az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2 --ppg ${{ steps.write.outputs.ppg-id }} 
-          echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
-    - name: Wait for VM instance
-      run: sleep 60s
-      shell: bash
-    - name: Execute performance tests
-      uses: appleboy/ssh-action@master
-      env:
-        REPO_NAME: "ballerina-performance-cloud"
-        IP: ${{ steps.write.outputs.cluster-ip }}
-        SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
-        GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
-        SPACE_ID: ${{steps.write.outputs.space-id}}
-        MESSAGE_KEY: ${{steps.write.outputs.message-key}}
-        CHAT_TOKEN: ${{steps.write.outputs.chat-token}}
-        PAYLOAD: ${{ matrix.payload }}
-        USERS: ${{ matrix.users }}
-      with:
-        host: ${{ steps.vminstance.outputs.ip-address }}
-        username: ${{ secrets.VM_USER }}
-        password: ${{ secrets.VM_PWD }}
-        envs: REPO_NAME,IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN
-        timeout: 300s #5 mins
-        command_timeout: '180m' #3 hours
-        script: |
-          source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
+        kubectl apply -f base-image/k8s.yaml
+        while [[ $(kubectl get pods -l app=jmeter -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "waiting for pod" && sleep 1; done
+        kubectl logs -f -l app="jmeter"
     - name: Pod logs
       if: always()
       run: |
@@ -131,18 +112,4 @@ jobs:
       if: always()
       run: |
         kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
-    - name: Cleanup VM
-      if: always()
-      continue-on-error: true
-      uses: azure/CLI@v1
-      with:
-        azcliversion: "agentazcliversion"
-        inlineScript: |
-          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
-          var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
-          if [ -n "$var" ]
-          then
-              az resource delete --ids ${var}
-          else
-              echo "Disk is already deleted"
-          fi
+        kubectl delete -f base-image/k8s.yaml

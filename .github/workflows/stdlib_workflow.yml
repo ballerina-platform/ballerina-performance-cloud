@@ -71,18 +71,16 @@ jobs:
           AZURE_APP_ID: ${{ secrets.AZURE_APP_ID }}
           AZURE_APP_PASSWORD: ${{ secrets.AZURE_APP_PASSWORD }}
           RESOURCE_GROUP: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
-          PPG_ID: "/subscriptions/${{ secrets.SUBSCRIPTION_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
         run: |
           az aks create \
               --resource-group "${RESOURCE_GROUP}" \
               --name "${{ github.event.inputs.clusterName }}" \
               --service-principal "${AZURE_APP_ID}"\
               --client-secret "${AZURE_APP_PASSWORD}" \
-              --ppg "${PPG_ID}" \
               --node-vm-size "Standard_F16s_v2" \
               --node-osdisk-size 256 \
               --node-osdisk-type Managed \
-              --node-count 2 \
+              --node-count 1 \
               --location "eastus" \
               --generate-ssh-keys
       - name: Configure AKS
@@ -209,44 +207,31 @@ jobs:
         echo "::set-output name=message-key::${{ secrets.MESSAGE_KEY }}"
         echo "::set-output name=chat-token::${{ secrets.CHAT_TOKEN }}"
         echo "::set-output name=custom-image-name::${{ needs.setup.outputs.custom-image-name }}"
-        echo "::set-output name=ppg-id::/subscriptions/${{ secrets.SUBSCRIPTION_ID }}/resourceGroups/ballerina-performance/providers/Microsoft.Compute/proximityPlacementGroups/${{ secrets.PPG_NAME }}"
         echo "::set-output name=dispatch-type::${{ github.event.inputs.dispatchType }}"
-    - name: Create VM Instance
-      id: vminstance
-      uses: azure/CLI@v1
-      with:
-        azcliversion: "agentazcliversion"
-        inlineScript: |
-          az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2 --ppg ${{ steps.write.outputs.ppg-id }} 
-          echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
     - name: Wait for VM instance
       run: sleep 60s
       shell: bash
     - name: Wait for pods
       run: |
         kubectl wait --for=condition=ready pod -l load=true --timeout=10m || true
-    - name: Execute performance tests
-      uses: appleboy/ssh-action@master
-      env: 
-        REPO_NAME: ${{ github.event.inputs.repo-name }}
-        IP: ${{ steps.write.outputs.cluster-ip }}
-        SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
-        GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
-        PAYLOAD: ${{ matrix.payload }}
-        USERS: ${{ matrix.users }}
-        BRANCH: ${{ needs.setup.outputs.branch-name }}
-        WORKFLOW_TYPE: ${{steps.write.outputs.dispatch-type}}
-      with:
-        host: ${{ steps.vminstance.outputs.ip-address }}
-        username: ${{ secrets.VM_USER }}
-        password: ${{ secrets.VM_PWD }}
-        envs: REPO_NAME,IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,BRANCH, WORKFLOW_TYPE
-        command_timeout: '180m' #3 hours
-        timeout: 300s #5 mins
-        script: |
-          source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh -r $REPO_NAME -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -b ${BRANCH:-""} -d ${WORKFLOW_TYPE:-""}
+    - name: Deploy Jmeter container
+      run: |
+        wget https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/base-image/k8s.yaml
+        sed -i -e 's/<<CLUSTER_IP>>/${{ steps.write.outputs.cluster-ip }}/g' k8s.yaml
+        sed -i -e 's/<<REPO_NAME>>/${{ github.event.inputs.repo-name }}/g' k8s.yaml
+        sed -i -e 's/<<SCENARIO_NAME>>/${{ steps.write.outputs.scenario-name }}/g' k8s.yaml
+        sed -i -e 's/<<GITHUB_TOKEN>>/${{steps.write.outputs.git-token}}/g' k8s.yaml
+        sed -i -e 's/<<PAYLOAD_SIZE>>/${{ matrix.payload }}/g' k8s.yaml
+        sed -i -e 's/<<SPACE_ID>>/${{steps.write.outputs.space-id}}/g' k8s.yaml
+        sed -i -e 's/<<MESSAGE_KEY>>/${{steps.write.outputs.message-key}}/g' k8s.yaml
+        sed -i -e 's/<<CHAT_TOKEN>>/${{steps.write.outputs.chat-token}}/g' k8s.yaml
+        sed -i -e 's/<<DISPATCH_TYPE>>/${{steps.write.outputs.dispatch-type}}/g' k8s.yaml
+        sed -i -e 's/<<BRANCH_NAME>>/${{ needs.setup.outputs.branch-name }}/g' k8s.yaml
+        sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' k8s.yaml
+
+        kubectl apply -f k8s.yaml
+        while [[ $(kubectl get pods -l app=jmeter -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "waiting for pod" && sleep 1; done
+        kubectl logs -f -l app="jmeter"
     - name: Pod logs
       if: always()
       run: |
@@ -255,21 +240,7 @@ jobs:
       if: always()
       run: |
         kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
-    - name: Cleanup VM
-      if: always()
-      continue-on-error: true
-      uses: azure/CLI@v1
-      with:
-        azcliversion: "agentazcliversion"
-        inlineScript: |
-          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
-          var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
-          if [ -n "$var" ]
-          then
-              az resource delete --ids ${var}
-          else 
-              echo "Disk is already deleted"
-          fi
+        kubectl delete -f k8s.yaml
   cleanup:
     needs: run_test
     name: clean up
