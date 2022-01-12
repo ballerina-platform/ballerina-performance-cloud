@@ -1,7 +1,5 @@
-FROM ubuntu:18.04
+FROM ballerina/jmeter_container:latest
 LABEL maintainer="dev@ballerina.io"
-
-RUN apt update -y && apt install curl wget default-jre unzip jq git sudo -y
 
 RUN useradd -m ballerina && echo "ballerina:ballerina" | chpasswd && adduser ballerina sudo
 WORKDIR /home/ballerina
@@ -11,16 +9,12 @@ USER ballerina
 SHELL ["/bin/bash", "-c"]
 
 COPY --chown=ballerina execute-tests.sh /home/ballerina/setup/ 
-COPY --chown=ballerina configure-jmeter.sh /home/ballerina/setup/ 
 COPY --chown=ballerina base-scenario.sh /home/ballerina/setup/ 
 COPY --chown=ballerina utils /home/ballerina/setup/utils/
-
-RUN (cd /home/ballerina/setup/; ./configure-jmeter.sh -i /home/ballerina/ -d)
 
 ENV PATH=$PATH:/home/ballerina/setup/utils/jtl-splitter/
 ENV PATH=$PATH:/home/ballerina/setup/utils/payloads/
 ENV PATH=$PATH:/home/ballerina/setup/utils/csv/
-ENV PATH=$PATH:/home/ballerina/apache-jmeter-5.4/bin/
 ENV PATH=$PATH:/home/ballerina/setup/
 
 ENV REPO_NAME=""
