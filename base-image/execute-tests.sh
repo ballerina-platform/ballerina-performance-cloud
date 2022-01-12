@@ -113,6 +113,7 @@ else
   echo "--------Splitting Completed--------"
 
   echo "--------Generating CSV--------"
+  sudo chmod +x $JMETER_HOME/bin/JMeterPluginsCMD.sh
   JMeterPluginsCMD.sh --generate-csv temp_summary.csv --input-jtl original-measurement.jtl --plugin-type AggregateReport
   echo "--------CSV generated--------"
 
