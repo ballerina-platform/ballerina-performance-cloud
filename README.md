@@ -4,20 +4,30 @@ This repository contains container based performance tests for Ballerina. The te
 
 [![Daily Build](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/spawn_cluster.yml/badge.svg)](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/spawn_cluster.yml)
 [![Lang Comparison](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/lang_comparison.yml/badge.svg)](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/lang_comparison.yml)
-[![db_test_workflow](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/db_test_workflow.yml/badge.svg)](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/db_test_workflow.yml)
 
 ## Dashboard
 [https://ballerina.io/ballerina-performance-cloud/](https://ballerina.io/ballerina-performance-cloud/)
 
-### How to add new tests
-1. Create a new Ballerina package in `/tests` folder
+### Adopting load tests for standard libraries
+
+1. All the tests in the standard library should reside inside `load-tests` directory in the repository root.
+
+2. Create a directory inside `load-tests` for the test. We will call it `test_sample` here.
+
+3. The test should have four directories inside.
+    1. deployment
+    2. results
+    3. scripts
+    4. src
    
-2. Configure the Cloud.toml to generate Docker and Kubernetes artifacts. 
-   Please note that repository name should be `ballerina` to push the image. Sample Cloud.toml should look like below. 
+4. The `src` directory should contain the ballerina package that has to be load tested.
+   This project should have `cloud = "k8s"` entry inside Ballerina.toml and it should have Cloud.toml file to 
+   configure the docker and  Kubernetes artifacts.
+
 ```toml
 [container.image]
-repository= "ballerina"
-name="<ballerina_project_name>" # Docker image name should be same as package name
+repository= "ballerina" # Do not change this entry.
+name="test_sample" # Docker image name should be same as package name
 
 [cloud.deployment] 
 # Resource Allocations Change these according to your scenario needs
@@ -29,150 +39,65 @@ name="<ballerina_project_name>" # Docker image name should be same as package na
 # min_replicas=1
 # max_replicas=1
 ```
-3. Create a `deployment` folder in `tests/<ballerina_project_name>/deployment`.
-   This folder should contain all the extra yamls should be applied to k8s. This will be done using Kustomize. `ingress.yml` is mandatory.
+3. The `deployment` directory should contain the additional kubernetes artifacts that should be applied on top of 
+   c2c genrated yaml. This will be done using Kustomize. `ingress.yaml` and `kustomization.yaml` is mandatory here. 
+   You can add any additional yamls you require for the deployment in this directory (helper pods, mysql etc).
    
-4. Create a `scripts` folder in `tests/<ballerina_project_name>/scripts`
-   This folder should contain the Jmeter script, and a bash script name `run.sh` to start the jmeter script.
-   The `run.sh` will be the entry point to Jmeter vm. Sample `run.sh` will look like below.
+kustomization.yaml
+```yaml
+resources:
+  - test_sample.yaml # this is the name of generated yaml from c2c. you can execute bal build on the src dir to find the exact name
+  - ingress.yaml
+```
+ingress.yaml
+```yaml
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: test_sample
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+spec:
+  rules:
+  - host: bal.perf.test
+    http:
+      paths:
+      - path: "/"
+        pathType: Prefix
+        backend:
+          service:
+            name: sample-svc # generated service name from c2c. you might need to verify this by manually reading the generated yaml.
+            port:
+              number: 9090
+  tls:
+  - hosts:
+    - "bal.perf.test"
+
+```
+4. The `scripts` directory is used to hold the scripts required for load test execution. It must contain run.sh file 
+   which will be responsible for running the load test. You can include the .jmx file and access it via the 
+   directory via $scriptsDir variable in the run.sh file. 
+   
+   You can additionally have `pre_run.sh` (ex - to install dependencies for required test) and `post_run.sh` (ex - 
+   to modify results csv) in the same directory.
+   
+Sample run.sh file
 ```bash
-#!/bin/bash 
 set -e
 source base-scenario.sh
 
-jmeter -n -t "$scriptsDir/"http-post-request.jmx -l "$resultsDir/"original.jtl -Jusers="$concurrent_users" -Jduration=1200 -Jhost=bal.perf.test -Jport=443 -Jprotocol=https -Jpath=passthrough $payload_flags
-
+jmeter -n -t "$scriptsDir/"http-post-request.jmx -l "$resultsDir/"original.jtl -Jusers=50 -Jduration=1200 -Jhost=bal.perf.test -Jport=443 -Jprotocol=https -Jpath=passthrough $payload_flags
 ```
-
-5. Create a CSV file with the same name as the `<ballerina_project_name>` in the summary directory.
-   Once the test is executed results will be appended to this csv file.
-   Make sure to add the following headers into the csv.
+5. The `results` directory should contain summary.csv file with the following header. Results of the tests will be 
+   appended to this file.
 ```csv
 Label,# Samples,Average,Median,90% Line,95% Line,99% Line,Min,Max,Error %,Throughput,Received KB/sec,Std. Dev.,Date,Payload,Users
 ```
 
-6. Finally, configure the GitHub Action workflow file in the `.github/workflows/<workflow>.yaml` to trigger the test.
-    Sample workflow file:
-```yaml
-name: h1_h1_passthrough
-
-on:
-  workflow_dispatch:
-  repository_dispatch:
-    types: [ h1_h1_passthrough ]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 1
-      matrix:
-        payload: [50, 1024]
-        users: [60, 200]
-    env:
-      TEST_NAME: "h1_h1_passthrough"
-      TEST_ROOT: "tests"
-    steps:
-    - uses: actions/checkout@v2
-    - name: Login to DockerHub
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    - name: Ballerina Build
-      uses: ballerina-platform/ballerina-action@nightly
-      env:
-        CI_BUILD: true
-        WORKING_DIR: tests/h1_h1_passthrough
-      with:
-        args:
-          build
-    - name: Docker push
-      run: docker push ballerina/${TEST_NAME}:latest
-    - name: Copy artifacts
-      run: |
-        ls -ltr
-        cp -a ${TEST_ROOT}/${TEST_NAME}/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
-    - name: 'Install Kustomize'
-      run: |
-        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
-    - name: 'Run Kustomize'
-      run: |
-          kustomize build ${TEST_ROOT}/${TEST_NAME}/deployment > ${TEST_ROOT}/${TEST_NAME}/final.yaml
-    - name: Configure AKS
-      uses: azure/aks-set-context@v1
-      with:
-        creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: ${{ secrets.CLUSTER_NAME }}
-        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
-    - name: Deploy artifacts
-      run: |
-        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
-    - name: Login via Az module
-      uses: azure/login@v1
-      with:
-        creds: ${{secrets.AZURE_CREDENTIALS}}
-    - name: Write values to outputs
-      id: write
-      run: |
-        echo "::set-output name=cluster-ip::$(kubectl get service nginx-ingress-ingress-nginx-controller --namespace ingress-basic -w  \
-                                              -o 'go-template={{with .status.loadBalancer.ingress}}{{range .}}{{.ip}}{{"\n"}}{{end}}{{.err}}{{end}}' 2>/dev/null \
-                                              | head -n1)"
-        echo "::set-output name=scenario-name::${TEST_NAME}"
-        echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ matrix.users }}-${{ matrix.payload }}-${{ GITHUB.RUN_NUMBER }}"
-        echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
-        echo "::set-output name=space-id::${{ secrets.SPACE_ID }}"
-        echo "::set-output name=message-key::${{ secrets.MESSAGE_KEY }}"
-        echo "::set-output name=chat-token::${{ secrets.CHAT_TOKEN }}"
-        echo "::set-output name=custom-image-name::$(cat image.txt)"
-    - name: Create VM Instance
-      id: vminstance
-      uses: azure/CLI@v1
-      with:
-        azcliversion: "agentazcliversion"
-        inlineScript: |
-          az vm create --resource-group "${{ secrets.CLUSTER_RESOURCE_GROUP }}"  --name "${{ steps.write.outputs.vm-name }}"  --admin-username "${{ secrets.VM_USER }}" --admin-password "${{ secrets.VM_PWD }}" --location  eastus \
-          --image "mi_${{ steps.write.outputs.custom-image-name }}" --tags benchmark-number=${{ steps.write.outputs.vm-name }} --size Standard_F4s_v2
-          echo "::set-output name=ip-address::$(az vm show -d -g "${{ secrets.CLUSTER_RESOURCE_GROUP }}" -n "${{ steps.write.outputs.vm-name }}" --query publicIps -o tsv)"
-    - name: Wait for VM instance
-      run: sleep 60s
-      shell: bash
-    - name: Execute performance tests
-      uses: appleboy/ssh-action@master
-      env: 
-        IP: ${{ steps.write.outputs.cluster-ip }}
-        SCENARIO_NAME: ${{ steps.write.outputs.scenario-name }}
-        GITHUB_TOKEN: ${{steps.write.outputs.git-token}}
-        PAYLOAD: ${{ matrix.payload }}
-        USERS: ${{ matrix.users }}
-      with:
-        host: ${{ steps.vminstance.outputs.ip-address }}
-        username: ${{ secrets.VM_USER }}
-        password: ${{ secrets.VM_PWD }}
-        envs: IP,SCENARIO_NAME,GITHUB_TOKEN,PAYLOAD,USERS,SPACE_ID,MESSAGE_KEY,CHAT_TOKEN
-        timeout: 300s #5 mins
-        command_timeout: '180m' #3 hours
-        script: |
-          source /etc/profile.d/10-perf-vm.sh
-          execute-tests.sh -c $IP -s $SCENARIO_NAME -t $GITHUB_TOKEN -p $PAYLOAD -u $USERS -i $SPACE_ID -m $MESSAGE_KEY -a $CHAT_TOKEN
-    - name: Undeploy Kubernetes artifacts
-      if: always()
-      run: |
-        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
-    - name: Cleanup VM
-      if: always()
-      continue-on-error: true
-      uses: azure/CLI@v1
-      with:
-        azcliversion: "agentazcliversion"
-        inlineScript: |
-          az resource delete --ids $(az resource list --tag benchmark-number=${{ steps.write.outputs.vm-name }} -otable --query "[].id" -otsv)
-          var=`az disk list --query "[?tags.\"benchmark-number\"=='${{ steps.write.outputs.vm-name }}'].id" -otable -otsv`
-          if [ -n "$var" ]
-          then
-              az resource delete --ids ${var}
-          else 
-              echo "Disk is already deleted"
-          fi
-
-``` 
+6. When your test is ready, you can commit your test suite for any repository under `ballerina-platform` and execute 
+   https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/stdlib_workflow.yml by giving 
+   the repository name as an input.
 
