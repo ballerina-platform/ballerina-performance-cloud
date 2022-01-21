@@ -10,10 +10,6 @@ spec:
     spec:
       restartPolicy: "Never"
       containers:
-      volumes:
-        - name: task-pv-storage
-          persistentVolumeClaim:
-            claimName: task-pv-claim
         - image: "ballerina/perf_base_container:latest"
           name: "jmeter-job"
           volumeMounts:
@@ -42,3 +38,7 @@ spec:
               value: "<<CONCURRENT_USERS>>"
             - name: CHAT_TOKEN
               value: "<<CHAT_TOKEN>>"
+      volumes:
+        - name: task-pv-storage
+          persistentVolumeClaim:
+            claimName: task-pv-claim
