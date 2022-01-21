@@ -1,28 +1,17 @@
-apiVersion: "apps/v1"
-kind: "Deployment"
+apiVersion: batch/v1 
+kind: Job
 metadata:
-  labels:
-    app: "jmeter"
-  name: "j-deployment"
+  name: "jmeter-job"
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: "jmeter"
   template:
     metadata:
       labels:
         app: "jmeter"
     spec:
+      restartPolicy: "Never"
       containers:
       - image: "ballerina/perf_base_container:latest"
-        lifecycle:
-          preStop:
-            exec:
-              command:
-              - "sleep"
-              - "15"
-        name: "j-deployment"
+        name: "jmeter-job"
         env:
         - name: CLUSTER_IP
           value: "<<CLUSTER_IP>>"

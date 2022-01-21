@@ -232,6 +232,7 @@ jobs:
         kubectl apply -f k8s.yaml
         while [[ $(kubectl get pods -l app=jmeter -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "waiting for pod" && sleep 1; done
         kubectl logs -f -l app="jmeter"
+        kubectl wait --for=condition=complete  --timeout=1h job/jmeter-job
     - name: Pod logs
       if: always()
       run: |
