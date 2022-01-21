@@ -135,32 +135,11 @@ if [[ ! -z ${DISPATCH_TYPE} ]]; then
     pushd "${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/results/
     sudo mkdir /results/"${SCENARIO_NAME}"
     sed -n '$p' summary.csv | sudo tee /results/"${SCENARIO_NAME}"/summary.csv
-    STATUS="success"
-    SUMMARY_STRING=$(sed -n '$p' summary.csv)
-    ERROR_RATE=$(echo $SUMMARY_STRING | cut -d ',' -f10)
-    ERROR_RATE=$(echo $ERROR_RATE | sed 's/%//')
-    ERROR_RATE_LIMIT="5.00"
-    if [ 1 -eq "$(echo "${ERROR_RATE} > ${ERROR_RATE_LIMIT}" | bc)" ]; then
-        STATUS="failed"
-    fi
-    DATA_STRING=$( jq -n \
-                  --arg status "$STATUS" \
-                  --arg summary "$SUMMARY_STRING" \
-                  --arg errorRate "$ERROR_RATE" \
-                  --arg eventType "${DISPATCH_TYPE}" \
-                  --arg scenarioName "${SCENARIO_NAME}" \
-                  '{"event_type": $eventType, "client_payload": { "name": $scenarioName, "status": $status, "result": $summary, "errorRate": $errorRate}}' )
-
-    curl -X POST \
-        -H "Accept: application/vnd.github.v3+json" \
-        -H "Authorization: token ${GITHUB_TOKEN}" \
-        --data "$DATA_STRING" \
-        "https://api.github.com/repos/ballerina-platform/${REPO_NAME}/dispatches"
     popd
 else
     echo "--------Committing CSV--------"
     pushd "${REPO_NAME}"
-     git clean -xfd
+    git clean -xfd
     git add load-tests/"${SCENARIO_NAME}"/results/summary.csv
     git commit -m "Update ${SCENARIO_NAME} test results on $(date)"
     git push origin "${branch_name}"
