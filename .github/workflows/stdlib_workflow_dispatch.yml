@@ -1,4 +1,4 @@
-name: Stdlib Workflow
+name: Stdlib Workflow Dispatch
 
 on:
   workflow_dispatch:
@@ -253,6 +253,55 @@ jobs:
       uses: azure/login@v1
       with:
         creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: Configure AKS
+      uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: '${{ github.event.inputs.clusterName }}'
+        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+    - name: Deploy data collector pod
+      if: always()
+      run: |
+        kubectl apply -f https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/base-image/notification.yaml
+        kubectl wait --for=condition=Ready pod/dataaccess
+        kubectl cp dataaccess:/data data/
+        DISPATCH_TYPE="${{ github.event.inputs.dispatchType }}"
+
+        pushd data
+        CONTENT=$(for SCENARIO_NAME in *; do 
+
+        STATUS="success"
+        SUMMARY_STRING=$(cat $SCENARIO_NAME/summary.csv)
+        ERROR_RATE=$(echo $SUMMARY_STRING | cut -d ',' -f10)
+        ERROR_RATE=$(echo $ERROR_RATE | sed 's/%//')
+        ERROR_RATE_LIMIT="5.00"
+        if [ 1 -eq "$(echo "${ERROR_RATE} > ${ERROR_RATE_LIMIT}" | bc)" ]; then
+            STATUS="failed"
+        fi
+        DATA_STRING=$( jq -n \
+                        --arg status "$STATUS" \
+                        --arg summary "$SUMMARY_STRING" \
+                        --arg errorRate "$ERROR_RATE" \
+                        --arg scenarioName "${SCENARIO_NAME}" \
+                        '{ "name": $scenarioName, "status": $status, "result": $summary, "errorRate": $errorRate}' )
+
+        echo $DATA_STRING
+
+        done | jq -n '.result |= [inputs]')
+
+        FINAL_PAYLOAD=$( jq -n \
+                        --argjson content "${CONTENT}" \
+                        --arg eventType "${DISPATCH_TYPE}" \
+                        '{"event_type": $eventType, "client_payload": $content }' )
+        echo $FINAL_PAYLOAD
+
+        curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.BALLERINA_BOT_TOKEN }}" \
+            --data "$FINAL_PAYLOAD" \
+            "https://api.github.com/repos/ballerina-platform/${{ github.event.inputs.repo-name }}/dispatches"
+
+        popd
     - name: Cleaning up the cluster
       if: always()
       uses: azure/CLI@v1
