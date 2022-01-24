@@ -134,7 +134,7 @@ fi
 if [[ ! -z ${DISPATCH_TYPE} ]]; then
     pushd "${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/results/
     sudo mkdir /results/"${SCENARIO_NAME}"
-    cat summary.csv | sudo tee /results/"${SCENARIO_NAME}"/summary.csv
+    sed -n '$p' summary.csv | sudo tee /results/"${SCENARIO_NAME}"/summary.csv
     STATUS="success"
     SUMMARY_STRING=$(sed -n '$p' summary.csv)
     ERROR_RATE=$(echo $SUMMARY_STRING | cut -d ',' -f10)
