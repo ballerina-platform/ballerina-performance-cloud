@@ -260,6 +260,7 @@ jobs:
         cluster-name: '${{ github.event.inputs.clusterName }}'
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy data collector pod
+      shell: bash
       if: always()
       run: |
         kubectl apply -f https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/base-image/notification.yaml
