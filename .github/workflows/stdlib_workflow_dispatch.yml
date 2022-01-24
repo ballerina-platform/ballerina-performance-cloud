@@ -288,7 +288,7 @@ jobs:
 
         echo $DATA_STRING
 
-        done | jq -n '.result |= [inputs]')
+        done | jq -n '.results |= [inputs]')
 
         FINAL_PAYLOAD=$( jq -n \
                         --argjson content "${CONTENT}" \
