@@ -1,6 +1,6 @@
 [package]
 org = "wso2"
-name = "ballerina_hello"
+name = "bal_hello"
 version = "0.0.1"
 
 [build-options]
