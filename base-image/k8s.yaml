@@ -38,6 +38,8 @@ spec:
               value: "<<CONCURRENT_USERS>>"
             - name: CHAT_TOKEN
               value: "<<CHAT_TOKEN>>"
+            - name: VERSION
+              value: "<<VERSION>>"
       volumes:
         - name: task-pv-storage
           persistentVolumeClaim:

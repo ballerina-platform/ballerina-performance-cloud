@@ -30,5 +30,6 @@ ENV CHAT_TOKEN=""
 ENV DISPATCH_TYPE=""
 ENV BRANCH_NAME=""
 ENV CONCURRENT_USERS="1"
+ENV VERSION=""
 
 CMD bash /home/ballerina/setup/execute-tests.sh
