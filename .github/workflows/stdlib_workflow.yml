@@ -231,7 +231,7 @@ jobs:
         sed -i -e 's/<<DISPATCH_TYPE>>/${{steps.write.outputs.dispatch-type}}/g' k8s.yaml
         sed -i -e 's/<<BRANCH_NAME>>/${{ needs.setup.outputs.branch-name }}/g' k8s.yaml
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' k8s.yaml
-        sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' k8s.yaml
         kubectl apply -f k8s.yaml
         while [[ $(kubectl get pods -l app=jmeter -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "waiting for pod" && sleep 1; done
         kubectl logs -f -l app="jmeter"
