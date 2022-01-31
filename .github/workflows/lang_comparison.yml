@@ -27,7 +27,9 @@ jobs:
             --service-principal "${AZURE_APP_ID}"\
             --client-secret "${AZURE_APP_PASSWORD}" \
             --nodepool-name compnodepool \
-            --node-vm-size "Standard_F16s" \
+            --node-vm-size "Standard_F4s_v2" \
+            --node-osdisk-size 256 \
+            --node-osdisk-type Managed \
             --node-count 1 \
             --location "eastus" \
             --generate-ssh-keys
