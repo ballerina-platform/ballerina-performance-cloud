@@ -36,6 +36,7 @@ jobs:
         args:
           build
     - name: Ballerina Build from Distribution ZIP
+      id: zip
       if: ${{ github.event.client_payload.zipURL != '' }}
       run: |
         wget -c ${{ github.event.client_payload.zipURL }}
@@ -48,6 +49,9 @@ jobs:
         echo "var ${BAL_PATH}"
         pushd load-tests/${TEST_NAME}/src
         ls -ltr
+        $BAL_PATH/bin/bal version > tmp1.txt
+        version_out=$(cat tmp1.txt | head -n 1)
+        echo "::set-output name=version::${version_out}"
         $BAL_PATH/bin/bal build
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}:latest
@@ -87,6 +91,13 @@ jobs:
         echo "::set-output name=message-key::${{ secrets.MESSAGE_KEY }}"
         echo "::set-output name=chat-token::${{ secrets.CHAT_TOKEN }}"
         echo "::set-output name=custom-image-name::$(cat image.txt)"
+        if [[ -z "${{steps.zip.outputs.version}}" ]]; then
+          docker run --entrypoint "/ballerina/runtime/bin/bal" ballerina/ballerina:nightly "version" > tmp.txt
+          version_out=$(cat tmp.txt | head -n 1)
+        else 
+          version_out="${{steps.zip.outputs.version}}"
+        fi
+        echo "::set-output name=version::${version_out}"
     - name: Deploy Jmeter container
       run: |
         sed -i -e 's/<<CLUSTER_IP>>/${{ steps.write.outputs.cluster-ip }}/g' base-image/k8s.yaml
@@ -100,7 +111,7 @@ jobs:
         sed -i -e 's/<<DISPATCH_TYPE>>//g' base-image/k8s.yaml
         sed -i -e 's/<<BRANCH_NAME>>//g' base-image/k8s.yaml
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
-
+        sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
         kubectl apply -f base-image/k8s.yaml
         while [[ $(kubectl get pods -l app=jmeter -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "waiting for pod" && sleep 1; done
         kubectl logs -f -l app="jmeter"

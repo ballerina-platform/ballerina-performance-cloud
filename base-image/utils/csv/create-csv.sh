@@ -42,6 +42,13 @@ sed -i ' 1 s/.*/&,Users/' "${1}"
 # Append Users value
 sed -i " 2 s/.*/&,${4}/" "${1}"
 
+if [[ ! -z ${VERSION} ]]; then
+  # Append Version header
+  sed -i ' 1 s/.*/&,Version/' "${1}"
+  # Append Version value
+  sed -i " 2 s/.*/&,${VERSION}/" "${1}"
+fi
+
 # Remove total row
 sed -i '$ d' "${1}"
 echo "CSV modification completed"
