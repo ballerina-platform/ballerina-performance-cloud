@@ -35,7 +35,7 @@
                 <a aria-current="page" class="nav-link" href="./index.html">Daily Performance Tests</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link active" href="#">Language Comparison</a>
+                <a class="nav-link active" href="#">Weekly Language Comparison</a>
             </li>
         </ul>
     </div>
@@ -246,6 +246,17 @@
             errorChart.destroy();
         }
     }
+    
+    function extractVersion(stats, users) {
+        let version;
+        stats.filter(function (row) {
+            return row['Users'] === users;
+        }).map(function (value) {
+                version = value.Version;
+            }
+        );
+        return version;
+    }
 
 
     function extractData(stats, users, attribute) {
@@ -303,8 +314,9 @@
             promises.push(d3.csv(url).then(function (stats) {
                 if (chartType !== undefined) {
                     let color = getColorByLang(lang);
+                    let title = extractVersion(stats, chartType);
                     let data = {
-                        label: lang.replace("_hello", ""),
+                        label: title,
                         showLine: true,
                         backgroundColor: color,
                         borderColor: color,

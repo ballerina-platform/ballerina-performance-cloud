@@ -35,7 +35,7 @@
                 <a aria-current="page" class="nav-link active" href="#">Daily Performance Tests</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="./comparison.html">Language Comparison</a>
+                <a class="nav-link" href="./comparison.html">Weekly Language Comparison</a>
             </li>
         </ul>
     </div>
@@ -308,8 +308,9 @@
                 let g = Math.floor(Math.random() * 255);
                 let b = Math.floor(Math.random() * 255);
                 let color = 'rgb(' + r + ',' + g + ',' + b + ')';
+                let version = extractVersion(stats, users, payload);
                 let data = {
-                    label: users + " users " + payload + " payload (ms)",
+                    label: users + " users " + payload + " payload (ms) Version " + version +" ",
                     showLine: true,
                     backgroundColor: color,
                     borderColor: color,
@@ -322,10 +323,21 @@
             datasets: dataset
         };
     }
+    
+    function extractVersion(stats, users, payload) {
+        let version;
+        stats.filter(function (row) {
+            return row['Users'] === users && row['Payload'] === payload;
+        }).map(function (value) {
+                version = value.Version;
+            }
+        );
+        return version;
+    }
 
     function drawCharts(url, chartTypes) {
         destroyCharts();
-        d3.csv(url).then(function (stats) {
+        d3.csv(url).then(function (stats) {        
             //Throughput Chart
             const throughput_dataset = getCSVData(stats, 'Throughput', chartTypes)
             throughputChart = drawChart(throughput_dataset, 'throughputCanvas');
