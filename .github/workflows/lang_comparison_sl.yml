@@ -65,7 +65,7 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [0]
-        users: [100]
+        users: [50]
     env:
       TEST_NAME: "go_hello"
       TEST_ROOT: "load-tests"
@@ -145,7 +145,7 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [0]
-        users: [100]
+        users: [50]
     env:
       TEST_NAME: "ballerina_hello"
       TEST_ROOT: "load-tests"
@@ -242,7 +242,7 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [0]
-        users: [100]
+        users: [50]
     env:
       TEST_NAME: "python_hello"
       TEST_ROOT: "load-tests"
@@ -322,7 +322,7 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [0]
-        users: [100]
+        users: [50]
     env:
       TEST_NAME: "python_flask_hello"
       TEST_ROOT: "load-tests"
@@ -402,7 +402,7 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [0]
-        users: [100]
+        users: [50]
     env:
       TEST_NAME: "node_hello"
       TEST_ROOT: "load-tests"
@@ -482,7 +482,7 @@ jobs:
       max-parallel: 1
       matrix:
         payload: [0]
-        users: [100]
+        users: [50]
     env:
       TEST_NAME: "node_express_hello"
       TEST_ROOT: "load-tests"
