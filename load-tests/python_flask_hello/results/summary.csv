@@ -1,3 +1,4 @@
 Label,# Samples,Average,Median,90% Line,95% Line,99% Line,Min,Max,Error %,Throughput,Received KB/sec,Std. Dev.,Date,Payload,Users,Version
 HTTP Request,765216,84,84,95,102,121,58,172,0.00%,708.5,106.5,10.09,1643656707,0,60,Python 3.8 Flask 2.0
 HTTP Request,769016,280,182,221,1197,1620,122,10185,0.00%,711.3,106.9,415.41,1643658035,0,200,Python 3.8 Flask 2.0
+HTTP Request,644893,83,84,94,100,120,57,180,0.00%,597.1,89.8,10.55,1643889420,0,50,Python 3.8 Flask 2.0
