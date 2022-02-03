@@ -11,13 +11,13 @@
     <link crossorigin="anonymous" href="./css/bootstrap.min.css" rel="stylesheet">
     <link href="./img/img.png" rel="shortcut icon">
     <link href="css/styles.css" rel="stylesheet">
-    <title>Ballerina Benchmark Performance</title>
+    <title>Ballerina Cloud Performance</title>
 </head>
 <body>
 <header class="jumbotron">
     <div class="container">
         <div class="row align-items-center">
-            <h1 class="display-5">Ballerina Benchmark Comparison</h1>
+            <h1 class="display-5">Ballerina Cloud Performance Stats</h1>
         </div>
     </div>
 </header>
@@ -35,30 +35,48 @@
                 <a aria-current="page" class="nav-link" href="./index.html">Swan lake Performance</a>
             </li>
             <li class="nav-item">
-                <a aria-current="page" class="nav-link" href="./daily-tests.html">Daily Performance Tests</a>
+                <a aria-current="page" class="nav-link active" href="#">Daily Performance Tests</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link active" href="#">Weekly Language Comparison</a>
+                <a class="nav-link" href="./comparison.html">Weekly Language Comparison</a>
             </li>
         </ul>
     </div>
     <div class="row_header">
-        <h5>Hello World Service Comparison</h5>
+        <h5>Test Scenario</h5>
     </div>
     <div class="row ">
         <div class="col-12 col-md-9">
             <form>
                 <div class="form-group row">
+                    <select class="form-control" id="scenario" onchange="onSelectChange(this.value)">
+                        <option selected="selected" value="h1_h1_passthrough">HTTP1->HTTP1 Passthrough</option>
+                        <option value="h1_transformation">HTTP1 Transformation</option>
+                        <option value="h1c_h1c_passthrough">HTTP1 Client->HTTP1 Client Passthrough</option>
+                        <option value="h1c_transformation">HTTP1 Client Transformation</option>
+                        <option value="observability_enabled">Observability Enabled</option>
+                    </select>
+                </div>
+                <div class="form-group row">
                     <div class="form-check">
                         <input checked class="form-check-input" name="params" onclick="drawSelectedCharts()"
-                               type="radio"
-                               value="60"><label
-                            class="check-label">60 Users</label>
+                               type="checkbox" value="60_50"><label
+                            class="check-label">60 Users 50b </label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" name="params" onclick="drawSelectedCharts() " type="radio"
-                               value="200"><label
-                            class="check-label">200 Users</label>
+                        <input class="form-check-input" name="params" onclick="drawSelectedCharts()" type="checkbox"
+                               value="60_1024"><label
+                            class="check-label">60 Users 1024b</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" name="params" onclick="drawSelectedCharts()" type="checkbox"
+                               value="200_50"><label
+                            class="check-label">200 Users 50b </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" name="params" onclick="drawSelectedCharts() " type="checkbox"
+                               value="200_1024"><label
+                            class="check-label">200 Users 1024b </label>
                     </div>
                 </div>
             </form>
@@ -67,17 +85,15 @@
     <div class="row">
         <div class="col-sm-3" id="range-selector">
             <div class="btn-toolbar  pull-right">
-                <input class="period ui-button btn-light" id="1w" type="button" value="1w"/>
-                <input autofocus class="period ui-button btn-light" id="1m" type="button" value="1m"/>
-                <input class="period ui-button btn-light" id="3m" type="button" value="3m"/>
-                <input class="period ui-button btn-light" id="6m" type="button" value="6m"/>
-                <input class="period ui-button btn-light" id="1y" type="button" value="1y"/>
+                <input class="period btn-light" id="1w" type="button" value="1w"/>
+                <input autofocus class="period btn-light" id="1m" type="button" value="1m"/>
+                <input class="period btn-light" id="3m" type="button" value="3m"/>
+                <input class="period btn-light" id="6m" type="button" value="6m"/>
+                <input class="period btn-light" id="1y" type="button" value="1y"/>
             </div>
         </div>
-        <div class="col-sm-4" id="date-selector">
+        <div class="col-sm-8" id="date-selector">
             From: <input class="ui-widget" id="fromDate" type="datetime-local">
-        </div>
-        <div class="col-sm-4" id="date-selector">
             To: <input class="ui-widget" id="toDate" type="datetime-local">
         </div>
     </div>
@@ -86,7 +102,7 @@
             <div class="col-12">
                 <h3>Throughput (Req/sec)</h3>
             </div>
-            <div id=throughputCanvas">
+            <div>
                 <canvas id="throughputCanvas"></canvas>
             </div>
         </div>
@@ -134,7 +150,6 @@
 </div>
 
 <script>
-
     let throughputChart;
     let averageChart;
     let stdDevChart;
@@ -170,12 +185,27 @@
         drawSelectedCharts();
     });
 
-    // A $( document ).ready() block.
     $(document).ready(function () {
+        let value = document.getElementById("scenario").value;
         document.getElementById("fromDate").value = fromDate.toJSON().slice(0, 19);
         document.getElementById("toDate").value = toDate.toJSON().slice(0, 19);
-        drawSelectedCharts()
+        onSelectChange(value)
     });
+
+    function onSelectChange(value) {
+        let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/load-tests/"
+            + value + "/results/summary.csv";
+        drawCharts(url, getSelected());
+    }
+
+    function getSelected() {
+        const checkboxes = document.querySelectorAll('input[name="params"]:checked');
+        let params = [];
+        checkboxes.forEach((checkbox) => {
+            params.push(checkbox.value);
+        });
+        return params;
+    }
 
     $("#date-selector").change(function () {
         fromDate = new Date($("#fromDate").val());
@@ -185,18 +215,15 @@
         }
     });
 
-    function getSelectedRadio() {
-        return document.querySelector('input[name="params"]:checked').value;
-    }
-
     function drawSelectedCharts() {
-        let params = getSelectedRadio();
-        destroyCharts();
-        drawCharts(params);
-        return params
+        let value = document.getElementById("scenario").value;
+        let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/load-tests/"
+            + value + "/results/summary.csv";
+        let params = getSelected();
+        drawCharts(url, params);
     }
 
-    function renderChart(dataset, canvas) {
+    function drawChart(dataset, canvas) {
         let timeFormat = 'DD/MM/YYYY, HH:mm:ss';
         return new Chart(
             document.getElementById(canvas),
@@ -208,8 +235,8 @@
                         tooltip: {
                             callbacks: {
                                 afterBody: function (t, d) {
-                                    return "Specs: 1 cpu, 512mb memory";
-                                }
+                                    return ["Version: "+ t[0].raw.version, "Specs: 1 cpu, 512mb memory"];
+                                },
                             }
                         }
                     },
@@ -249,27 +276,15 @@
             errorChart.destroy();
         }
     }
-    
-    function extractVersion(stats, users) {
-        let version;
-        stats.filter(function (row) {
-            return row['Users'] === users;
-        }).map(function (value) {
-                version = value.Version;
-            }
-        );
-        return version;
-    }
 
-
-    function extractData(stats, users, attribute) {
+    function extractData(stats, users, payload, attribute) {
         let coordinates = [];
         stats.filter(function (row) {
-            return row['Users'] === users;
+            return row['Users'] === users && row['Payload'] === payload;
         }).map(function (value) {
                 let date = new Date(value['Date'] * 1000);
                 if (fromDate.getTime() < date.getTime() && date.getTime() < toDate.getTime()) {
-                    coordinates.push({"x": date.toISOString().slice(0, 10), "y": value[attribute].replace("%", "")});
+                    coordinates.push({"x": date.toLocaleString(), "y": value[attribute].replace("%", ""), "version": value['Version']});
                 }
             }
         );
@@ -285,96 +300,55 @@
         });
     }
 
-    function getColorByLang(lang) {
-        if (lang.includes("ballerina")) {
-            return 'rgb(98,217,198)';
-        } else if (lang.includes("express")) {
-            return 'rgb(200,200,200)';
-        } else if (lang.includes("go")) {
-            return 'rgb(200,100,100)';
-        } else if (lang.includes("flask")) {
-            return 'rgb(125,200,125)';
-        } else if (lang.includes("python")) {
-            return 'rgb(255,150,250)';
-        } else if (lang.includes("node")) {
-            return 'rgb(145,135,145)';
-        } else {
-            let r = Math.floor(Math.random() * 255);
-            let g = Math.floor(Math.random() * 255);
-            let b = Math.floor(Math.random() * 255);
-            return 'rgb(' + r + ',' + g + ',' + b + ')';
-        }
-
-    }
-
-    function drawChart(attribute, chartType, canvasId) {
+    function getCSVData(stats, attribute, chartTypes) {
         let dataset = [];
-        const promises = [];
-        let urls = ["python_flask_hello", "python_hello", "node_express_hello", "node_hello", "go_hello", "ballerina_hello"];
-        urls.forEach(function (lang) {
-            let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/load-tests/"
-                + lang + "/results/summary.csv";
-            promises.push(d3.csv(url).then(function (stats) {
-                if (chartType !== undefined) {
-                    let color = getColorByLang(lang);
-                    let title = extractVersion(stats, chartType);
-                    let data = {
-                        label: title,
-                        showLine: true,
-                        backgroundColor: color,
-                        borderColor: color,
-                        data: extractData(stats, chartType, attribute)
-                    }
-                    dataset.push(data);
+        if (chartTypes !== undefined) {
+            chartTypes.forEach(function (type) {
+                let res = type.split("_");
+                let users = res[0];
+                let payload = res[1];
+                let r = Math.floor(Math.random() * 255);
+                let g = Math.floor(Math.random() * 255);
+                let b = Math.floor(Math.random() * 255);
+                let color = 'rgb(' + r + ',' + g + ',' + b + ')';
+                let data = {
+                    label: users + " users " + payload + " payload (ms)",
+                    showLine: true,
+                    backgroundColor: color,
+                    borderColor: color,
+                    data: extractData(stats, users, payload, attribute)
                 }
-            }));
-        });
-
-        Promise.allSettled(promises).then(() => {
-            let datasets = {
-                datasets: dataset
-            };
-            switch (canvasId) {
-                case "throughputCanvas":
-                    throughputChart = renderChart(datasets, "throughputCanvas")
-                    break;
-                case "averageCanvas":
-                    averageChart = renderChart(datasets, "averageCanvas")
-                    break;
-                case "stdDevCanvas":
-                    stdDevChart = renderChart(datasets, "stdDevCanvas")
-                    break;
-                case "percentileCanvas":
-                    percentileChart = renderChart(datasets, "percentileCanvas")
-                    break;
-                case "errorCanvas":
-                    errorChart = renderChart(datasets, "errorCanvas")
-                    break;
-                default:
-                    break;
-            }
-        })
+                dataset.push(data);
+            })
+        }
+        return {
+            datasets: dataset
+        };
     }
 
-
-    function drawCharts(chartType) {
+    function drawCharts(url, chartTypes) {
         destroyCharts();
+        d3.csv(url).then(function (stats) {
+            //Throughput Chart
+            const throughput_dataset = getCSVData(stats, 'Throughput', chartTypes)
+            throughputChart = drawChart(throughput_dataset, 'throughputCanvas');
 
-        //Throughput Chart
-        drawChart('Throughput', chartType, 'throughputCanvas');
+            // Average Chart
+            const average_dataset = getCSVData(stats, 'Average', chartTypes);
+            averageChart = drawChart(average_dataset, 'averageCanvas');
 
-        // Average Chart
-        drawChart('Average', chartType, 'averageCanvas');
+            //Standard Deviation of Response Time Chart
+            const deviation_dataset = getCSVData(stats, 'Std. Dev.', chartTypes)
+            stdDevChart = drawChart(deviation_dataset, 'stdDevCanvas')
 
-        //Standard Deviation of Response Time Chart
-        drawChart('Std. Dev.', chartType, 'stdDevCanvas');
+            //99 percentile of Response Time Chart
+            const percentile_dataset = getCSVData(stats, '99% Line', chartTypes)
+            percentileChart = drawChart(percentile_dataset, "percentileCanvas");
 
-        //99 percentile of Response Time Chart
-        drawChart('99% Line', chartType, 'percentileCanvas');
-
-        //Error Count Chart
-        drawChart('Error %', chartType, 'errorCanvas');
-
+            //Error Count Chart
+            const error_dataset = getCSVData(stats, 'Error %', chartTypes);
+            errorChart = drawChart(error_dataset, "errorCanvas");
+        });
     }
 
 </script>

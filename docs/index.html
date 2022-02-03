@@ -32,66 +32,30 @@
     <div class="row nav_bar">
         <ul class="nav nav-tabs">
             <li class="nav-item">
-                <a aria-current="page" class="nav-link active" href="#">Daily Performance Tests</a>
+                <a aria-current="page" class="nav-link active" href="#">Swan lake Performance</a>
+            </li>
+            <li class="nav-item">
+                <a aria-current="page" class="nav-link" href="./daily-tests.html">Daily Performance Tests</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="./comparison.html">Weekly Language Comparison</a>
             </li>
         </ul>
     </div>
-    <div class="row_header">
-        <h5>Test Scenario</h5>
-    </div>
     <div class="row ">
         <div class="col-12 col-md-9">
-            <form>
-                <div class="form-group row">
-                    <select class="form-control" id="scenario" onchange="onSelectChange(this.value)">
-                        <option selected="selected" value="h1_h1_passthrough">HTTP1->HTTP1 Passthrough</option>
-                        <option value="h1_transformation">HTTP1 Transformation</option>
-                        <option value="h1c_h1c_passthrough">HTTP1 Client->HTTP1 Client Passthrough</option>
-                        <option value="h1c_transformation">HTTP1 Client Transformation</option>
-                        <option value="observability_enabled">Observability Enabled</option>
-                    </select>
-                </div>
-                <div class="form-group row">
-                    <div class="form-check">
-                        <input checked class="form-check-input" name="params" onclick="drawSelectedCharts()"
-                               type="checkbox" value="60_50"><label
-                            class="check-label">60 Users 50b </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" name="params" onclick="drawSelectedCharts()" type="checkbox"
-                               value="60_1024"><label
-                            class="check-label">60 Users 1024b</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" name="params" onclick="drawSelectedCharts()" type="checkbox"
-                               value="200_50"><label
-                            class="check-label">200 Users 50b </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" name="params" onclick="drawSelectedCharts() " type="checkbox"
-                               value="200_1024"><label
-                            class="check-label">200 Users 1024b </label>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-3" id="range-selector">
-            <div class="btn-toolbar  pull-right">
-                <input class="period btn-light" id="1w" type="button" value="1w"/>
-                <input autofocus class="period btn-light" id="1m" type="button" value="1m"/>
-                <input class="period btn-light" id="3m" type="button" value="3m"/>
-                <input class="period btn-light" id="6m" type="button" value="6m"/>
-                <input class="period btn-light" id="1y" type="button" value="1y"/>
-            </div>
-        </div>
-        <div class="col-sm-8" id="date-selector">
-            From: <input class="ui-widget" id="fromDate" type="datetime-local">
-            To: <input class="ui-widget" id="toDate" type="datetime-local">
+            <h5>Purpose of the framework</h5>
+            <p>This performance framework was developed to get an idea of how ballerina performance changes with nightly builds and how ballerina performs compared to other languages in different use cases. </p>
+
+            <h5>Test Execution</h5>
+            <ol>
+                <li>It creates a fresh single node cluster(Standard_F4s_v2) Kubernetes cluster and installs Nginx ingress.</li>
+                <li>Deploy the application pod into the cluster (Hello world service written by different languages with 1 cpu, 512mb memory resource limits).</li>
+                <li>Deploy the JMeter pod and execute the benchmark and then commit the results to Github.</li>
+                <li>Cleanup the cluster.</li>
+            </ol>
+            <h5>Performance Accuracy</h5>
+            <p>Due to infrastructure-related reasons, we have noticed about 10% variance in worst-case test execution. Additionally, we haven't optimized any application for optimal settings and only wrote a simple hello world as our objective is simply to get a rough idea of where we are. This is not an effort to get the most accurate numbers. You could view the source codes(and other artifacts) for scenarios <a href="https://github.com/ballerina-platform/ballerina-performance-cloud/tree/main/load-tests">here.</a></p>
         </div>
     </div>
     <div class="row">
@@ -152,103 +116,42 @@
     let stdDevChart;
     let percentileChart;
     let errorChart;
-    let toDate = new Date();
-    let fromDate = new Date();
-    fromDate.setMonth(toDate.getMonth() - 1);
-
-    $(".period").click(function () {
-        let period = this.id;
-        fromDate = new Date();
-        switch (period) {
-            case "1w":
-                fromDate.setDate(fromDate.getDate() - 7);
-                break;
-            case "1m":
-                fromDate.setMonth(fromDate.getMonth() - 1);
-                break;
-            case "3m":
-                fromDate.setMonth(fromDate.getMonth() - 3);
-                break;
-            case "6m":
-                fromDate.setMonth(fromDate.getMonth() - 6);
-                break;
-            case "1y":
-                fromDate.setFullYear(fromDate.getFullYear() - 1);
-                break;
-            default:
-                break;
-        }
-        document.getElementById("fromDate").value = fromDate.toJSON().slice(0, 19);
-        drawSelectedCharts();
-    });
 
     $(document).ready(function () {
-        let value = document.getElementById("scenario").value;
-        document.getElementById("fromDate").value = fromDate.toJSON().slice(0, 19);
-        document.getElementById("toDate").value = toDate.toJSON().slice(0, 19);
-        onSelectChange(value)
+        let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/sl-compare-data.csv";
+        drawCharts(url);
     });
 
-    function onSelectChange(value) {
-        let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/load-tests/"
-            + value + "/results/summary.csv";
-        drawCharts(url, getSelected());
-    }
-
-    function getSelected() {
-        const checkboxes = document.querySelectorAll('input[name="params"]:checked');
-        let params = [];
-        checkboxes.forEach((checkbox) => {
-            params.push(checkbox.value);
-        });
-        return params;
-    }
-
-    $("#date-selector").change(function () {
-        fromDate = new Date($("#fromDate").val());
-        toDate = new Date($("#toDate").val())
-        if (new Date(fromDate).getTime() < new Date(toDate).getTime()) {
-            drawSelectedCharts();
+    function drawChart(labels, data, colors, canvas, type) {
+        let dataset = {
+            labels,
+            datasets: [{
+                label: type,
+                data,
+                backgroundColor: colors,
+                borderColor: colors,
+                borderWidth: 1
+            }]
         }
-    });
-
-    function drawSelectedCharts() {
-        let value = document.getElementById("scenario").value;
-        let url = "https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/load-tests/"
-            + value + "/results/summary.csv";
-        let params = getSelected();
-        drawCharts(url, params);
-    }
-
-    function drawChart(dataset, canvas) {
-        let timeFormat = 'DD/MM/YYYY, HH:mm:ss';
         return new Chart(
             document.getElementById(canvas),
             {
-                type: 'line',
+                type: 'bar',
                 data: dataset,
                 options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
                     plugins: {
                         tooltip: {
                             callbacks: {
                                 afterBody: function (t, d) {
-                                    return ["Version: "+ t[0].raw.version, "Specs: 1 cpu, 512mb memory"];
+                                    return ["Specs: 1 cpu, 512mb memory"];
                                 },
                             }
                         }
-                    },
-                    scales: {
-                        xAxes: [{
-                            type: "time",
-                            time: {
-                                format: timeFormat,
-                                tooltipFormat: 'll'
-                            },
-                            scaleLabel: {
-                                display: true,
-                                labelString: 'Date'
-                            }
-                        }],
                     }
                 }
             }
@@ -297,54 +200,40 @@
         });
     }
 
-    function getCSVData(stats, attribute, chartTypes) {
-        let dataset = [];
-        if (chartTypes !== undefined) {
-            chartTypes.forEach(function (type) {
-                let res = type.split("_");
-                let users = res[0];
-                let payload = res[1];
+    function drawCharts(url) {
+        destroyCharts();
+        let labels = [];
+        let throughputs = [];
+        let ninetyNines = [];
+        let averages = [];
+        let errors = [];
+        let stdDivs = [];
+        let colors = [];
+        d3.csv(url).then(function (stats) {
+            stats.forEach(function (row) {
+                let label = row["Version"];
+                labels.push(label);
+                let throughput = row["Throughput"];
+                throughputs.push(throughput);
+                let ninetyNine = row["99% Line"];
+                ninetyNines.push(ninetyNine);
+                let average = row["Average"];
+                averages.push(average);
+                let error = row["Error %"].replace("%", "");
+                errors.push(error);
+                let stdDev = row["Std. Dev."];
+                stdDivs.push(stdDev);
                 let r = Math.floor(Math.random() * 255);
                 let g = Math.floor(Math.random() * 255);
                 let b = Math.floor(Math.random() * 255);
                 let color = 'rgb(' + r + ',' + g + ',' + b + ')';
-                let data = {
-                    label: users + " users " + payload + " payload (ms)",
-                    showLine: true,
-                    backgroundColor: color,
-                    borderColor: color,
-                    data: extractData(stats, users, payload, attribute)
-                }
-                dataset.push(data);
+                colors.push(color);
             })
-        }
-        return {
-            datasets: dataset
-        };
-    }
-
-    function drawCharts(url, chartTypes) {
-        destroyCharts();
-        d3.csv(url).then(function (stats) {
-            //Throughput Chart
-            const throughput_dataset = getCSVData(stats, 'Throughput', chartTypes)
-            throughputChart = drawChart(throughput_dataset, 'throughputCanvas');
-
-            // Average Chart
-            const average_dataset = getCSVData(stats, 'Average', chartTypes);
-            averageChart = drawChart(average_dataset, 'averageCanvas');
-
-            //Standard Deviation of Response Time Chart
-            const deviation_dataset = getCSVData(stats, 'Std. Dev.', chartTypes)
-            stdDevChart = drawChart(deviation_dataset, 'stdDevCanvas')
-
-            //99 percentile of Response Time Chart
-            const percentile_dataset = getCSVData(stats, '99% Line', chartTypes)
-            percentileChart = drawChart(percentile_dataset, "percentileCanvas");
-
-            //Error Count Chart
-            const error_dataset = getCSVData(stats, 'Error %', chartTypes);
-            errorChart = drawChart(error_dataset, "errorCanvas");
+            throughputChart = drawChart(labels,throughputs, colors,'throughputCanvas', "Throughput");
+            averageChart = drawChart(labels,averages,colors, 'averageCanvas', "Average Response Time");
+            stdDevChart = drawChart(labels,stdDivs,colors, 'stdDevCanvas', "Std. Dev.");
+            percentileChart = drawChart(labels,ninetyNines,colors, 'percentileCanvas', "99% Line");
+            errorChart = drawChart(labels,errors,colors, 'errorCanvas', "Error Rate");
         });
     }
 
