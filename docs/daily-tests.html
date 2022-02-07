@@ -337,15 +337,15 @@
             const average_dataset = getCSVData(stats, 'Average', chartTypes);
             averageChart = drawChart(average_dataset, 'averageCanvas');
 
-            //Standard Deviation of Response Time chart.
+            ////Standard deviation of response time chart.
             const deviation_dataset = getCSVData(stats, 'Std. Dev.', chartTypes)
             stdDevChart = drawChart(deviation_dataset, 'stdDevCanvas')
 
-            //99 percentile of Response Time chart.
+            //The 99th percentile of the response time chart.
             const percentile_dataset = getCSVData(stats, '99% Line', chartTypes)
             percentileChart = drawChart(percentile_dataset, "percentileCanvas");
 
-            //Error Count chart.
+            //Error count chart.
             const error_dataset = getCSVData(stats, 'Error %', chartTypes);
             errorChart = drawChart(error_dataset, "errorCanvas");
         });
