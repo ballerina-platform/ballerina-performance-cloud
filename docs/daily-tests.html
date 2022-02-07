@@ -329,23 +329,23 @@
     function drawCharts(url, chartTypes) {
         destroyCharts();
         d3.csv(url).then(function (stats) {
-            //Throughput Chart
+            //Throughput chart.
             const throughput_dataset = getCSVData(stats, 'Throughput', chartTypes)
             throughputChart = drawChart(throughput_dataset, 'throughputCanvas');
 
-            // Average Chart
+            //Average chart.
             const average_dataset = getCSVData(stats, 'Average', chartTypes);
             averageChart = drawChart(average_dataset, 'averageCanvas');
 
-            //Standard Deviation of Response Time Chart
+            //Standard Deviation of Response Time chart.
             const deviation_dataset = getCSVData(stats, 'Std. Dev.', chartTypes)
             stdDevChart = drawChart(deviation_dataset, 'stdDevCanvas')
 
-            //99 percentile of Response Time Chart
+            //99 percentile of Response Time chart.
             const percentile_dataset = getCSVData(stats, '99% Line', chartTypes)
             percentileChart = drawChart(percentile_dataset, "percentileCanvas");
 
-            //Error Count Chart
+            //Error Count chart.
             const error_dataset = getCSVData(stats, 'Error %', chartTypes);
             errorChart = drawChart(error_dataset, "errorCanvas");
         });

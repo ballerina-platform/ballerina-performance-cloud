@@ -45,17 +45,26 @@
     <div class="row ">
         <div class="col-12 col-md-9">
             <h5>Purpose of the framework</h5>
-            <p>This performance framework was developed to get an idea of how ballerina performance changes with nightly builds and how ballerina performs compared to other languages in different use cases. </p>
+            <p>This performance framework was developed to get an idea of how Ballerina performance changes with nightly builds and how Ballerina performs compared to other languages in different use cases. </p>
 
-            <h5>Test Execution</h5>
+            <h5>Test Execution for Hello World Sample</h5>
             <ol>
-                <li>Create a fresh single node cluster(Standard_F4s_v2) Kubernetes cluster in Azure and installs Nginx ingress.</li>
-                <li>Deploy the application pod into the cluster (Hello world service written by different languages with 1 cpu, 512mb memory resource limits).</li>
-                <li>Deploy the JMeter pod and execute the benchmark and then commit the results to Github. (Concurrent Users - 50)</li>
+                <li>Create a fresh single node (Standard_F4s_v2) Kubernetes cluster in Azure and installs Nginx Ingress.</li>
+                <li>For each language hello world sample</li>
+                <ol>
+                    <li>Deploy the application pod into the cluster (Hello world sample with 1 cpu, 512mb memory resource limits).</li>
+                    <li>Deploy the JMeter pod and execute the benchmark and then, commit the results to Github. (Concurrent Users - 50)</li>
+                    <li>Clean up the application pod</li>
+                </ol>
                 <li>Cleanup the cluster.</li>
             </ol>
             <h5>Performance Accuracy</h5>
-            <p>Due to infrastructure-related reasons, we have noticed about 10% variance in worst-case test execution. Additionally, we haven't optimized any application for optimal settings and only wrote a simple hello world as our objective is simply to get a rough idea of where we are. This is not an effort to get the most accurate numbers. You could view the source codes(and other artifacts) for scenarios <a href="https://github.com/ballerina-platform/ballerina-performance-cloud/tree/main/load-tests">here.</a></p>
+            <p>A variance 10% was observed due to infrastructure-related reasons in worst-case between two test 
+                executions. The samples are very simple hello world applications and the language specific optimizations
+                has not applied to any sample or deployments. This is only a high level use case specific test 
+                designed to get rough numbers. These might not be the best numbers for the language. For the source 
+                code (and other artifacts) of the scenarios, see <a 
+                        href="https://github.com/ballerina-platform/ballerina-performance-cloud/tree/main/load-tests">load tests.</a></p>
         </div>
     </div>
     <div class="row">
