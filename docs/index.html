@@ -49,12 +49,12 @@
 
             <h5>Test Execution for Hello World Sample</h5>
             <ol>
-                <li>Create a fresh single node (Standard_F4s_v2) Kubernetes cluster in Azure and installs Nginx Ingress.</li>
-                <li>For each hello world sample in the load-tests directory</li>
-                <ol>
+                <li>Create a fresh single node (Standard_F4s_v2) Kubernetes cluster in Azure and install Nginx Ingress.</li>
+                <li>For each hello world sample in the load-tests directory;</li>
+                <ol type="a">
                     <li>Deploy the application pod into the cluster (Hello world sample with 1 CPU, 512MB memory resource limits).</li>
                     <li>Deploy the JMeter pod and execute the benchmark and then, commit the results to Github. (Concurrent Users - 50)</li>
-                    <li>Clean up the application pod</li>
+                    <li >Clean up the application pod</li>
                 </ol>
                 <li>Cleanup the cluster.</li>
             </ol>
