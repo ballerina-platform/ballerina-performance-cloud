@@ -27,11 +27,6 @@ if [[ -z ${REPO_NAME} ]]; then
     exit 1
 fi
 
-if [[ -z ${CLUSTER_IP} ]]; then
-    echo "Please provide the cluster ip."
-    exit 1
-fi
-
 if [[ -z ${SCENARIO_NAME} ]]; then
     echo "Please provide the scenario name."
     exit 1
@@ -66,7 +61,9 @@ popd
 
 payload_flags=""
 
-echo "${CLUSTER_IP} bal.perf.test" | sudo tee -a /etc/hosts
+if [[ ! -z ${CLUSTER_IP} ]]; then
+    echo "${CLUSTER_IP} bal.perf.test" | sudo tee -a /etc/hosts
+fi
 
 function executeScript() {
   FILE="${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/scripts/"${1}"

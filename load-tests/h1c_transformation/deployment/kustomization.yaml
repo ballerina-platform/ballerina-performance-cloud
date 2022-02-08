@@ -1,6 +1,5 @@
 resources:
   - h1c_transformation.yaml
-  - ingress.yaml
   - netty-backend.yaml
 patches:
 - path: deployment-patch.yaml

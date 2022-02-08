@@ -1,5 +1,4 @@
 resources:
-  - ingress.yaml
   - observability_enabled.yaml
 patches:
 - path: deployment-patch.yaml
