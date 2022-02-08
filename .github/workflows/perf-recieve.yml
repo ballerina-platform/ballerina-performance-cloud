@@ -1,0 +1,14 @@
+name: Benchmark github hook.
+on:
+  repository_dispatch:
+    types: [perf]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Prints payload
+      env:
+        json_var: ${{ toJson(github.event.client_payload.results) }}
+      run: |
+        echo $json_var | jq 
