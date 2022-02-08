@@ -18,4 +18,4 @@
 # ----------------------------------------------------------------------------
 set -e
 source base-scenario.sh
-jmeter -n -t "$scriptsDir/"http-get-request.jmx -l "$resultsDir/"original.jtl -Jusers="$concurrent_users" -Jduration=1200 -Jhost=bal.perf.test -Jport=80 -Jprotocol=http -Jpath=hello 
+jmeter -n -t "$scriptsDir/"http-get-request.jmx -l "$resultsDir/"original.jtl -Jusers="$concurrent_users" -Jduration=1200 -Jhost=node-express.default.svc.cluster.local -Jport=9090 -Jprotocol=http -Jpath=hello 
