@@ -3,9 +3,9 @@ repository = "ballerina"
 name = "h1c_transformation"
 
 [cloud.deployment]
-min_memory = "256Mi"
-max_memory = "512Mi"
-min_cpu = "200m"
+min_memory="256Mi"
+max_memory="512Mi"
+min_cpu="200m"
 max_cpu="1000m"
 
 [cloud.deployment.autoscaling]
