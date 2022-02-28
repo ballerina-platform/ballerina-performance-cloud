@@ -247,7 +247,7 @@ jobs:
         kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
         kubectl delete -f k8s.yaml
   cleanup:
-    needs: run_test
+    needs: [setup,run_test]
     name: clean up
     if: always()
     runs-on: ubuntu-latest
@@ -292,6 +292,23 @@ jobs:
         echo $DATA_STRING
 
         done | jq -n '.results |= [inputs]')
+
+        echo "Complete List"
+        COMPLETE_LIST='${{ needs.setup.outputs.matrix }}'
+        echo $COMPLETE_LIST
+
+        for SCENARIO_NAME in *; do 
+        COMPLETE_LIST=$(echo $COMPLETE_LIST | jq --arg SCENARIO $SCENARIO_NAME 'del(.[] | select(. == $SCENARIO))')
+        done
+
+        echo "Incomplete List"
+        echo $COMPLETE_LIST
+        while read i; do
+            SCENARIO=$(echo $i | tr -d '"')
+            CONTENT=$(echo $CONTENT | jq --arg SCENARIO $SCENARIO '.results += [{"name":$SCENARIO,"status": "failed"}]')
+        done <<<$(echo $COMPLETE_LIST | jq -c '.[]')
+
+        echo $CONTENT
 
         FINAL_PAYLOAD=$( jq -n \
                         --argjson content "${CONTENT}" \
