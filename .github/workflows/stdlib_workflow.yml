@@ -132,6 +132,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
+      fail-fast: false
       matrix:
         test_name: ${{ fromJson(needs.setup.outputs.matrix) }}
         payload: [50]
