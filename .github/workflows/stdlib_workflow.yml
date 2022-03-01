@@ -132,6 +132,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
+      fail-fast: false
       matrix:
         test_name: ${{ fromJson(needs.setup.outputs.matrix) }}
         payload: [50]
@@ -246,7 +247,7 @@ jobs:
         kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
         kubectl delete -f k8s.yaml
   cleanup:
-    needs: run_test
+    needs: [setup,run_test]
     name: clean up
     if: always()
     runs-on: ubuntu-latest
@@ -291,6 +292,24 @@ jobs:
         echo $DATA_STRING
 
         done | jq -n '.results |= [inputs]')
+
+        echo "Complete scenario list from the inputs"
+        COMPLETE_LIST='${{ needs.setup.outputs.matrix }}'
+        echo $COMPLETE_LIST
+
+        REMAINING_LIST=$COMPLETE_LIST
+        for SCENARIO_NAME in *; do 
+        REMAINING_LIST=$(echo $REMAINING_LIST | jq --arg SCENARIO $SCENARIO_NAME 'del(.[] | select(. == $SCENARIO))')
+        done
+
+        echo "Remaining scenario list after removing successful runs"
+        echo $REMAINING_LIST
+        while read i; do
+            SCENARIO=$(echo $i | tr -d '"')
+            CONTENT=$(echo $CONTENT | jq --arg SCENARIO $SCENARIO '.results += [{"name":$SCENARIO,"status": "failed"}]')
+        done <<<$(echo $REMAINING_LIST | jq -c '.[]')
+
+        echo $CONTENT
 
         FINAL_PAYLOAD=$( jq -n \
                         --argjson content "${CONTENT}" \
