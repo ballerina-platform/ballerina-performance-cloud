@@ -293,20 +293,21 @@ jobs:
 
         done | jq -n '.results |= [inputs]')
 
-        echo "Complete List"
+        echo "Complete scenario list from the inputs"
         COMPLETE_LIST='${{ needs.setup.outputs.matrix }}'
         echo $COMPLETE_LIST
 
+        REMAINING_LIST=$COMPLETE_LIST
         for SCENARIO_NAME in *; do 
-        COMPLETE_LIST=$(echo $COMPLETE_LIST | jq --arg SCENARIO $SCENARIO_NAME 'del(.[] | select(. == $SCENARIO))')
+        REMAINING_LIST=$(echo $REMAINING_LIST | jq --arg SCENARIO $SCENARIO_NAME 'del(.[] | select(. == $SCENARIO))')
         done
 
-        echo "Incomplete List"
-        echo $COMPLETE_LIST
+        echo "Remaining scenario list after removing successful runs"
+        echo $REMAINING_LIST
         while read i; do
             SCENARIO=$(echo $i | tr -d '"')
             CONTENT=$(echo $CONTENT | jq --arg SCENARIO $SCENARIO '.results += [{"name":$SCENARIO,"status": "failed"}]')
-        done <<<$(echo $COMPLETE_LIST | jq -c '.[]')
+        done <<<$(echo $REMAINING_LIST | jq -c '.[]')
 
         echo $CONTENT
 
