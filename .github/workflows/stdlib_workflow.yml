@@ -272,26 +272,26 @@ jobs:
         DISPATCH_TYPE="${{ github.event.inputs.dispatchType }}"
 
         pushd data
-        CONTENT=$(for SCENARIO_NAME in *; do 
+        if [ -z "$(ls -A ./)" ]; then
+          CONTENT=$(echo '{ "results": [] }' | jq )
+        else
+          CONTENT=$(for SCENARIO_NAME in *; do 
 
-        STATUS="success"
-        SUMMARY_STRING=$(cat $SCENARIO_NAME/summary.csv)
-        ERROR_RATE=$(echo $SUMMARY_STRING | cut -d ',' -f10)
-        ERROR_RATE=$(echo $ERROR_RATE | sed 's/%//')
-        ERROR_RATE_LIMIT="5.00"
-        if [ 1 -eq "$(echo "${ERROR_RATE} > ${ERROR_RATE_LIMIT}" | bc)" ]; then
-            STATUS="failed"
+          STATUS="success"
+          SUMMARY_STRING=$(cat $SCENARIO_NAME/summary.csv)
+          ERROR_RATE=$(echo $SUMMARY_STRING | cut -d ',' -f10)
+          ERROR_RATE=$(echo $ERROR_RATE | sed 's/%//')
+          DATA_STRING=$( jq -n \
+                          --arg status "$STATUS" \
+                          --arg summary "$SUMMARY_STRING" \
+                          --arg errorRate "$ERROR_RATE" \
+                          --arg scenarioName "${SCENARIO_NAME}" \
+                          '{ "name": $scenarioName, "status": $status, "result": $summary, "errorRate": $errorRate}' )
+
+          echo $DATA_STRING
+
+          done | jq -n '.results |= [inputs]')
         fi
-        DATA_STRING=$( jq -n \
-                        --arg status "$STATUS" \
-                        --arg summary "$SUMMARY_STRING" \
-                        --arg errorRate "$ERROR_RATE" \
-                        --arg scenarioName "${SCENARIO_NAME}" \
-                        '{ "name": $scenarioName, "status": $status, "result": $summary, "errorRate": $errorRate}' )
-
-        echo $DATA_STRING
-
-        done | jq -n '.results |= [inputs]')
 
         echo "Complete scenario list from the inputs"
         COMPLETE_LIST='${{ needs.setup.outputs.matrix }}'
