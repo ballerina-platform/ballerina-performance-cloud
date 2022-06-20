@@ -124,9 +124,12 @@ jobs:
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
         kubectl apply -f base-image/k8s.yaml
-        while [[ $(kubectl get pods -l app=jmeter -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "waiting for pod" && sleep 1; done
-        kubectl logs -f -l app="jmeter"
-        kubectl wait --for=condition=complete  --timeout=2h job/jmeter-job
+        echo "Waiting till the Jmeter job to finish"
+        kubectl wait --for=condition=complete --timeout=2h job/jmeter-job & completion_pid=$!
+        kubectl wait --for=condition=failed --timeout=2h job/jmeter-job && exit 1 & failure_pid=$! 
+        wait -n $completion_pid $failure_pid
+        kubectl logs job.batch/jmeter-job
+        exit $exit_code
     - name: Pod logs
       if: always()
       run: |
@@ -201,9 +204,12 @@ jobs:
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
         kubectl apply -f base-image/k8s.yaml
-        while [[ $(kubectl get pods -l app=jmeter -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "waiting for pod" && sleep 1; done
-        kubectl logs -f -l app="jmeter"
-        kubectl wait --for=condition=complete  --timeout=2h job/jmeter-job
+        echo "Waiting till the Jmeter job to finish"
+        kubectl wait --for=condition=complete --timeout=2h job/jmeter-job & completion_pid=$!
+        kubectl wait --for=condition=failed --timeout=2h job/jmeter-job && exit 1 & failure_pid=$! 
+        wait -n $completion_pid $failure_pid
+        kubectl logs job.batch/jmeter-job
+        exit $exit_code
     - name: Pod logs
       if: always()
       run: |
@@ -278,9 +284,12 @@ jobs:
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
         kubectl apply -f base-image/k8s.yaml
-        while [[ $(kubectl get pods -l app=jmeter -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "waiting for pod" && sleep 1; done
-        kubectl logs -f -l app="jmeter"
-        kubectl wait --for=condition=complete  --timeout=2h job/jmeter-job
+        echo "Waiting till the Jmeter job to finish"
+        kubectl wait --for=condition=complete --timeout=2h job/jmeter-job & completion_pid=$!
+        kubectl wait --for=condition=failed --timeout=2h job/jmeter-job && exit 1 & failure_pid=$! 
+        wait -n $completion_pid $failure_pid
+        kubectl logs job.batch/jmeter-job
+        exit $exit_code
     - name: Pod logs
       if: always()
       run: |
@@ -355,9 +364,12 @@ jobs:
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
         kubectl apply -f base-image/k8s.yaml
-        while [[ $(kubectl get pods -l app=jmeter -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "waiting for pod" && sleep 1; done
-        kubectl logs -f -l app="jmeter"
-        kubectl wait --for=condition=complete  --timeout=2h job/jmeter-job
+        echo "Waiting till the Jmeter job to finish"
+        kubectl wait --for=condition=complete --timeout=2h job/jmeter-job & completion_pid=$!
+        kubectl wait --for=condition=failed --timeout=2h job/jmeter-job && exit 1 & failure_pid=$! 
+        wait -n $completion_pid $failure_pid
+        kubectl logs job.batch/jmeter-job
+        exit $exit_code
     - name: Pod logs
       if: always()
       run: |
@@ -432,9 +444,12 @@ jobs:
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
         kubectl apply -f base-image/k8s.yaml
-        while [[ $(kubectl get pods -l app=jmeter -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "waiting for pod" && sleep 1; done
-        kubectl logs -f -l app="jmeter"
-        kubectl wait --for=condition=complete  --timeout=2h job/jmeter-job
+        echo "Waiting till the Jmeter job to finish"
+        kubectl wait --for=condition=complete --timeout=2h job/jmeter-job & completion_pid=$!
+        kubectl wait --for=condition=failed --timeout=2h job/jmeter-job && exit 1 & failure_pid=$! 
+        wait -n $completion_pid $failure_pid
+        kubectl logs job.batch/jmeter-job
+        exit $exit_code
     - name: Pod logs
       if: always()
       run: |
@@ -509,9 +524,12 @@ jobs:
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
         kubectl apply -f base-image/k8s.yaml
-        while [[ $(kubectl get pods -l app=jmeter -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "waiting for pod" && sleep 1; done
-        kubectl logs -f -l app="jmeter"
-        kubectl wait --for=condition=complete  --timeout=2h job/jmeter-job
+        echo "Waiting till the Jmeter job to finish"
+        kubectl wait --for=condition=complete --timeout=2h job/jmeter-job & completion_pid=$!
+        kubectl wait --for=condition=failed --timeout=2h job/jmeter-job && exit 1 & failure_pid=$! 
+        wait -n $completion_pid $failure_pid
+        kubectl logs job.batch/jmeter-job
+        exit $exit_code
     - name: Pod logs
       if: always()
       run: |
