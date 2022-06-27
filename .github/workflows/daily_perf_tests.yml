@@ -154,11 +154,26 @@ jobs:
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
         kubectl apply -f base-image/k8s.yaml
         echo "Waiting till the Jmeter job to finish"
-        kubectl wait --for=condition=complete --timeout=2h job/jmeter-job & completion_pid=$!
-        kubectl wait --for=condition=failed --timeout=2h job/jmeter-job && exit 1 & failure_pid=$! 
-        wait -n $completion_pid $failure_pid
+        attempt_num=1
+        until kubectl wait --for=condition=complete --timeout=2h job/jmeter-job
+        do
+            if ((attempt_num==3))
+            then
+                echo "Job waiting failed on the $attempt_num attempt and there are no more attempts left! Failing the workflow"
+                kubectl get jobs
+                kubectl get pods
+                kubectl logs job.batch/jmeter-job
+                exit 1
+            else
+                echo "Attempt $attempt_num failed! Trying again in 30 seconds..."
+                ((attempt_num++))
+                sleep 30
+                kubectl get jobs
+                kubectl get pods
+            fi
+        done
+
         kubectl logs job.batch/jmeter-job
-        exit $exit_code
     - name: Pod logs
       if: always()
       run: |
