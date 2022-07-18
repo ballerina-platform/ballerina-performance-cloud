@@ -13,6 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 600
     steps:
+    - name: Define AKS cluster name
+      run: |
+        cluster_name="bpc-daily-perf-cluster"
+        echo "::set-output name=cluster-name::$cluster_name"
+      id: cluster 
     - name: CHECKOUT
       uses: actions/checkout@v2
     - name: AZURE LOGIN
@@ -27,7 +32,7 @@ jobs:
       run: |
         az aks create \
             --resource-group "${RESOURCE_GROUP}" \
-            --name "bpc_daily_perf_cluster" \
+            --name "${{ steps.cluster.outputs.cluster-name }}" \
             --service-principal "${AZURE_APP_ID}"\
             --client-secret "${AZURE_APP_PASSWORD}" \
             --node-vm-size "Standard_F4s_v2" \
@@ -40,11 +45,13 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: bpc_daily_perf_cluster
+        cluster-name: ${{ steps.cluster.outputs.cluster-name }}
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy Volumes
       run: |
         kubectl apply -f https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/base-image/volumes.yaml
+    outputs:
+      cluster-name: ${{ steps.cluster.outputs.cluster-name }}
   build:
     needs: setup
     runs-on: ubuntu-latest
@@ -112,7 +119,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: bpc_daily_perf_cluster
+        cluster-name: ${{ needs.setup.outputs.cluster-name }}
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -199,5 +206,5 @@ jobs:
       with:
         azcliversion: "agentazcliversion"
         inlineScript: |
-          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_bpc_daily_perf_cluster_eastus -y
-          az aks delete --name bpc_daily_perf_cluster --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
+          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_${{ needs.setup.outputs.cluster-name }}_eastus -y
+          az aks delete --name ${{ needs.setup.outputs.cluster-name }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
