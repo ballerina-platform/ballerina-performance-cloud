@@ -50,6 +50,8 @@ jobs:
     - name: Deploy Volumes
       run: |
         kubectl apply -f https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/base-image/volumes.yaml
+    outputs:
+      cluster-name: ${{ steps.cluster.outputs.cluster-name }}
   build:
     needs: setup
     runs-on: ubuntu-latest
@@ -117,7 +119,7 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: ${{ steps.cluster.outputs.cluster-name }}
+        cluster-name: ${{ needs.setup.outputs.cluster-name }}
         resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
     - name: Deploy artifacts
       run: |
@@ -204,5 +206,5 @@ jobs:
       with:
         azcliversion: "agentazcliversion"
         inlineScript: |
-          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_${{ steps.cluster.outputs.cluster-name }}_eastus -y
-          az aks delete --name ${{ steps.cluster.outputs.cluster-name }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
+          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_${{ needs.setup.outputs.cluster-name }}_eastus -y
+          az aks delete --name ${{ needs.setup.outputs.cluster-name }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
