@@ -2,7 +2,7 @@
 
 This repository contains container based performance tests for Ballerina. The tests are running in an AKS cluster.
 
-[![Daily Build](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/daily_perf_tests.yml/badge.svg)](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/spawn_cluster.yml)
+[![Daily Build](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/daily_perf_tests.yml/badge.svg)](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/daily_perf_tests.yml)
 [![Lang Comparison](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/lang_comparison.yml/badge.svg)](https://github.com/ballerina-platform/ballerina-performance-cloud/actions/workflows/lang_comparison.yml)
 
 ## Dashboard
