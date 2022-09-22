@@ -59,7 +59,7 @@ jobs:
       max-parallel: 1
       fail-fast: false
       matrix:
-        test: [h1_h1_passthrough, h1_transformation, h1c_h1c_passthrough, h1c_transformation, observability_enabled]
+        test: [https_passthrough, https_transformation, passthrough, transformation, observability_enabled]
         payload: [50, 1024]
         users: [60, 200]
     env:

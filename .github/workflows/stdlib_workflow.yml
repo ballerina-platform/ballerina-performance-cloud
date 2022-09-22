@@ -11,7 +11,7 @@ on:
       tests:
         description: >
           Array of test names
-          Example-["hello world","h1_h1_passthrough"]
+          Example-["hello world","https_passthrough"]
         required: false
       zipURL:
         description: 'Ballerina Zip Distribution URL'
