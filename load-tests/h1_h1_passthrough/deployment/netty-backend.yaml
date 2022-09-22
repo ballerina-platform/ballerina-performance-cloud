@@ -21,6 +21,8 @@ spec:
         env:
         - name: "SSL"
           value: "true"
+        - name: "HTTP2"
+          value: "true"
 
 ---
 apiVersion: v1
