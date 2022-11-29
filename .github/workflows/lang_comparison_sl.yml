@@ -105,6 +105,7 @@ jobs:
         sed -i -e 's/<<BRANCH_NAME>>//g' base-image/k8s.yaml
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<BASE_BRANCH>>//g' k8s.yaml
         kubectl apply -f base-image/k8s.yaml
         echo "Waiting till the Jmeter job to finish"
         attempt_num=1
@@ -217,6 +218,7 @@ jobs:
         sed -i -e 's/<<BRANCH_NAME>>//g' base-image/k8s.yaml
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<BASE_BRANCH>>//g' k8s.yaml
         kubectl apply -f base-image/k8s.yaml
         echo "Waiting till the Jmeter job to finish"
         attempt_num=1
@@ -312,6 +314,7 @@ jobs:
         sed -i -e 's/<<BRANCH_NAME>>//g' base-image/k8s.yaml
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<BASE_BRANCH>>//g' k8s.yaml
         kubectl apply -f base-image/k8s.yaml
         echo "Waiting till the Jmeter job to finish"
         attempt_num=1
@@ -407,6 +410,7 @@ jobs:
         sed -i -e 's/<<BRANCH_NAME>>//g' base-image/k8s.yaml
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<BASE_BRANCH>>//g' k8s.yaml
         kubectl apply -f base-image/k8s.yaml
         echo "Waiting till the Jmeter job to finish"
         attempt_num=1
@@ -502,6 +506,7 @@ jobs:
         sed -i -e 's/<<BRANCH_NAME>>//g' base-image/k8s.yaml
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<BASE_BRANCH>>//g' k8s.yaml
         kubectl apply -f base-image/k8s.yaml
         echo "Waiting till the Jmeter job to finish"
         attempt_num=1
@@ -597,6 +602,7 @@ jobs:
         sed -i -e 's/<<BRANCH_NAME>>//g' base-image/k8s.yaml
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<BASE_BRANCH>>//g' k8s.yaml
         kubectl apply -f base-image/k8s.yaml
         echo "Waiting till the Jmeter job to finish"
         attempt_num=1
