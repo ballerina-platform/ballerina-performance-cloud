@@ -24,26 +24,30 @@ on:
         description: 'Repository dispatch type'
         default: ''
         required: false
+      branch:
+        description: 'Branch of the given repository'
+        default: ''
+        required: false
 jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Setup custom image
-        id: image
-        run: |
-          echo "::set-output name=custom-image-name::$(cat image.txt)"
       - name: Setup outputs
         id: write
         run: |
           testsInput='${{ github.event.inputs.tests }}'
+          branch='${{ github.event.inputs.branch }}'
           if [[ -z $testsInput ]]; then
             repoName=${{ github.event.inputs.repo-name }}
             git clone https://github.com/ballerina-platform/$repoName
             if [[ -z $repoName ]]; then
               echo "Github repo should be in `ballerina-platform` org"
               exit 1
+            fi
+            if [[ ! -z $branch ]]; then
+              git checkout $branch
             fi
             cd $repoName/load-tests
             tests=$(ls -d */ | cut -f1 -d'/' | jq -R -s -c 'split("\n")[:-1]')
@@ -125,7 +129,6 @@ jobs:
           fi
     outputs:
       matrix: ${{ steps.write.outputs.test }}
-      custom-image-name: ${{ steps.image.outputs.custom-image-name }}
       branch-name: ${{ steps.branch.outputs.branch-name }}
   run_test:
     needs: setup
@@ -142,8 +145,14 @@ jobs:
       TEST_ROOT: "load-tests"
     steps:
     - uses: actions/checkout@v2
+      if: ${{ github.event.inputs.branch == '' }}
       with:
         repository: ballerina-platform/${{ github.event.inputs.repo-name }}
+    - uses: actions/checkout@v2
+      if: ${{ github.event.inputs.branch != '' }}
+      with:
+        repository: ballerina-platform/${{ github.event.inputs.repo-name }}
+        ref: ${{ github.event.inputs.branch }}
     - name: Login to DockerHub
       uses: docker/login-action@v1
       with:
@@ -208,7 +217,6 @@ jobs:
         echo "::set-output name=space-id::${{ secrets.SPACE_ID }}"
         echo "::set-output name=message-key::${{ secrets.MESSAGE_KEY }}"
         echo "::set-output name=chat-token::${{ secrets.CHAT_TOKEN }}"
-        echo "::set-output name=custom-image-name::${{ needs.setup.outputs.custom-image-name }}"
         echo "::set-output name=dispatch-type::${{ github.event.inputs.dispatchType }}"
         version_out=""
         echo "::set-output name=version::${version_out}"
@@ -233,6 +241,7 @@ jobs:
         sed -i -e 's/<<BRANCH_NAME>>/${{ needs.setup.outputs.branch-name }}/g' k8s.yaml
         sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' k8s.yaml
         sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' k8s.yaml
+        sed -i -e 's/<<BASE_BRANCH>>/${{ github.event.inputs.branch }}/g' k8s.yaml
         kubectl apply -f k8s.yaml
         echo "Waiting till the Jmeter job to finish"
         attempt_num=1
@@ -288,6 +297,7 @@ jobs:
         kubectl wait --for=condition=Ready pod/dataaccess
         kubectl cp dataaccess:/data data/
         DISPATCH_TYPE="${{ github.event.inputs.dispatchType }}"
+        BRANCH="${{ github.event.inputs.branch }}"
 
         pushd data
         if [ -z "$(ls -A ./)" ]; then
@@ -299,12 +309,22 @@ jobs:
           SUMMARY_STRING=$(cat $SCENARIO_NAME/summary.csv)
           ERROR_RATE=$(echo $SUMMARY_STRING | cut -d ',' -f10)
           ERROR_RATE=$(echo $ERROR_RATE | sed 's/%//')
-          DATA_STRING=$( jq -n \
-                          --arg status "$STATUS" \
-                          --arg summary "$SUMMARY_STRING" \
-                          --arg errorRate "$ERROR_RATE" \
-                          --arg scenarioName "${SCENARIO_NAME}" \
-                          '{ "name": $scenarioName, "status": $status, "result": $summary, "errorRate": $errorRate}' )
+          if [[ -z $BRANCH ]]; then
+            DATA_STRING=$( jq -n \
+                            --arg status "$STATUS" \
+                            --arg summary "$SUMMARY_STRING" \
+                            --arg errorRate "$ERROR_RATE" \
+                            --arg scenarioName "${SCENARIO_NAME}" \
+                            '{ "name": $scenarioName, "status": $status, "result": $summary, "errorRate": $errorRate}' )
+          else 
+            DATA_STRING=$( jq -n \
+                --arg status "$STATUS" \
+                --arg summary "$SUMMARY_STRING" \
+                --arg errorRate "$ERROR_RATE" \
+                --arg scenarioName "${SCENARIO_NAME}" \
+                --arg branch "${BRANCH}" \
+                '{ "name": $scenarioName, "status": $status, "branch": $branch,"result": $summary, "errorRate": $errorRate}' )
+          fi
 
           echo $DATA_STRING
 

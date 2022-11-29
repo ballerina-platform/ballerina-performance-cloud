@@ -40,6 +40,8 @@ spec:
               value: "<<CHAT_TOKEN>>"
             - name: VERSION
               value: "<<VERSION>>"
+            - name: BASE_BRANCH
+              value: "<<BASE_BRANCH>>"
       volumes:
         - name: task-pv-storage
           persistentVolumeClaim:

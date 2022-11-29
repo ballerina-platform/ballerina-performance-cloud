@@ -21,6 +21,7 @@ set -e
 payload_size=${PAYLOAD_SIZE}
 branch_name=${BRANCH_NAME}
 concurrent_users=${CONCURRENT_USERS}
+base_branch=${BASE_BRANCH}
 
 if [[ -z ${REPO_NAME} ]]; then
     echo "Please provide the repo name."
@@ -48,7 +49,11 @@ pushd "${REPO_NAME}"
 if [[ -z $branch_name ]]; then
     timestamp=$(date +%s -u)
     branch_name="nightly-${SCENARIO_NAME}-${timestamp}"
-    git checkout -b "${branch_name}"
+    if [[ -z $base_branch ]]; then
+        git checkout -b "${branch_name}"
+    else 
+        git checkout -b "${branch_name}" -t "origin/${base_branch}"
+    fi
 else 
     git checkout ${branch_name}
 fi
