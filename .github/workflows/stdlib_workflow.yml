@@ -47,7 +47,7 @@ jobs:
               exit 1
             fi
             if [[ ! -z $branch ]]; then
-              git checkout $branch
+              (cd $repoName ; git checkout $branch)
             fi
             cd $repoName/load-tests
             tests=$(ls -d */ | cut -f1 -d'/' | jq -R -s -c 'split("\n")[:-1]')
