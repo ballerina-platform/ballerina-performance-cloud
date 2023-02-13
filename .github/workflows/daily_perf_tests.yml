@@ -111,7 +111,7 @@ jobs:
         cp -a ${TEST_ROOT}/${TEST_NAME}/src/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
     - name: 'Install Kustomize'
       run: |
-        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+        curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
     - name: 'Run Kustomize'
       run: |
         kustomize build ${TEST_ROOT}/${TEST_NAME}/deployment > ${TEST_ROOT}/${TEST_NAME}/final.yaml
