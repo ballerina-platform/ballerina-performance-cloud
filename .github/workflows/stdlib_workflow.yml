@@ -260,10 +260,10 @@ jobs:
                 sleep 30
                 kubectl get jobs
                 kubectl get pods
+                kubectl logs job.batch/jmeter-job
             fi
         done
 
-        kubectl logs job.batch/jmeter-job
     - name: Pod logs
       if: always()
       run: |
