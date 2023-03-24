@@ -264,6 +264,7 @@ jobs:
             fi
         done
 
+        kubectl logs job.batch/jmeter-job
     - name: Pod logs
       if: always()
       run: |
