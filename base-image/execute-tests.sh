@@ -76,7 +76,8 @@ function executeScript() {
       echo "-------- Executing $1 --------"
       pushd "${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/scripts/
       chmod +x "${1}"
-       ./"${1}" -r "${REPO_NAME}" -s "${SCENARIO_NAME}" -u "${concurrent_users}" -f "$payload_flags"
+       . ./"${1}" -r "${REPO_NAME}" -s "${SCENARIO_NAME}" -u "${concurrent_users}" -f "$payload_flags" # The use of a dot before the command ensures 
+       # that the variable persists even after the script ${1} has completed execution.
       popd
       echo "-------- $1 executed --------"
   fi
@@ -106,7 +107,9 @@ echo "--------End test--------"
 POST_RUN_FILE="${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/scripts/post_run.sh
 if test -f "$POST_RUN_FILE"; then
   executeScript "post_run.sh"
-else
+fi
+
+if [[ "$FORCE_ENABLE_JMETER_PROCESSING" == "true" ]] || test ! -f "$POST_RUN_FILE"; then
   echo "--------Processing Results--------"
   pushd "${REPO_NAME}"/load-tests/"${SCENARIO_NAME}"/results/
   echo "--------Splitting Results--------"
