@@ -172,7 +172,6 @@ jobs:
       if: ${{ github.event.inputs.zipURL == '' }}
       uses: ballerina-platform/ballerina-action@nightly
       env:
-        CI_BUILD: true
         WORKING_DIR: load-tests/${{ matrix.test_name }}/src
       with:
         args:
@@ -185,7 +184,6 @@ jobs:
         mkdir ballerina-dist
         unzip -q ballerina-dist.zip -d ballerina-dist
         unzip -q ballerina-dist/ballerina-2201.8.0-SNAPSHOT-swan-lake.zip -d ballerina-8.0-dist
-        export CI_BUILD=true
         export BAL_PATH=`pwd`/ballerina-8.0-dist/ballerina-2201.8.0-SNAPSHOT-swan-lake/distributions/ballerina-2201.8.0
         echo "var ${BAL_PATH}"
         pushd load-tests/${TEST_NAME}/src
