@@ -80,7 +80,7 @@ jobs:
       if: ${{ github.event.inputs.zipURL == '' }}
       uses: ballerina-platform/ballerina-action@nightly
       env:
-        CI_BUILD: true
+        DOCKER_BUILDKIT: 0
         WORKING_DIR: load-tests/${{ steps.testname.outputs.test-name }}/src
       with:
         args:
