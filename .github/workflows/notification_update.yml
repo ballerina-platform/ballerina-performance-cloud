@@ -21,7 +21,7 @@ jobs:
     - name: Ballerina Build
       uses: ballerina-platform/ballerina-action@master
       env:
-        CI_BUILD: true
+        DOCKER_BUILDKIT: 0
         WORKING_DIR: notifications
       with:
         args:
