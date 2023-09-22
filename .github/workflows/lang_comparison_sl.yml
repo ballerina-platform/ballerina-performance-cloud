@@ -60,6 +60,8 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Docker build
+      env:
+        DOCKER_BUILDKIT: 0
       run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}/src
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}
@@ -269,6 +271,8 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Docker build
+      env:
+        DOCKER_BUILDKIT: 0
       run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}/src
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}
@@ -365,6 +369,8 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Docker build
+      env:
+        DOCKER_BUILDKIT: 0
       run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}/src
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}
@@ -461,6 +467,8 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Docker build
+      env:
+        DOCKER_BUILDKIT: 0
       run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}/src
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}
@@ -557,6 +565,8 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Docker build
+      env:
+        DOCKER_BUILDKIT: 0
       run: docker build -t ballerina/${TEST_NAME} ${TEST_ROOT}/${TEST_NAME}/src
     - name: Docker push
       run: docker push ballerina/${TEST_NAME}
