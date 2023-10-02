@@ -184,7 +184,6 @@ jobs:
         curl --netrc-file _netrc -L -o ballerina-dist.zip ${{ github.event.inputs.zipURL }}
         mkdir ballerina-dist
         unzip -q ballerina-dist.zip -d ballerina-dist
-        export CI_BUILD=true
         export BAL_PATH=`pwd`/ballerina-dist
         echo "var ${BAL_PATH}"
         pushd load-tests/${TEST_NAME}/src
