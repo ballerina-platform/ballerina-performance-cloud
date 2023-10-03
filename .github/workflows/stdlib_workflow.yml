@@ -34,6 +34,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 17.0.7
       - name: Setup outputs
         id: write
         run: |
@@ -144,6 +149,11 @@ jobs:
       TEST_NAME: "${{ matrix.test_name }}"
       TEST_ROOT: "load-tests"
     steps:
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: 17.0.7
     - uses: actions/checkout@v2
       if: ${{ github.event.inputs.branch == '' }}
       with:
@@ -174,7 +184,7 @@ jobs:
         curl --netrc-file _netrc -L -o ballerina-dist.zip ${{ github.event.inputs.zipURL }}
         mkdir ballerina-dist
         unzip -q ballerina-dist.zip -d ballerina-dist
-        export CI_BUILD=true
+        export DOCKER_BUILDKIT=0
         export BAL_PATH=`pwd`/ballerina-dist
         echo "var ${BAL_PATH}"
         pushd load-tests/${TEST_NAME}/src
