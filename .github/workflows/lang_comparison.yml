@@ -647,6 +647,7 @@ jobs:
         kubectl delete -f base-image/k8s.yaml
   cleanup:
     needs: go-lang
+    if: always()
     name: clean up cluster
     runs-on: ubuntu-latest
     steps:
