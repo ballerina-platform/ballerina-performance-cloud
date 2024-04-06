@@ -94,7 +94,6 @@ jobs:
         filename="${filename%.*}"
         echo "Distribution: ${filename}"
         unzip -q ${filename}.zip
-        export CI_BUILD=true
         export BAL_PATH=`pwd`/${filename}
         echo "var ${BAL_PATH}"
         pushd load-tests/${TEST_NAME}/src
