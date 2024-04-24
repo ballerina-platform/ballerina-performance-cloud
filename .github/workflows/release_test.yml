@@ -1,0 +1,215 @@
+name: Release Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      zipURL:
+        description: 'Ballerina Zip Distribution URL'
+        required: false
+  schedule:
+    - cron:  '0 6 * * *'
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 600
+    steps:
+    - name: Define AKS cluster name
+      run: |
+        cluster_name="bpc-daily-perf-cluster"
+        echo "::set-output name=cluster-name::$cluster_name"
+      id: cluster 
+    - name: CHECKOUT
+      uses: actions/checkout@v2
+    - name: AZURE LOGIN
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: Create Cluster
+      env:
+        AZURE_APP_ID: ${{ secrets.AZURE_APP_ID }}
+        AZURE_APP_PASSWORD: ${{ secrets.AZURE_APP_PASSWORD }}
+        RESOURCE_GROUP: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+      run: |
+        az aks create \
+            --resource-group "${RESOURCE_GROUP}" \
+            --name "${{ steps.cluster.outputs.cluster-name }}" \
+            --service-principal "${AZURE_APP_ID}"\
+            --client-secret "${AZURE_APP_PASSWORD}" \
+            --node-vm-size "Standard_F4s_v2" \
+            --node-osdisk-size 256 \
+            --node-osdisk-type Managed \
+            --node-count 1 \
+            --location "eastus" \
+            --generate-ssh-keys
+    - name: Configure AKS
+      uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: ${{ steps.cluster.outputs.cluster-name }}
+        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+    - name: Deploy Volumes
+      run: |
+        kubectl apply -f https://raw.githubusercontent.com/ballerina-platform/ballerina-performance-cloud/main/base-image/volumes.yaml
+    outputs:
+      cluster-name: ${{ steps.cluster.outputs.cluster-name }}
+  build:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        test: [https_transformation]
+        payload: [1024]
+        users: [200, 60]
+    env:
+      TEST_NAME: "${{ matrix.test }}"
+      TEST_ROOT: "load-tests"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+    - name: Write Test Name to outputs
+      id: testname
+      run: |
+        echo "::set-output name=test-name::${TEST_NAME}"
+    - name: Ballerina Build from Nightly Pack
+      if: ${{ github.event.inputs.zipURL == '' }}
+      uses: ballerina-platform/ballerina-action@nightly
+      env:
+        DOCKER_BUILDKIT: 0
+        WORKING_DIR: load-tests/${{ steps.testname.outputs.test-name }}/src
+      with:
+        args:
+          build
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'adopt'
+        java-version: 17.0.7
+    - name: Ballerina Build from Distribution ZIP
+      id: zip
+      if: ${{ github.event.inputs.zipURL != '' }}
+      run: |
+        wget -c ${{ github.event.inputs.zipURL }}
+        filename=$(basename -- "${{ github.event.inputs.zipURL }}")
+        filename="${filename%.*}"
+        echo "Distribution: ${filename}"
+        unzip -q ${filename}.zip
+        export BAL_PATH=`pwd`/${filename}
+        echo "var ${BAL_PATH}"
+        pushd load-tests/${TEST_NAME}/src
+        ls -ltr
+        $BAL_PATH/bin/bal version > tmp1.txt
+        version_out=$(cat tmp1.txt | head -n 1)
+        echo "::set-output name=version::${version_out}"
+        $BAL_PATH/bin/bal build
+    - name: Docker push
+      run: docker push ballerina/${TEST_NAME}:latest
+    - name: Copy artifacts
+      run: |
+        ls -ltr
+        cp -a ${TEST_ROOT}/${TEST_NAME}/src/target/kubernetes/${TEST_NAME}/. ${TEST_ROOT}/${TEST_NAME}/deployment/
+    - name: 'Install Kustomize'
+      run: |
+        curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+    - name: 'Run Kustomize'
+      run: |
+        kustomize build ${TEST_ROOT}/${TEST_NAME}/deployment > ${TEST_ROOT}/${TEST_NAME}/final.yaml
+    - name: Configure AKS
+      uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: ${{ needs.setup.outputs.cluster-name }}
+        resource-group: ${{ secrets.CLUSTER_RESOURCE_GROUP }}
+    - name: Deploy artifacts
+      run: |
+        kubectl apply -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
+    - name: Login via Az module
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: Write values to outputs
+      id: write
+      run: |
+        echo "::set-output name=scenario-name::${TEST_NAME}"
+        echo "::set-output name=vm-name::bal-perf-vm-`echo ${TEST_NAME} | tr '_' '-'`-${{ matrix.users }}-${{ matrix.payload }}-${{ GITHUB.RUN_NUMBER }}"
+        echo "::set-output name=git-token::${{ secrets.BALLERINA_BOT_TOKEN }}"
+        echo "::set-output name=space-id::${{ secrets.SPACE_ID }}"
+        echo "::set-output name=message-key::${{ secrets.MESSAGE_KEY }}"
+        echo "::set-output name=chat-token::${{ secrets.CHAT_TOKEN }}"
+        echo "::set-output name=custom-image-name::$(cat image.txt)"
+        if [[ -z "${{steps.zip.outputs.version}}" ]]; then
+          docker run --entrypoint "/ballerina/runtime/bin/bal" ballerina/ballerina:nightly "version" > tmp.txt
+          version_out=$(cat tmp.txt | head -n 1)
+        else 
+          version_out="${{steps.zip.outputs.version}}"
+        fi
+        echo "::set-output name=version::${version_out}"
+    - name: Deploy Jmeter container
+      run: |
+        sed -i -e 's/<<CLUSTER_IP>>//g' base-image/k8s.yaml
+        sed -i -e 's/<<REPO_NAME>>/ballerina-performance-cloud/g' base-image/k8s.yaml
+        sed -i -e 's/<<SCENARIO_NAME>>/${{ steps.write.outputs.scenario-name }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<GITHUB_TOKEN>>/${{steps.write.outputs.git-token}}/g' base-image/k8s.yaml
+        sed -i -e 's/<<PAYLOAD_SIZE>>/${{ matrix.payload }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<SPACE_ID>>/${{steps.write.outputs.space-id}}/g' base-image/k8s.yaml
+        sed -i -e 's/<<MESSAGE_KEY>>/${{steps.write.outputs.message-key}}/g' base-image/k8s.yaml
+        sed -i -e 's/<<CHAT_TOKEN>>/${{steps.write.outputs.chat-token}}/g' base-image/k8s.yaml
+        sed -i -e 's/<<DISPATCH_TYPE>>//g' base-image/k8s.yaml
+        sed -i -e 's/<<BRANCH_NAME>>//g' base-image/k8s.yaml
+        sed -i -e 's/<<CONCURRENT_USERS>>/${{ matrix.users }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<VERSION>>/${{ steps.write.outputs.version }}/g' base-image/k8s.yaml
+        sed -i -e 's/<<BASE_BRANCH>>//g' base-image/k8s.yaml
+        kubectl apply -f base-image/k8s.yaml
+        echo "Waiting till the Jmeter job to finish"
+        attempt_num=1
+        until kubectl wait --for=condition=complete --timeout=2h job/jmeter-job
+        do
+            if ((attempt_num==3))
+            then
+                echo "Job waiting failed on the $attempt_num attempt and there are no more attempts left! Failing the workflow"
+                kubectl get jobs
+                kubectl get pods
+                kubectl logs job.batch/jmeter-job
+                exit 1
+            else
+                echo "Attempt $attempt_num failed! Trying again in 30 seconds..."
+                ((attempt_num++))
+                sleep 30
+                kubectl get jobs
+                kubectl get pods
+            fi
+        done
+
+        kubectl logs job.batch/jmeter-job
+    - name: Pod logs
+      if: always()
+      run: |
+        kubectl logs -l logs=true
+    - name: Undeploy Kubernetes artifacts
+      if: always()
+      run: |
+        kubectl delete -f ${TEST_ROOT}/${TEST_NAME}/final.yaml
+        kubectl delete -f base-image/k8s.yaml
+  cleanup:
+    needs: [setup,build]
+    name: clean up
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: AZURE LOGIN
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - name: Cleaning up the cluster
+      if: always()
+      uses: azure/CLI@v1
+      with:
+        azcliversion: "agentazcliversion"
+        inlineScript: |
+          az group delete --name mc_${{ secrets.CLUSTER_RESOURCE_GROUP }}_${{ needs.setup.outputs.cluster-name }}_eastus -y
+          az aks delete --name ${{ needs.setup.outputs.cluster-name }} --resource-group ${{ secrets.CLUSTER_RESOURCE_GROUP }} -y
