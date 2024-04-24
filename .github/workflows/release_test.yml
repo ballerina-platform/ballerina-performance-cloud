@@ -61,7 +61,7 @@ jobs:
       matrix:
         test: [https_transformation]
         payload: [1024]
-        users: [60]
+        users: [200]
     env:
       TEST_NAME: "${{ matrix.test }}"
       TEST_ROOT: "load-tests"
