@@ -182,6 +182,11 @@ jobs:
       run: |
         echo default login ballerina-bot password ${{ secrets.BALLERINA_BOT_TOKEN }} >> _netrc
         curl --netrc-file _netrc -L -o ballerina-dist.zip ${{ github.event.inputs.zipURL }}
+        actualsize=$(wc -c <"ballerina-dist.zip")
+        echo $actualsize
+        if [ $actualsize -le 2000 ]; then
+            cat ballerina-dist.zip
+        fi
         mkdir ballerina-dist
         unzip -q ballerina-dist.zip -d ballerina-dist
         export DOCKER_BUILDKIT=0
