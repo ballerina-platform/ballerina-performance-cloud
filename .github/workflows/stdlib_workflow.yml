@@ -180,8 +180,8 @@ jobs:
     - name: Ballerina Build from Distribution ZIP
       if: ${{ github.event.inputs.zipURL != '' }}
       run: |
-        echo default login ballerina-bot password ${{ secrets.BALLERINA_BOT_TOKEN }} >> _netrc
-        curl --netrc-file _netrc -L -o ballerina-dist.zip ${{ github.event.inputs.zipURL }}
+        export packageUser=ballerina-bot
+        curl -u $packageUser:${{ secrets.BALLERINA_BOT_TOKEN }} -L -o ballerina-dist.zip ${{ github.event.inputs.zipURL }}
         actualsize=$(wc -c <"ballerina-dist.zip")
         echo $actualsize
         if [ $actualsize -le 2000 ]; then
