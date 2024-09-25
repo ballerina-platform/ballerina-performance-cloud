@@ -182,11 +182,6 @@ jobs:
       run: |
         export packageUser=ballerina-bot
         curl -u $packageUser:${{ secrets.BALLERINA_BOT_TOKEN }} -L -o ballerina-dist.zip ${{ github.event.inputs.zipURL }}
-        actualsize=$(wc -c <"ballerina-dist.zip")
-        echo $actualsize
-        if [ $actualsize -le 2000 ]; then
-            cat ballerina-dist.zip
-        fi
         mkdir ballerina-dist
         unzip -q ballerina-dist.zip -d ballerina-dist
         export DOCKER_BUILDKIT=0
