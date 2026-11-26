@@ -176,7 +176,7 @@ jobs:
       id: jdk
       run: |
         # Ballerina 2201.14.0 and later run on JDK 25; earlier versions run on JDK 21.
-        langVersion=$(sed -n 's/^ballerinaLangVersion=//p' gradle.properties 2>/dev/null | tr -d '[:space:]')
+        langVersion=$(sed -n 's/^[[:space:]]*ballerinaLangVersion[[:space:]]*=[[:space:]]*//p' gradle.properties 2>/dev/null | tr -d '[:space:]')
         updateNumber=$(echo "$langVersion" | cut -d'.' -f2)
         javaVersion=21
         if [[ "$updateNumber" =~ ^[0-9]+$ ]] && (( updateNumber >= 14 )); then
