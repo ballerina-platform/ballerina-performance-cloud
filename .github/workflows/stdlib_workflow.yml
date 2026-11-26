@@ -172,11 +172,25 @@ jobs:
       with:
         args:
           build
-    - name: Set up JDK 21
+    - name: Select JDK version
+      id: jdk
+      run: |
+        # Ballerina 2201.14.0 and later run on JDK 25; earlier versions run on JDK 21.
+        langVersion=$(sed -n 's/^[[:space:]]*ballerinaLangVersion[[:space:]]*=[[:space:]]*//p' gradle.properties 2>/dev/null | tr -d '[:space:]')
+        majorNumber=$(echo "$langVersion" | cut -d'.' -f1)
+        updateNumber=$(echo "$langVersion" | cut -s -d'.' -f2)
+        javaVersion=21
+        if [[ "$majorNumber" =~ ^[0-9]+$ && "$updateNumber" =~ ^[0-9]+$ ]] &&
+            (( majorNumber > 2201 || (majorNumber == 2201 && updateNumber >= 14) )); then
+          javaVersion=25
+        fi
+        echo "Ballerina ${langVersion:-unknown}: using JDK ${javaVersion}"
+        echo "version=${javaVersion}" >> $GITHUB_OUTPUT
+    - name: Set up JDK
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: 21
+        java-version: ${{ steps.jdk.outputs.version }}
     - name: Ballerina Build from Distribution ZIP
       if: ${{ github.event.inputs.zipURL != '' }}
       run: |
